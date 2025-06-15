@@ -2,7 +2,8 @@
   <section class="viewer-section">
     <h2>Decentralized Viewer</h2>
     <form @submit.prevent="fetchRemoteContent">
-      <input v-model="remoteUrl" placeholder="Enter remote server feed URL (e.g. https://example.com/api/feed-json/)" style="width: 80%" />
+      <label for="remote-url" style="display: block; margin-bottom: 8px;">Remote Server Feed URL:</label>
+      <input id="remote-url" v-model="remoteUrl" placeholder="Enter remote server feed URL (e.g. https://example.com/api/feed-json/)" style="width: 80%" />
       <button type="submit">View</button>
     </form>
     <div v-if="loading">Loading...</div>
