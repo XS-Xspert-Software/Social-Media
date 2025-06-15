@@ -25,7 +25,7 @@ try {
     globalConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
   }
 } catch (e) {
-  console.error('Failed to load config.json:', e);
+  log('error', 'Failed to load config.json:', e);
 }
 
 // Helper to get trusted servers from config
@@ -34,6 +34,18 @@ const getTrustedServers = (): string[] => {
     ? globalConfig.federationTrustedServers
     : [];
 };
+
+// Logger function for extensible logging
+function log(level: string, ...args: any[]) {
+  const ts = new Date().toISOString();
+  if (level === 'error') {
+    console.error(`[${ts}]`, ...args);
+  } else if (level === 'warn') {
+    console.warn(`[${ts}]`, ...args);
+  } else {
+    console.log(`[${ts}]`, ...args);
+  }
+}
 
 app.use(cors({origin: "*"})); 
 app.use(express.json());
@@ -49,8 +61,8 @@ app.post('/api/register', async (req: Request, res: Response) => {
     const user = await registerUser({ username, email, password });
     res.status(201).json({ user });
   } catch (e: any) {
-    console.error("Erreur complète registerUser:", e, typeof e, JSON.stringify(e));
-    res.status(400).json({ error: e.message || e.toString() || "Erreur inconnue" });
+    log('error', "Erreur complète registerUser:", e, typeof e, JSON.stringify(e));
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -66,6 +78,7 @@ app.post('/api/login', loginRateLimiter, async (req: Request, res: Response) => 
     const { token, user } = await loginUser({ email, password });
     res.json({ token, user });
   } catch (e: any) {
+    log('error', e.message);
     res.status(400).json({ error: e.message });
   }
 });
@@ -78,6 +91,7 @@ app.get('/api/user-info', (req, res) => {
       const user = await getUserInfo(userId);
       res.json({ user });
     } catch (e: any) {
+      log('error', e.message);
       res.status(400).json({ error: e.message });
     }
   })();
@@ -122,7 +136,8 @@ app.get('/federation/posts', wrapAsync(async (req: Request, res: Response) => {
     const data = await fetchRes.json();
     res.json(data);
   } catch (e: any) {
-    res.status(502).json({ error: 'Failed to fetch remote posts', message: 'An error occurred while processing the request.' });
+    log('error', 'Error fetching from remote server:', e);
+    res.status(502).json({ error: 'Failed to fetch from remote server' });
   }
 }));
 
@@ -139,7 +154,8 @@ app.get('/federation/user-info', wrapAsync(async (req: Request, res: Response) =
     const data = await fetchRes.json();
     res.json(data);
   } catch (e: any) {
-    res.status(502).json({ error: 'Failed to fetch remote user info', details: e.message });
+    log('error', 'Error fetching from remote server:', e);
+    res.status(502).json({ error: 'Failed to fetch from remote server' });
   }
 }));
 
@@ -156,7 +172,8 @@ app.get('/federation/videos', wrapAsync(async (req: Request, res: Response) => {
     const data = await fetchRes.json();
     res.json(data);
   } catch (e: any) {
-    res.status(502).json({ error: 'Failed to fetch remote videos', details: e.message });
+    log('error', 'Error fetching from remote server:', e);
+    res.status(502).json({ error: 'Failed to fetch from remote server' });
   }
 }));
 
@@ -185,13 +202,12 @@ app.get('/federation/discover', (req: Request, res: Response) => {
 
 // Accept incoming federation requests (for future: e.g. push posts, follow, etc.)
 app.post('/federation/inbox', (req: Request, res: Response) => {
-  // For now, just log and accept
-  console.log('Received federation inbox:', req.body);
+  log('info', 'Received federation inbox:', req.body);
   res.json({ status: 'ok' });
 });
 
 export default app;
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  log('info', `Server is running on port ${PORT}`);
 });

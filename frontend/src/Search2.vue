@@ -305,6 +305,18 @@ const {
   selectedPost,
 } = usePosts();
 
+// Logging function
+function log(level, ...args) {
+  const ts = new Date().toISOString();
+  if (level === 'error') {
+    console.error(`[${ts}]`, ...args);
+  } else if (level === 'warn') {
+    console.warn(`[${ts}]`, ...args);
+  } else {
+    console.log(`[${ts}]`, ...args);
+  }
+}
+
 // Follow/Unfollow functionality
 const toggleFollow = async () => {
   if (!userProfile.value || actionLoading.value) return;
@@ -335,7 +347,7 @@ const toggleFollow = async () => {
      notify('Successfully unfollowed user', false);
     }
   } catch (error) {
-    console.error('Error toggling follow:', error);
+    log('error', 'Error toggling follow:', error);
    notify('Failed to update follow status', true);
   } finally {
     actionLoading.value = false;
@@ -402,7 +414,7 @@ const toggleFriendship = async () => {
 
     await fetchUserData(userProfile.value.username);
   } catch (error) {
-    console.error('Error toggling friendship:', error);
+    log('error', 'Error toggling friendship:', error);
    notify('Failed to update friendship status', true);
   } finally {
     actionLoading.value = false;
@@ -452,7 +464,7 @@ const checkRelationshipStatus = async (targetUsername) => {
       relationshipStatus.value = { isFollowing: false, friendshipStatus: 'none' };
     }
   } catch (error) {
-    console.error('Error checking relationship status:', error);
+    log('error', 'Error checking relationship status:', error);
     relationshipStatus.value = { isFollowing: false, friendshipStatus: 'none' };
   }
 };
@@ -483,7 +495,7 @@ const fetchUserData = async (usernameToFetch) => {
     searched.value = true;
 
     const user = data.user;
-  console.log('Fetched user data:', user);
+  log('info', 'Fetched user data:', user);
 
     userProfile.value = {
       username: user.username,
@@ -513,7 +525,7 @@ const fetchUserData = async (usernameToFetch) => {
 
     await checkRelationshipStatus(usernameToFetch);
   } catch (error) {
-    console.error('Error fetching user data:', error);
+    log('error', 'Error fetching user data:', error);
     searched.value = true;
     userProfile.value = null;
     posts.value = [];

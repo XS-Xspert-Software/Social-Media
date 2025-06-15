@@ -78,6 +78,17 @@ import { defineAsyncComponent, nextTick } from 'vue'
 // Lazy load Ably only when needed
 const loadAbly = () => import('ably')
 
+function log(level, ...args) {
+  const ts = new Date().toISOString();
+  if (level === 'error') {
+    console.error(`[${ts}]`, ...args);
+  } else if (level === 'warn') {
+    console.warn(`[${ts}]`, ...args);
+  } else {
+    console.log(`[${ts}]`, ...args);
+  }
+}
+
 export default {
   name: 'Chat',
   data() {
@@ -143,7 +154,7 @@ export default {
           return true
         })
       } catch (error) {
-        console.error('Error fetching users:', error)
+        log('error', 'Error fetching users:', error)
         this.warningMessage = 'Failed to load users'
       } finally {
         this.loading = false
@@ -269,7 +280,7 @@ handleUserClick(user) {
         this.ably = new Ably.Realtime('9frHeA.Si13Zw:KVzVyovw6hCu4RRuy6P11Tyl0h7MJIzv2Q_n4YgbNnE')
         
         this.ably.connection.on('connected', () => {
-          console.log('Connected to Ably')
+          log('info', 'Connected to Ably')
           this.channel = this.ably.channels.get('chat-room')
           this.channel.subscribe('new-message', (msg) => {
             const { text, id, username } = msg.data
@@ -280,11 +291,11 @@ handleUserClick(user) {
         })
         
         this.ably.connection.on('failed', () => {
-          console.error('Failed to connect to Ably')
+          log('error', 'Failed to connect to Ably')
           this.warningMessage = 'Failed to connect to chat service.'
         })
       } catch (error) {
-        console.error('Failed to load Ably:', error)
+        log('error', 'Failed to load Ably:', error)
         this.warningMessage = 'Failed to initialize chat service.'
       }
     }

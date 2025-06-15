@@ -115,7 +115,7 @@ export default {
           this.error = 'Failed to load videos';
         }
       } catch (error) {
-        console.error('Error loading videos:', error);
+        log('error', 'Error loading videos:', error);
         this.error = 'Failed to load videos: ' + error.message;
       } finally {
         this.loading = false;
@@ -152,7 +152,7 @@ export default {
         await this.loadVideos();
         alert('Video uploaded successfully!');
       } catch (error) {
-        console.error('Error uploading video:', error);
+        log('error', 'Error uploading video:', error);
         alert('Failed to upload video: ' + error.message);
       } finally {
         this.uploading = false;
@@ -168,9 +168,9 @@ export default {
     async trackVideoWatch(videoId) {
       try {
         await djangoAPI.trackVideoWatch(videoId, this.userId);
-        console.log('Video watch tracked:', videoId);
+        log('info', 'Video watch tracked:', videoId);
       } catch (error) {
-        console.error('Error tracking video watch:', error);
+        log('error', 'Error tracking video watch:', error);
       }
     },
     
@@ -181,6 +181,17 @@ export default {
     }
   }
 };
+
+function log(level, ...args) {
+  const ts = new Date().toISOString();
+  if (level === 'error') {
+    console.error(`[${ts}]`, ...args);
+  } else if (level === 'warn') {
+    console.warn(`[${ts}]`, ...args);
+  } else {
+    console.log(`[${ts}]`, ...args);
+  }
+}
 </script>
 
 <style scoped>

@@ -676,12 +676,12 @@ export default function usePosts() {
 
     // Open full-screen image (Optional, retained for compatibility)
     const openFullScreen = imageSrc => {
-      console.log('Open full-screen image:', imageSrc);
+      log('info', 'Open full-screen image:', imageSrc);
     };
 
     // Notification (mock, replace with actual implementation)
     const showNotification = (message, isError) => {
-      console.log(`${isError ? 'Error' : 'Success'}: ${message}`);
+      log(isError ? 'error' : 'info', `${isError ? 'Error' : 'Success'}: ${message}`);
       // Implement actual notification UI
     };
 
