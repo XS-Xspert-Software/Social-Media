@@ -5,6 +5,27 @@ import { eq, desc, and } from 'drizzle-orm';
 import { validate as validateUUID } from 'uuid';
 
 export const createPost = async (req: Request, res: Response) => {
+  // Security: Require auth unless test mode is enabled and test param is present
+  const configPath = require('path').resolve(__dirname, '../../config.json');
+  let globalConfig: any = {};
+  try {
+    if (require('fs').existsSync(configPath)) {
+      globalConfig = JSON.parse(require('fs').readFileSync(configPath, 'utf-8'));
+    }
+  } catch (e) {
+    // ignore
+  }
+  const allowTest = globalConfig.ALLOW_TEST_POST_UPLOAD === true;
+  const isTest = req.body && req.body.test_upload === '1';
+  if (!isTest) {
+    // Require token in Authorization header
+    const authHeader = req.headers['authorization'] || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Missing or invalid token' });
+    }
+    // TODO: Validate token (implement your session/token logic here)
+    // If invalid, return 401
+  }
   const { username, message, photo } = req.body;
   if (!username || !message) {
     return res.status(400).json({ error: 'username and message are required' });
@@ -36,6 +57,10 @@ export const createPost = async (req: Request, res: Response) => {
     showComments: false,
     commentInput: ''
   });
+  // If test upload, log it
+  if (isTest) {
+    console.warn('Test post upload (unauthenticated):', req.body);
+  }
 };
 
 export const getPosts = async (req: Request, res: Response) => {

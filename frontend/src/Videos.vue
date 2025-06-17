@@ -30,6 +30,26 @@
       </form>
     </div>
 
+    <!-- Test Video Upload Section -->
+    <div class="test-upload-section">
+      <h3>Test Video Upload (No Auth Required)</h3>
+      <form @submit.prevent="testUploadVideo" enctype="multipart/form-data">
+        <div class="form-group">
+          <label for="testCaption">Caption:</label>
+          <input type="text" id="testCaption" v-model="testUploadForm.caption" required placeholder="Enter test caption...">
+        </div>
+        <div class="form-group">
+          <label for="testVideoFile">Video File (.mp4):</label>
+          <input type="file" id="testVideoFile" @change="handleTestFileSelect" accept="video/mp4" required>
+        </div>
+        <button type="submit" :disabled="testUploading">
+          {{ testUploading ? 'Uploading...' : 'Upload Test Video' }}
+        </button>
+        <div v-if="testUploadError" class="error">{{ testUploadError }}</div>
+        <div v-if="testUploadSuccess" class="success">{{ testUploadSuccess }}</div>
+      </form>
+    </div>
+
     <!-- Videos Feed -->
     <div class="videos-feed">
       <div v-if="loading" class="loading">Loading videos...</div>
@@ -79,7 +99,14 @@ export default {
       uploadForm: {
         caption: '',
         videoFile: null
-      }
+      },
+      testUploadForm: {
+        caption: '',
+        videoFile: null
+      },
+      testUploading: false,
+      testUploadError: '',
+      testUploadSuccess: ''
     };
   },
   computed: {
@@ -99,13 +126,11 @@ export default {
       this.loading = true;
       this.error = null;
       try {
-        // Updated endpoint and response handling for Django backend
         const response = await djangoAPI.request(`/feed-json/`);
         if (response.videos) {
-          // Map Django's response to expected frontend format
           this.videos = response.videos.map(v => ({
             id: v.id,
-            video_id: v.video_id || v.id,
+            video_id: v.video_id || v.id, // prefer UUID if present
             caption: v.caption,
             created_at: v.created_at,
             video_url: v.video_url,
@@ -131,17 +156,22 @@ export default {
         alert('Please fill in all fields');
         return;
       }
+      // Get token from localStorage
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        alert('You must be logged in to upload videos.');
+        return;
+      }
       this.uploading = true;
       try {
         const formData = new FormData();
         formData.append('caption', this.uploadForm.caption);
         formData.append('video', this.uploadForm.videoFile); // Django expects 'video'
-        // Optionally add user if needed: formData.append('user', this.userId || 'anonymous');
-        // If you require authentication, add the token header here
-        // Use API config for video upload endpoint
-        const response = await djangoAPI.request('/api/videopost/', {
+        if (this.userId) formData.append('user', this.userId);
+        // Send token in Authorization header
+        const response = await fetch('http://localhost:8000/api/videopost/', {
           method: 'POST',
-          // headers: { Authorization: `Token <your_token_here>` },
+          headers: { 'Authorization': `Token ${token}` },
           body: formData
         });
         const data = await response.json();
@@ -159,10 +189,52 @@ export default {
       }
     },
     
+    handleTestFileSelect(event) {
+      this.testUploadForm.videoFile = event.target.files[0];
+    },
+    async testUploadVideo() {
+      this.testUploadError = '';
+      this.testUploadSuccess = '';
+      if (!this.testUploadForm.caption || !this.testUploadForm.videoFile) {
+        this.testUploadError = 'Please fill in all test fields';
+        return;
+      }
+      this.testUploading = true;
+      try {
+        const formData = new FormData();
+        formData.append('caption', this.testUploadForm.caption);
+        formData.append('video', this.testUploadForm.videoFile);
+        formData.append('test_upload', '1'); // Enable test upload
+        const response = await fetch('http://localhost:8000/api/videopost/', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Upload failed');
+        this.testUploadForm.caption = '';
+        this.testUploadForm.videoFile = null;
+        document.getElementById('testVideoFile').value = '';
+        this.testUploadSuccess = 'Test video uploaded successfully!';
+        await this.loadVideos();
+      } catch (error) {
+        this.testUploadError = 'Failed to upload test video: ' + error.message;
+      } finally {
+        this.testUploading = false;
+      }
+    },
+    
     getVideoUrl(videoId) {
-      // Use the direct video_url from the feed, not the API endpoint
+      // Use the direct video_url from the feed, or fallback to API endpoint
       const video = this.videos.find(v => v.video_id === videoId || v.id === videoId);
-      return video ? video.video_url : '';
+      if (video && video.video_url) {
+        // If video_url is a relative path, prepend Django backend base URL
+        if (video.video_url.startsWith('/')) {
+          return `http://localhost:8000${video.video_url}`;
+        }
+        return video.video_url;
+      }
+      // fallback: try API endpoint for streaming by UUID or int
+      return `http://localhost:8000/api/videopost/?video_id=${videoId}`;
     },
     
     async trackVideoWatch(videoId) {
@@ -327,5 +399,17 @@ button:disabled {
   width: 100%;
   border-radius: 8px;
   outline: none;
+}
+
+.test-upload-section {
+  background: #e6f7ff;
+  border: 1px solid #91d5ff;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.test-upload-section h3 {
+  color: #1890ff;
 }
 </style>

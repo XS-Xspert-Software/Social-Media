@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+import uuid
 
 class VideoWatch(models.Model):
     video_id = models.CharField(max_length=100)
@@ -18,7 +19,7 @@ class VideoPost(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     caption = models.CharField(max_length=255, blank=True)
     video_url = models.URLField(max_length=500)
-    video_id = models.CharField(max_length=100, unique=True, default="default_video_id")  # Default value added
+    video_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
