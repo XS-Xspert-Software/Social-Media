@@ -1,5 +1,5 @@
-
 <template>
+  <div class="chat-section card">
     <div id="app">
         <div id="chatbox-container" class="chat-box">
           <header id="header">
@@ -112,9 +112,9 @@
       </div>
     </div>
   </div>
-
-  </template>
-  <script>
+  </div>
+</template>
+<script>
 import { nextTick } from 'vue'
 
 export default {
@@ -1083,5 +1083,17 @@ border: none;
   object-fit: contain;
   transform: scale(1.8); /* Try 1.5 or 2 for more zoom */
   transition: transform 0.3s ease;
+}
+
+.chat-section.card {
+  max-width: 700px;
+  margin: 60px auto 0 auto;
+  padding: 32px 28px 24px 28px;
+  border-radius: 22px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.28);
+  border: 2px solid #fff8;
+  color: #fff;
+  backdrop-filter: blur(32px) saturate(1.8);
+  -webkit-backdrop-filter: blur(32px) saturate(1.8);
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <div class="auth-container">
-    <div class="auth-card">
+    <div class="auth-card card">
       <h2>{{ isLogin ? 'Login' : 'Register' }}</h2>
       
       <form @submit.prevent="handleSubmit">
@@ -140,12 +140,15 @@ export default {
 }
 
 .auth-card {
-  background: white;
-  padding: 40px;
-  border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  width: 100%;
   max-width: 400px;
+  margin: 60px auto 0 auto;
+  padding: 32px 28px 24px 28px;
+  border-radius: 22px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.28);
+  border: 2px solid #fff8;
+  color: #fff;
+  backdrop-filter: blur(32px) saturate(1.8);
+  -webkit-backdrop-filter: blur(32px) saturate(1.8);
 }
 
 .auth-card h2 {

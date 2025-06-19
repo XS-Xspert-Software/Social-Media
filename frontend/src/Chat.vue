@@ -1,5 +1,5 @@
 <template>
-  <section class="chat-section" style="background-color: #000;">
+  <div class="chat-section card">
     <div class="tabs">
       <button
         :class="{ active: activeSection === 'users-section' }"
@@ -70,7 +70,7 @@
         </div>
       </div>
     </div>
-  </section>
+  </div>
 </template>
 <script>
 import { defineAsyncComponent, nextTick } from 'vue'
@@ -321,7 +321,6 @@ handleUserClick(user) {
 </script>
 <style scoped>
 .chat-section {
-
      padding: 16px;
     border-radius: 12px;
     min-height: 650px;
@@ -426,4 +425,15 @@ handleUserClick(user) {
     flex: 1;
      border: none;
   }
+  .chat-section.card {
+  max-width: 700px;
+  margin: 60px auto 0 auto;
+  padding: 32px 28px 24px 28px;
+  border-radius: 22px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.28);
+  border: 2px solid #fff8;
+  color: #fff;
+  backdrop-filter: blur(32px) saturate(1.8);
+  -webkit-backdrop-filter: blur(32px) saturate(1.8);
+}
 </style>

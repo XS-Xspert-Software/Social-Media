@@ -1,16 +1,18 @@
 <template>
-  <section class="viewer-section">
-    <h2>Decentralized Viewer</h2>
-    <form @submit.prevent="fetchRemoteContent">
-      <input v-model="remoteUrl" placeholder="Enter remote server feed URL (e.g. https://example.com/api/feed-json/)" style="width: 80%" />
-      <button type="submit">View</button>
-    </form>
-    <div v-if="loading">Loading...</div>
-    <div v-if="error" class="error">{{ error }}</div>
-    <div v-if="content">
-      <pre style="white-space: pre-wrap; word-break: break-all; background: #222; color: #fff; padding: 1em; border-radius: 8px;">{{ content }}</pre>
-    </div>
-  </section>
+  <div class="viewer-panel card">
+    <section class="viewer-section">
+      <h2>Decentralized Viewer</h2>
+      <form @submit.prevent="fetchRemoteContent">
+        <input v-model="remoteUrl" placeholder="Enter remote server feed URL (e.g. https://example.com/api/feed-json/)" style="width: 80%" />
+        <button type="submit">View</button>
+      </form>
+      <div v-if="loading">Loading...</div>
+      <div v-if="error" class="error">{{ error }}</div>
+      <div v-if="content">
+        <pre style="white-space: pre-wrap; word-break: break-all; background: #222; color: #fff; padding: 1em; border-radius: 8px;">{{ content }}</pre>
+      </div>
+    </section>
+  </div>
 </template>
 
 <script>
@@ -64,6 +66,17 @@ export default {
 </script>
 
 <style scoped>
+.viewer-panel.card {
+  max-width: 700px;
+  margin: 60px auto 0 auto;
+  padding: 32px 28px 24px 28px;
+  border-radius: 22px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.28);
+  border: 2px solid #fff8;
+  color: #fff;
+  backdrop-filter: blur(32px) saturate(1.8);
+  -webkit-backdrop-filter: blur(32px) saturate(1.8);
+}
 .viewer-section {
   max-width: 700px;
   margin: 40px auto;

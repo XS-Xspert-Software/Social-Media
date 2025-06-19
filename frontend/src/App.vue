@@ -1,51 +1,53 @@
 <template>
-  <div class="min-h-screen flex flex-col">
-    <header>
-      <h1 style="font-size: 23px; margin-left: 5%">𝓢𝔂𝓷𝓬</h1>
-      <div class="user-section" style="gap: 12px; display: flex; align-items: center;">
-        <i
-          class="fas fa-search"
-          @click="navigateToSearch"
-          style="font-size: 24px; color: #007bff; cursor: pointer;"
-          aria-label="Open search page"
-        ></i>
-        <div class="relative">
-          <span class="username-display" @click="toggleProfileMenu">{{ userProfile.username }}</span>
-          <Transition name="fade">
-            <div v-if="showProfileMenu" class="profile-menu">
-              <button @click="authAction">{{ isSignedIn ? 'Logout' : 'Login' }}</button>
-            </div>
-          </Transition>
+  <div id="app" class="card">
+    <div class="min-h-screen flex flex-col">
+      <header>
+        <h1 style="font-size: 23px; margin-left: 5%">𝓢𝔂𝓷𝓬</h1>
+        <div class="user-section" style="gap: 12px; display: flex; align-items: center;">
+          <i
+            class="fas fa-search"
+            @click="navigateToSearch"
+            style="font-size: 24px; color: #007bff; cursor: pointer;"
+            aria-label="Open search page"
+          ></i>
+          <div class="relative">
+            <span class="username-display" @click="toggleProfileMenu">{{ userProfile.username }}</span>
+            <Transition name="fade">
+              <div v-if="showProfileMenu" class="profile-menu">
+                <button @click="authAction">{{ isSignedIn ? 'Logout' : 'Login' }}</button>
+              </div>
+            </Transition>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
 
-    <main>
-      <Suspense>
-        <router-view />
+      <main>
+        <Suspense>
+          <router-view />
 
-        <template #fallback>
-          <div class="loading-spinner">Loading...</div>
-        </template>
-      </Suspense>
-    </main>
+          <template #fallback>
+            <div class="loading-spinner">Loading...</div>
+          </template>
+        </Suspense>
+      </main>
 
-    <Notification ref="notifier" />
+      <Notification ref="notifier" />
 
-    <nav class="glassmorphism">
-      <ul>
-        <li
-          v-for="tab in tabs"
-          :key="tab.name"
-          :class="{ active: currentTab === tab.name }"
-          @click="switchTab(tab.name)"
-        >
-          <i :class="tab.icon"></i>
-        </li>
-      </ul>
-    </nav>
+      <nav class="glassmorphism">
+        <ul>
+          <li
+            v-for="tab in tabs"
+            :key="tab.name"
+            :class="{ active: currentTab === tab.name }"
+            @click="switchTab(tab.name)"
+          >
+            <i :class="tab.icon"></i>
+          </li>
+        </ul>
+      </nav>
 
-    <Float />
+      <Float />
+    </div>
   </div>
 </template>
 
@@ -325,5 +327,11 @@ export default {
   margin-top: 30%;
   border-radius: 4px;
   transition: background-color 0.2s;
+}
+#app.card {
+  min-height: 100vh;
+  background: none;
+  box-shadow: none;
+  border: none;
 }
 </style>

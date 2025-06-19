@@ -676,4 +676,17 @@ defineExpose({
 });
 </script>
 <style src="./Posts.css"></style>
+<style scoped>
+.search-panel.card {
+  max-width: 600px;
+  margin: 60px auto 0 auto;
+  padding: 32px 28px 24px 28px;
+  border-radius: 22px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.28);
+  border: 2px solid #fff8;
+  color: #fff;
+  backdrop-filter: blur(32px) saturate(1.8);
+  -webkit-backdrop-filter: blur(32px) saturate(1.8);
+}
+</style>
 

@@ -7,7 +7,7 @@
 
     <!-- Slide-up Fullscreen Panel -->
     <transition name="slide-up">
-      <div v-if="showPanel" class="floating-panel">
+      <div v-if="showPanel" class="floating-panel card">
         <div class="panel-header">
           <h2>Upload Section</h2>
           <button class="close-btn" @click="togglePanel">&times;</button>
@@ -297,4 +297,15 @@ const resetForm = () => {
   font-size: 1rem;
 }
 
+.float-panel.card {
+  max-width: 400px;
+  margin: 20px auto 0 auto;
+  padding: 18px 18px 14px 18px;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.28);
+  border: 2px solid #fff8;
+  color: #fff;
+  backdrop-filter: blur(32px) saturate(1.8);
+  -webkit-backdrop-filter: blur(32px) saturate(1.8);
+}
 </style>

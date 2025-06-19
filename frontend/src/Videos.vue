@@ -1,88 +1,90 @@
 <template>
-  <section class="videos-section">
-    <!-- Video Upload Form -->
-    <div class="upload-form" v-if="userId">
-      <h3>Create Video Post</h3>
-      <form @submit.prevent="uploadVideo" enctype="multipart/form-data">
-        <div class="form-group">
-          <label for="caption">Caption:</label>
-          <input 
-            type="text" 
-            id="caption" 
-            v-model="uploadForm.caption" 
-            required
-            placeholder="Enter video caption..."
-          >
-        </div>
-        <div class="form-group">
-          <label for="videoFile">Video File (.mp4):</label>
-          <input 
-            type="file" 
-            id="videoFile" 
-            @change="handleFileSelect"
-            accept="video/mp4"
-            required
-          >
-        </div>
-        <button type="submit" :disabled="uploading">
-          {{ uploading ? 'Uploading...' : 'Upload Video' }}
-        </button>
-      </form>
-    </div>
-
-    <!-- Test Video Upload Section -->
-    <div class="test-upload-section">
-      <h3>Test Video Upload (No Auth Required)</h3>
-      <form @submit.prevent="testUploadVideo" enctype="multipart/form-data">
-        <div class="form-group">
-          <label for="testCaption">Caption:</label>
-          <input type="text" id="testCaption" v-model="testUploadForm.caption" required placeholder="Enter test caption...">
-        </div>
-        <div class="form-group">
-          <label for="testVideoFile">Video File (.mp4):</label>
-          <input type="file" id="testVideoFile" @change="handleTestFileSelect" accept="video/mp4" required>
-        </div>
-        <button type="submit" :disabled="testUploading">
-          {{ testUploading ? 'Uploading...' : 'Upload Test Video' }}
-        </button>
-        <div v-if="testUploadError" class="error">{{ testUploadError }}</div>
-        <div v-if="testUploadSuccess" class="success">{{ testUploadSuccess }}</div>
-      </form>
-    </div>
-
-    <!-- Videos Feed -->
-    <div class="videos-feed">
-      <div v-if="loading" class="loading">Loading videos...</div>
-      <div v-else-if="error" class="error">{{ error }}</div>
-      <div v-else-if="filteredVideos.length === 0" class="no-videos">
-        No videos available.
-      </div>
-      <div v-else>
-        <div v-for="post in filteredVideos" :key="post.id" class="video-card hover-scale">
-          <div class="video-header">
-            <img :src="post.user?.avatar || 'https://i.pravatar.cc/40'" 
-                 alt="User Avatar" 
-                 class="user-avatar">
-            <div class="user-info">
-              <div class="username">{{ post.user?.username || 'Unknown' }}</div>
-              <div class="timestamp">{{ formatTimestamp(post.created_at) }}</div>
-            </div>
+  <div class="videos-panel card">
+    <section class="videos-section">
+      <!-- Video Upload Form -->
+      <div class="upload-form" v-if="userId">
+        <h3>Create Video Post</h3>
+        <form @submit.prevent="uploadVideo" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="caption">Caption:</label>
+            <input 
+              type="text" 
+              id="caption" 
+              v-model="uploadForm.caption" 
+              required
+              placeholder="Enter video caption..."
+            >
           </div>
-          
-          <p class="video-caption">{{ post.caption }}</p>
-          
-          <video 
-            controls 
-            class="video-player"
-            @play="trackVideoWatch(post.video_id)"
-            preload="metadata">
-            <source :src="getVideoUrl(post.video_id)" type="video/mp4">
-            Your browser does not support the video tag.
-          </video>
+          <div class="form-group">
+            <label for="videoFile">Video File (.mp4):</label>
+            <input 
+              type="file" 
+              id="videoFile" 
+              @change="handleFileSelect"
+              accept="video/mp4"
+              required
+            >
+          </div>
+          <button type="submit" :disabled="uploading">
+            {{ uploading ? 'Uploading...' : 'Upload Video' }}
+          </button>
+        </form>
+      </div>
+
+      <!-- Test Video Upload Section -->
+      <div class="test-upload-section">
+        <h3>Test Video Upload (No Auth Required)</h3>
+        <form @submit.prevent="testUploadVideo" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="testCaption">Caption:</label>
+            <input type="text" id="testCaption" v-model="testUploadForm.caption" required placeholder="Enter test caption...">
+          </div>
+          <div class="form-group">
+            <label for="testVideoFile">Video File (.mp4):</label>
+            <input type="file" id="testVideoFile" @change="handleTestFileSelect" accept="video/mp4" required>
+          </div>
+          <button type="submit" :disabled="testUploading">
+            {{ testUploading ? 'Uploading...' : 'Upload Test Video' }}
+          </button>
+          <div v-if="testUploadError" class="error">{{ testUploadError }}</div>
+          <div v-if="testUploadSuccess" class="success">{{ testUploadSuccess }}</div>
+        </form>
+      </div>
+
+      <!-- Videos Feed -->
+      <div class="videos-feed">
+        <div v-if="loading" class="loading">Loading videos...</div>
+        <div v-else-if="error" class="error">{{ error }}</div>
+        <div v-else-if="filteredVideos.length === 0" class="no-videos">
+          No videos available.
+        </div>
+        <div v-else>
+          <div v-for="post in filteredVideos" :key="post.id" class="video-card hover-scale">
+            <div class="video-header">
+              <img :src="post.user?.avatar || 'https://i.pravatar.cc/40'" 
+                   alt="User Avatar" 
+                   class="user-avatar">
+              <div class="user-info">
+                <div class="username">{{ post.user?.username || 'Unknown' }}</div>
+                <div class="timestamp">{{ formatTimestamp(post.created_at) }}</div>
+              </div>
+            </div>
+            
+            <p class="video-caption">{{ post.caption }}</p>
+            
+            <video 
+              controls 
+              class="video-player"
+              @play="trackVideoWatch(post.video_id)"
+              preload="metadata">
+              <source :src="getVideoUrl(post.video_id)" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </template>
 
 <script>
@@ -267,6 +269,18 @@ function log(level, ...args) {
 </script>
 
 <style scoped>
+.videos-panel.card {
+  max-width: 900px;
+  margin: 60px auto 0 auto;
+  padding: 32px 28px 24px 28px;
+  border-radius: 22px;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.28);
+  border: 2px solid #fff8;
+  color: #fff;
+  backdrop-filter: blur(32px) saturate(1.8);
+  -webkit-backdrop-filter: blur(32px) saturate(1.8);
+}
+
 .videos-section {
   max-width: 600px;
   margin: 0 auto;
