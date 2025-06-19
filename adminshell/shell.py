@@ -1,6 +1,5 @@
 # This script is part of the Pulse project.
 # Original revision and idea: Viktor Konkov, June 17 2025
-import datetime
 from datetime import datetime
 import os
 import logging
