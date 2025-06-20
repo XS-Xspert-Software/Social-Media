@@ -25,29 +25,38 @@ def print_colorful(data):
         print(colored(str(data), 'yellow'))
 
 def fetch_resource(resource, server_url, params=None):
+    """Fetch resource from server with improved error handling."""
+    resource_endpoints = {
+        'posts': '/api/posts',
+        'videos': '/api/videos',
+        'unique-posts': '/api/posts?unique=1'
+    }
+    
+    if resource not in resource_endpoints:
+        print(colored(
+            f"Unknown resource: {resource}. Available: {', '.join(resource_endpoints.keys())}", 
+            'red'
+        ))
+        return
+
     try:
-        if resource == 'posts':
-            url = f"{server_url.rstrip('/')}/api/posts"
-            resp = requests.get(url, params=params)
-        elif resource == 'videos':
-            url = f"{server_url.rstrip('/')}/api/videos"
-            resp = requests.get(url, params=params)
-        elif resource == 'unique-posts':
-            url = f"{server_url.rstrip('/')}/api/posts?unique=1"
-            resp = requests.get(url, params=params)
-        else:
-            print(colored(f"Unknown resource: {resource}", 'red'))
-            return
+        url = f"{server_url.rstrip('/')}{resource_endpoints[resource]}"
+        resp = requests.get(url, params=params, timeout=10)
+        
         if resp.status_code == 200:
             try:
                 data = resp.json()
                 print_colorful(data)
-            except Exception:
-                print(colored(resp.text, 'yellow'))
+            except ValueError as e:
+                print(colored(f"Invalid JSON response: {e}", 'red'))
+                snippet = resp.text[:200] + "..." if len(resp.text) > 200 else resp.text
+                print(colored(snippet, 'yellow'))
         else:
             print(colored(f"Error: {resp.status_code} {resp.text}", 'red'))
+    except requests.exceptions.RequestException as e:
+        print(colored(f"Request failed: {e}", 'red'))
     except Exception as e:
-        print(colored(f"Fetch failed: {e}", 'red'))
+        print(colored(f"Unexpected error: {e}", 'red'))
 
 def main():
     print("Type 'help' for commands. Type 'exit' to quit.")
