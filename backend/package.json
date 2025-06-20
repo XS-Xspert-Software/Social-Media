@@ -20,6 +20,7 @@
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
+    "esbuild": "^0.25.5",
     "express": "^5.1.0",
     "express-rate-limit": "^7.5.0",
     "pg": "^8.16.0",
