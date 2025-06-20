@@ -98,7 +98,12 @@ app.get('/api/user-info', (req, res) => {
 });
 
 app.get('/api/posts', getPosts as any);
-app.post('/api/posts', createPost as any);
+const createPostRateLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 10, // Limit each IP to 10 create post requests per `window` (1 minute)
+  message: { error: "Too many post creation attempts. Please try again later." },
+});
+app.post('/api/posts', createPostRateLimiter, createPost as any);
 app.post('/api/posts/:postId/like', likePost as any);
 app.post('/api/posts/:postId/dislike', dislikePost as any);
 
