@@ -494,8 +494,18 @@ button:hover, .button:hover {
 }
 
 /* Always leave space for nav at bottom of viewport */
-body, #app, .min-h-screen, main, .posts-feed {
-  padding-bottom: 20px !important;
+body, #app, .min-h-screen, main {
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+.posts-feed {
+  overflow: auto !important;
+  height: calc(100vh - 120px) !important; /* header + nav height */
+}
+
+.full-screen-post-modal, .modal, .new-post-modal {
+  overflow-y: auto !important;
 }
 
 
