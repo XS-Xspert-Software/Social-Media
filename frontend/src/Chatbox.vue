@@ -1,120 +1,88 @@
-
 <template>
-    <div id="app">
-        <div id="chatbox-container" class="chat-box">
-          <header id="header">
-    <div id="header-left" style="display: flex; align-items: center; gap: 12px;">
-  <i class="fas fa-arrow-left" @click="goBack" style="cursor: pointer; font-size: 20px;" aria-label="Go back"></i>
-  <img id="profile-image" class="profile-img" :src="profileImage" alt="Profile Image">
-  <span id="username">{{ chatWith }}</span>
-</div>
-
-            
-<button @click="startCall('voice')" v-if="!inCall" class="voice-button" style="margin-left:55%;"><i class="fa fa-phone"></i></button>
-<button @click="startCall('video')" v-if="!inCall" class="call-button video" style="margin-right: 20px;"><i class="fas fa-video"></i></button>
-
-<button @click="endCall" v-if="inCall">🔴 Hang Up</button>
-
-<div v-if="inCall" class="video-container">
-  <video ref="localVideo" autoplay muted playsinline style="width: 300px; background: #000;"></video>
-  <video ref="remoteVideo" autoplay playsinline style="width: 300px; background: #000;"></video>
-</div>
-      </header>
-
-      <div id="chatbox">
-<div id="messages-container">
-        <!-- Incoming Call Modal -->
-<div v-if="incomingCall" class="incoming-call-popup">
-  <p>📞 Incoming call from {{ chatWith }}</p>
-  <button @click="acceptCall">✅ Accept</button>
-  <button @click="rejectCall">❌ Reject</button>
-</div>
-  <div v-if="callEndedNotice" class="call-ended-toast">
-  Call Ended
-</div>
-
-<div
-  v-for="(msg, index) in messages"
-  :key="index"
-  :ref="'message-' + (msg.id || msg.id)"
-  :class="[
-    'message',
-    msg.side === 'user'
-      ? (msg.seen ? 'user-msg-seen' : 'user-msg')
-      : 'other-msg'
-  ]">
-<div class="msg-bubble">
-  <span v-if="msg.message">{{ msg.message }}</span>
-
-  <img
-  v-if="msg.photo"
-  :src="msg.photo"
-  alt="Message Photo"
-  class="msg-photo"
-  @click="openFullScreen(msg.photo)"
-/>
-
-  <div v-if="msg.reactions">
-    <span v-for="reaction in msg.reactions" :key="reaction">{{ reaction }}</span>
-  </div>
-</div>
-
-<!-- Fullscreen Preview -->
-<div v-if="fullscreenImage" class="fullscreen-overlay" @click="closeFullScreen">
-  <img :src="fullscreenImage" class="fullscreen-image" />
-</div>
-
-            <div class="timestamp">
-              {{ new Date(msg.timestamp).toLocaleTimeString() }}
-            </div>
-          </div>
-          <div ref="messagesEnd"></div>
-        </div>
-
-        <!-- Typing Indicator -->
-        <div v-if="isTyping" id="typing-indicator">{{ chatWith }} is typing...</div>
-
-        <!-- Message Input Area -->
-        <div id="message-input">
-          <input
-            type="text"
-            id="user-message"
-            placeholder="Type a message..."
-            v-model="messageInput"
-            @input="sendTypingIndicator"
-          />
-
-              <!-- Emoji Picker Button -->
-              <button @click="toggleEmojiPicker" class="emoji-button" style="border:none; background-color:#09d5fd; font-size:30px; margin-bottom:12px;">😃</button>
-    
-              <!-- Emoji Picker (displayed when button is clicked) -->
-              <div v-if="showEmojiPicker" class="emoji-picker">
-                <div @click="addEmoji('😊')">😊</div>
-                <div @click="addEmoji('😂')">😂</div>
-                <div @click="addEmoji('❤️')">❤️</div>
-                <div @click="addEmoji('👍')">👍</div>
-              </div>
-          <!-- File Input for Images -->
-          <input type="file" id="file-input" accept="image/*" @change="previewPhoto($event)" style="display: none;" />
-          <div class="icon-container" @click="triggerFileInput" style="font-size:30px;">
-            <i class="fas fa-camera"></i> <!-- FontAwesome Camera Icon -->
-          </div>
-
-          <!-- Image Preview -->
-          <img v-if="imagePreview" :src="imagePreview" alt="Preview" class="image-preview" />
-
-          <!-- Send Button -->
-          <button @click="sendMessage">Send</button>
-
-          <!-- Error Message -->
-          <p v-if="errorMessage" id="error-message" style="color: red">{{ errorMessage }}</p>
-        </div>
+    <div class="chat-box chatbox-override">
+    <!-- Chat Header -->
+    <div class="chat-header">
+      <div class="header-left">
+        <i class="fas fa-arrow-left" @click="goBack" aria-label="Go back"></i>
+        <img class="profile-img" :src="profileImage" alt="Profile Image" />
+        <span class="username">{{ chatWith }}</span>
+      </div>
+      <div class="header-actions" v-if="!inCall">
+        <button @click="startCall('voice')" class="icon-button"><i class="fa fa-phone"></i></button>
+        <button @click="startCall('video')" class="icon-button"><i class="fas fa-video"></i></button>
+      </div>
+      <button v-if="inCall" @click="endCall" class="hangup-button">🔴 Hang Up</button>
+      <div v-if="inCall" class="video-container">
+        <video ref="localVideo" autoplay muted playsinline style="width: 300px; background: #000;"></video>
+        <video ref="remoteVideo" autoplay playsinline style="width: 300px; background: #000;"></video>
       </div>
     </div>
-  </div>
 
-  </template>
+    <!-- Chat Main Area -->
+    <div class="chat-main">
+
+      <!-- Messages -->
+      <div id="messages-container">
+        <div v-if="incomingCall" class="incoming-call-popup">
+          <p>📞 Incoming call from {{ chatWith }}</p>
+          <button @click="acceptCall">✅ Accept</button>
+          <button @click="rejectCall">❌ Reject</button>
+        </div>
+
+        <div v-if="callEndedNotice" class="call-ended-toast">Call Ended</div>
+        <div class="chat-container">
+          <div
+            v-for="(msg, index) in messages"
+            :key="index"
+            :class="['message', msg.side === 'user' ? (msg.seen ? 'user-msg-seen' : 'user-msg') : 'other-msg']"
+          >
+            <div
+              class="msg-bubble"
+              :class="msg.side === 'user' && msg.seen ? 'user-msg-seen' : ''"
+            >
+              <span v-if="msg.message">{{ msg.message }}</span>
+              <img v-if="msg.photo" :src="msg.photo" alt="Message Photo" class="msg-photo" @click="openFullScreen(msg.photo)" />
+              <div v-if="msg.reactions"><span v-for="reaction in msg.reactions" :key="reaction">{{ reaction }}</span></div>
+            </div>
+            <div class="timestamp">{{ new Date(msg.timestamp).toLocaleTimeString() }}</div>
+          </div>
+        </div>
+
+        <div v-if="fullscreenImage" class="fullscreen-overlay" @click="closeFullScreen">
+          <img :src="fullscreenImage" class="fullscreen-image" />
+        </div>
+
+        <div ref="messagesEnd"></div>
+      </div>
+
+      <!-- Typing Indicator -->
+      <div v-if="isTyping" id="typing-indicator">{{ chatWith }} is typing...</div>
+
+      <!-- Message Input Area -->
+      <div class="message-input-wrapper">
+        <div class="message-input-row">
+          <button @click="toggleEmojiPicker" class="emoji-button">😃</button>
+          <input type="text" class="message-field" placeholder="Type a message..." v-model="messageInput" @input="sendTypingIndicator" />
+          <input type="file" id="file-input" accept="image/*" @change="previewPhoto($event)" style="display: none;" />
+          <div class="icon-container" @click="triggerFileInput"><i class="fas fa-camera"></i></div>
+          <button @click="sendMessage" class="send-button">Send</button>
+        </div>
+        <div v-if="showEmojiPicker" class="emoji-picker">
+          <div @click="addEmoji('😊')">😊</div>
+          <div @click="addEmoji('😂')">😂</div>
+          <div @click="addEmoji('❤️')">❤️</div>
+          <div @click="addEmoji('👍')">👍</div>
+        </div>
+        <img v-if="imagePreview" :src="imagePreview" alt="Preview" class="image-preview" />
+        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+      </div>
+
+    </div>
+    </div>
+</template>
+
   <script>
+  import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { nextTick } from 'vue'
 
 export default {
@@ -123,6 +91,7 @@ export default {
     userId: String,
     username: String
   },
+   
   data() {
     return {
       messages: [],
@@ -165,6 +134,7 @@ export default {
     }
   },
   mounted() {
+    
     const currentUserIdFromStorage = localStorage.getItem('userId')
     const loggedInUsernameFromStorage = localStorage.getItem('username')
     const profileImageFromStorage = localStorage.getItem('profileImage') || 'pfp3.jpg'
@@ -232,7 +202,12 @@ export default {
         seen: false,
       }
 
-      this.messages.push(receivedMessage)
+   if (this.messages.length > 0) {
+  const last = this.messages[this.messages.length - 1]
+  const lastText = last.message || (last.photo ? '[Photo]' : '')
+  const key = `lastMessage-${this.chatWithId}`
+  localStorage.setItem(key, lastText)
+}
       nextTick(() => {
         this.checkUnseenMessagesInView()
       })
@@ -258,6 +233,14 @@ export default {
           }))
 
           this.messages = alignedMessages
+
+                  // ✅ Save last message to localStorage
+    if (this.messages.length > 0) {
+      const last = this.messages[this.messages.length - 1]
+      const lastText = last.message || (last.photo ? '[Photo]' : '')
+      const key = `lastMessage-${this.chatWithId}`
+      localStorage.setItem(key, lastText)
+    }
 
           nextTick(() => {
             const chatboxContainer = document.getElementById('messages-container')
@@ -606,7 +589,6 @@ export default {
       message.seen = true
       message.alignmentClass = 'user-msg-seen'
     },
-
     previewPhoto(event) {
       const file = event.target.files[0]
       const reader = new FileReader()
@@ -667,421 +649,4 @@ export default {
   }
 }
 </script>
-
-    <style scoped>
-    /* Global Styles */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    background-color: #1f1f1f;
-    color: #e0e0e0;
-    height: 100vh;
-    justify-content: flex-start;
-    padding-top: 60px;
-    font-family: Arial, sans-serif;
-}
-
-/* Header */
-#header {
-    width: 700px;
-    background-color: #00a7f7;
-    border-bottom: 1px solid #444;
-    box-shadow: 0 4px 6px #0003;
-    color: #fff;
-    font-family: Arial, sans-serif;
-    justify-content: space-between;
-    left: 0;
-    padding: 10px 20px;
-    position: fixed;
-    right: 0;
-    top: .1px;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-}
-
-#username {
-    color:green;
-  position:fixed;
-  top: 3%;
-    font-size: 18px;
-    font-weight: 700;
-}
-
-#header-right {
-    display: flex;
-}
-
-#dropdownMenu {
-    background-color: #4caf50;
-    border: 1px solid #ccc;
-    box-shadow: 0 4px 6px #0000001a;
-    display: none;
-    padding: 10px;
-    position: absolute;
-    right: 20px;
-    top: 50px;
-    width: 150px;
-    z-index: 1000;
-}
-
-#dropdownMenu button {
-   
-    background-color: red;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
-    padding: 10px;
-    text-align: left;
-    width: 100%;
-}
-.call-button, .voice-button {
- font-size: 18px; background-color: #00a7f7; border: none;
-}
-/* Responsive: For tablets and small screens */
-@media (max-width: 768px) {
- .call-button, .voice-button {
-      margin-right:30px ;
-  }
-}
-/* Even smaller phones */
-@media (max-width: 480px) {
-  .call-button, .voice-button{
-      margin-right:20px ;
-  }
-}
-
-/* Profile Image - Larger */
-.profile-img {
-    margin-top: 5px;
-    border-radius: 50%;
-    height: 40px;
-    width: 40px;
-    margin-right: 20px;
-    object-fit: cover;
-}
-
-#chatbox-container {
-    background: linear-gradient(45deg, #ff6a00, #1fd1f9, #b621fe);
-    border-radius: 10px;
-    box-shadow: 0 4px 15px #0000001a;
-    height: calc(100vh - 60px);
-    width: 700px;
-    overflow: hidden;
-    position: relative;
-}
-
-#chatbox {
-    height: 90%;
-    padding: 10px;
-}
-
-#chatbox,
-#messages-container {
- 
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
-
-#messages-container {
-    flex-grow: 1;
-    height: 100%;
-    overflow-y: auto;
-    padding: 13px 10px 10px;
-}
-
-.message {
-    margin-bottom: 10px;
-}
-
-#messages-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-#messages-container::-webkit-scrollbar-thumb {
-    background-color: #888;
-    border-radius: 3px;
-}
-
-#messages-container::-webkit-scrollbar-thumb:hover {
-    background-color: #555;
-}
-
-.message {
-    align-items: center;
-    animation: fadeIn 0.5s ease-out;
-    display: flex;
-    flex-direction: row;
-    margin: 10px 0;
-}
-
-.user-msg, .user-msg-seen {
-    justify-content: flex-end; /* Ensure the user message is aligned to the right */
-}
-
-.other-msg {
-    justify-content: flex-start; /* Ensure other messages are aligned to the left */
-}
-
-.msg-bubble {
-    word-wrap: break-word;
-    background-color: #f1f1f1;
-    border-radius: 20px;
-    display: inline-block;
-    max-width: 70%;
-    padding: 10px;
-}
-
-.user-msg .msg-bubble, .user-msg-seen .msg-bubble {
-    background-color: #4caf50; /* Default color for user message */
-    border-top-left-radius: 0;
-    color: #fff;
-}
-
-.user-msg-seen .msg-bubble {
-    background-color: purple; /* Change background to purple for seen messages */
-    color: #fff; /* Keep text white */
-}
-.other-msg .msg-bubble {
-    background-color: #e0e0e0;
-    border-top-right-radius: 0;
-    color: #333;
-    margin-right: auto;
-}
-
-.msg-bubble img {
-    border-radius: 3px;
-    display: block;
-    height: auto;
-    max-width: 100%;
-    object-fit: contain;
-}
-
-.timestamp {
-    color: #000;
-    font-size: 0.75em;
-    margin-top: 5px;
-    text-align: right;
-}
-
-@keyframes fadeIn {
-    0% {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-#user-message:focus {
-    border-color: #4caf50;
-}
-
-#image-preview {
-    border-radius: 10px;
-    display: none;
-    margin-left: 10px;
-    max-height: 100px;
-    max-width: 100px;
-}
-/* Message Input Container */
-#message-input {
-  width: 100%;
-  max-width: 700px;
-  background-color: #09d5fd;
-  border-top: 1px solid #444;
-  bottom: 0;
- left: 23%;
-  display: flex;
-   align-items: center;
-  padding: 10px;
-  position: fixed;
-  transform: translateX(-50%);
-  z-index: 100;
-}
-
-/* Text Input */
-#user-message {
-  flex-grow: 1;
-  padding: 8px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  margin-right: 1px;
-  width: 100%;
-  background-color: #fff;
-  position: relative; /* Ensure input field is positioned for alignment */
-}
-
-/* Emoji Button (inside the input area) */
-.emoji-button {
-
-  cursor: pointer;
-  padding: 0;  /* Remove padding to avoid extra space */
-  
-  display: inline-block;
- /* Center align vertically inside input */
-  width: 30px;  /* Set width to control size */
-  height: 40px;  /* Set height to match emoji */
-}
-
-/* Emoji Picker */
-.emoji-picker {
-  position: absolute;
-  bottom: 40px;
-  right: 0;
-  background: #fff;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.emoji-picker div {
-  cursor: pointer;
-  padding: 5px;
-}
-
-.emoji-picker div:hover {
-  background-color: #f0f0f0;
-}
-
-
-/* Send Button (aligned to the right of the input area) */
-#message-input button {
-  background-color: #4CAF50;
-  color: white;
-  padding: 6px 15px;  /* Reduced padding to make the button smaller */
-  font-size: 13px;  /* Smaller font size */
-  border: none;
-  border-radius: 20px;  /* Reduced border-radius for a less rounded but still circular look */
-  cursor: pointer;
-  width: auto;  /* Auto width to shrink the button size based on the content */
-  margin-left: 10px;  /* Space between button and other elements */
-}
-
-
-#message-input button:hover {
-  background-color: #45a049;
-  border-color: #45a049;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    #message-input{
-        left:0;
-    }
-    /* Header */
-    #header {
-        padding: 10px;
-        font-size: 14px;
-        width: 100%;
-    }
-
-    /* Chatbox */
-    #chatbox-container {
-        width: 100%;
-        height: calc(100vh - 60px); /* Ensure full screen height on mobile */
-     
-    }
-
-    #chatbox, #messages-container {
-        padding: 10px;
-    }
-
-    /* Profile Image */
-    .profile-img {
-        height: 35px;
-        width: 35px;
-    }
-
-    /* Message Input */
-    #user-message {
-        width: 60%; /* Adjust input width for small screens */
-    }
-  
-   
-}
-
-@media (max-width: 480px) {
-    #message-input{
-        left: 50%;
-    }
-    /* Header */
-    #header {
-        padding: 10px;
-        font-size: 12px;
-        width: 100%;
-    }
-
-    /* Chatbox */
-    #chatbox-container {
-        width: 100%;
-        height: calc(100vh - 60px);
-    }
-
-    #user-message {
-        width: 55%;
-    }
-  
-
-    /* Profile Image */
-    .profile-img {
-        height: 30px;
-        width: 30px;
-    }
-
-    .icon-container {
-        width: 35px;
-        height: 35px;
-    }
-}
-#typing-indicator {
-  font-style: italic;
-  color: red;
-  margin: 8px 0 12px 10px;
-  animation: fadeIn 0.3s ease-in-out;
-}
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-.image-preview {
-  max-width: 150px;
-  max-height: 150px;
-  object-fit: cover;
-  cursor: pointer;
-border: none;
-  transition: transform 0.2s;
-}
-.image-preview:hover {
-  transform: scale(1.05);
-}
-
-.fullscreen-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.fullscreen-image {
-  max-width: 60%;
-  max-height: 200vh;
-  object-fit: contain;
-  transform: scale(1.8); /* Try 1.5 or 2 for more zoom */
-  transition: transform 0.3s ease;
-}
-</style>
+<style src="./Chatbox.css"></style>
