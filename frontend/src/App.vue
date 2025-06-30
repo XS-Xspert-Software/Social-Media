@@ -1,18 +1,31 @@
 <template>
-  <div class="min-h-screen flex flex-col">
-    <header>
-      <h1 style="font-size: 23px; margin-left: 5%">𝓢𝔂𝓷𝓬</h1>
+  <div :class="[ 'app-wrapper', { 'chatbox-fullscreen': isChatboxRoute }]">
+    <!-- Header (hidden in Chatbox) -->
+    <header v-if="!isChatboxRoute">
+   <h1 style="font-size: 23px; margin-left: 3%; display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="width:24px; height:24px;"><path d="M32 2 L38 26 L62 32 L38 38 L32 62 L26 38 L2 32 L26 26 Z"/><path d="M32 12 L36 28 L52 32 L36 36 L32 52 L28 36 L12 32 L28 28 Z"/><line x1="32" y1="2" x2="32" y2="62"/><line x1="2" y1="32" x2="62" y2="32"/></svg>𝓢𝔂𝓷𝓬</h1>
+
       <div class="user-section" style="gap: 12px; display: flex; align-items: center;">
         <i
           class="fas fa-search"
           @click="navigateToSearch"
-          style="font-size: 24px; color: #007bff; cursor: pointer;"
+          style="font-size: 24px;  cursor: pointer;"
           aria-label="Open search page"
         ></i>
         <div class="relative">
-          <span class="username-display" @click="toggleProfileMenu">{{ userProfile.username }}</span>
+          <span
+            class="username-display"
+            @click.stop="toggleProfileMenu"
+            style="cursor: pointer;"
+          >
+            {{ userProfile.username }}
+          </span>
           <Transition name="fade">
-            <div v-if="showProfileMenu" class="profile-menu">
+            <div
+              v-if="showProfileMenu"
+              class="profile-menu"
+              @click.outside="showProfileMenu = false"
+              tabindex="0"
+            >
               <button @click="authAction">{{ isSignedIn ? 'Logout' : 'Login' }}</button>
             </div>
           </Transition>
@@ -20,61 +33,68 @@
       </div>
     </header>
 
-    <main>
-      <Suspense>
-        <router-view />
+    <!-- Main Content -->
+  <Suspense>
+    <keep-alive include="Posts,Videos,Chat,Settings,Search2">
+      <router-view />
+    </keep-alive>
 
-        <template #fallback>
-          <div class="loading-spinner">Loading...</div>
-        </template>
-      </Suspense>
-    </main>
+    <template #fallback>
+      <div class="loading-spinner">Loading...</div>
+    </template>
+  </Suspense>
 
+    <!-- Notifications -->
     <Notification ref="notifier" />
 
-    <nav class="glassmorphism">
+    <!-- Nav (hidden in Chatbox) -->
+    <nav class="glassmorphism" v-if="!isChatboxRoute">
       <ul>
         <li
           v-for="tab in tabs"
           :key="tab.name"
           :class="{ active: currentTab === tab.name }"
           @click="switchTab(tab.name)"
+          style="cursor: pointer;"
         >
           <i :class="tab.icon"></i>
         </li>
       </ul>
     </nav>
 
-    <Float />
+    <!-- Floating Action Button (optional: hide if needed) -->
+    <Float v-if="!isChatboxRoute" />
   </div>
 </template>
 
 <script>
 import { defineAsyncComponent, shallowReactive } from 'vue'
+import Button from 'primevue/button';
 
-// Lazy load components
 const Posts = defineAsyncComponent(() => import('./Posts.vue'))
 const Videos = defineAsyncComponent(() => import('./Videos.vue'))
-const Chat = defineAsyncComponent(() => import('./Chat.vue'))        // User list
+const Chat = defineAsyncComponent(() => import('./Chat.vue'))
 const Settings = defineAsyncComponent(() => import('./Settings.vue'))
 const Search2 = defineAsyncComponent(() => import('./Search2.vue'))
 const Float = defineAsyncComponent(() => import('./Float.vue'))
 
-import Chatbox from './Chatbox.vue'  // Single chatbox component
+import Chatbox from './Chatbox.vue'
 import Notification from './Notification.vue'
 
-// Cache for decoded JWTs
 const jwtCache = new Map()
 
 export default {
   name: 'App',
-  components: { Posts, Videos, Chat, Chatbox, Settings, Search2, Float, Notification },
+  components: {
+    Posts, Videos, Chat, Chatbox, Settings, Search2, Float, Notification
+  },
 
   data() {
     return {
       currentTab: 'posts',
       searchQuery: '',
       showProfileMenu: false,
+      tabRoutes: ['Posts', 'Videos', 'Chat', 'Settings'],
       userProfile: shallowReactive({
         username: localStorage.getItem('username') || 'Guest',
         userId: localStorage.getItem('userId') || null,
@@ -88,7 +108,7 @@ export default {
         { name: 'posts', icon: 'fas fa-home' },
         { name: 'videos', icon: 'fab fa-youtube' },
         { name: 'chat', icon: 'fas fa-comment' },
-        { name: 'settings', icon: 'fas fa-cog' }
+        { name: 'settings', icon: 'fas fa-cog' },
       ]
     }
   },
@@ -101,12 +121,13 @@ export default {
 
   computed: {
     isSignedIn() {
-      const username = this.userProfile.username
-      return username && username !== 'Guest'
-    }
+      return this.userProfile.username && this.userProfile.username !== 'Guest'
+    },
+    isChatboxRoute() {
+      return this.$route.name === 'Chatbox'
+    },
   },
-    
-  
+
   methods: {
     navigateToSearch() {
       this.showProfileMenu = false
@@ -115,7 +136,7 @@ export default {
         this.$router.push('/user/' + this.searchQuery.trim())
         this.searchQuery = ''
       } else {
-        this.switchTab('search')
+        this.$router.push('/search')
       }
     },
 
@@ -129,29 +150,23 @@ export default {
     },
 
     switchTab(tab) {
+      this.showProfileMenu = false
       if (this.currentTab === tab) return
 
-      this.showProfileMenu = false
       this.currentTab = tab
 
-      switch (tab) {
-        case 'posts':
-          this.$router.push('/posts')
-          break
-        case 'videos':
-          this.$router.push('/videos')
-          break
-        case 'chat':
-          this.$router.push('/chat')  // User list route
-          break
-        case 'settings':
-          this.$router.push('/settings')
-          break
-        case 'search':
-          this.$router.push('/search')
-          break
-        default:
-          this.$router.push('/')
+      const componentMap = {
+        posts: null, // handled locally (root path)
+        videos: 'Videos',
+        chat: 'Chat',
+        settings: 'Settings'
+      }
+
+      const routeName = componentMap[tab]
+      if (routeName) {
+        this.$router.push({ name: routeName }).catch(() => {}) // ignore redundant navigation
+      } else {
+        this.$router.push('/').catch(() => {})
       }
     },
 
@@ -161,7 +176,6 @@ export default {
 
     decodeJWT(token) {
       if (jwtCache.has(token)) return jwtCache.get(token)
-
       try {
         const base64Url = token.split('.')[1]
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
@@ -183,8 +197,12 @@ export default {
       const decoded = this.decodeJWT(token)
       if (!decoded) return this.authAction()
 
-      const currentUsername = this.userProfile.username
-      if (decoded?.username && decoded.username !== currentUsername) {
+      if (
+        decoded?.username &&
+        (!this.isSignedIn ||
+          decoded.username !== this.userProfile.username ||
+          !this.userProfile.userId)
+      ) {
         try {
           const res = await fetch('https://1999-theta.vercel.app/api/authorize', {
             method: 'GET',
@@ -205,7 +223,9 @@ export default {
           }
 
           Object.entries(updates).forEach(([key, value]) => {
-            localStorage.setItem(key, value)
+            if (localStorage.getItem(key) !== value) {
+              localStorage.setItem(key, value)
+            }
           })
 
           this.updateUserProfile()
@@ -241,17 +261,17 @@ export default {
     },
 
     handleRouteChange(to) {
-      const routeTabMap = {
-        UserProfile: 'search',
-        Posts: 'posts',
-        Videos: 'videos',
-        Chat: 'chat',
-        Chatbox: 'chat',
-        Settings: 'settings',
-        Search2: 'search'
+      const tabRoutes = this.tabRoutes.map(r => r.toLowerCase())
+      if (to.name && tabRoutes.includes(to.name.toLowerCase())) {
+        this.currentTab = to.name.toLowerCase()
+      } else {
+        this.currentTab = 'posts' // fallback tab
       }
+    },
 
-      this.currentTab = routeTabMap[to.name] || 'posts'
+    // Example method to toggle floating panel from here via store
+    toggleFloatingPanel() {
+      this.uiStore.toggleFloatPanel()
     }
   },
 
@@ -265,21 +285,6 @@ export default {
   async mounted() {
     this.handleRouteChange(this.$route)
 
-    // Validate userId: must be a valid UUID (36 chars, 4 dashes)
-    const userId = localStorage.getItem('userId')
-    if (userId && !/^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.test(userId)) {
-      // Invalid userId, force logout and clear storage
-      localStorage.clear()
-      Object.assign(this.userProfile, {
-        username: 'Guest',
-        userId: null,
-        profilePic: 'default-pic.png'
-      })
-      this.showNotification('Session expired or invalid user. Please log in again.', true)
-      this.$router.push('/')
-      return
-    }
-
     const token = localStorage.getItem('authToken')
     if (token) {
       this.verifyToken(token)
@@ -287,28 +292,23 @@ export default {
 
     let storageTimeout
     const handleStorage = (event) => {
-      if (["username", "userId", "profilePic"].includes(event.key)) {
+      if (['username', 'userId', 'profilePic'].includes(event.key)) {
         clearTimeout(storageTimeout)
         storageTimeout = setTimeout(() => {
           this.updateUserProfile()
         }, 100)
       }
     }
-
     window.addEventListener('storage', handleStorage, { passive: true })
-    // Cleanup for Vue 3
     this.$.appContext.app.config.globalProperties.__onUnmount = () => {
       window.removeEventListener('storage', handleStorage)
       clearTimeout(storageTimeout)
     }
 
     this.updateUserProfile()
-  }
+  },
 }
 </script>
-
-
-
 <style scoped>
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.2s ease;
@@ -318,7 +318,6 @@ export default {
 }
 .username-display {
   font-size: 19px;
-  color: blue;
   cursor: pointer;
   margin-right: 16px;
   padding: 4px 8px;
