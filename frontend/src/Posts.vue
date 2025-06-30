@@ -1,11 +1,13 @@
 <template>
+<main>
   <div>
     <div id="loading" v-show="loading" class="loading"><div class="spinner"></div></div>
-    <div id="sort-options" style="gap:15%;">
-      <button class="sort-button" :class="{ active: sortOption === 'most-liked' }" @click="sortPosts('most-liked')">General</button>
-      <button class="sort-button" :class="{ active: sortOption === 'most-comments' }" @click="sortPosts('most-comments')">Trending</button>
-      <button class="sort-button" :class="{ active: sortOption === 'newest' }" @click="sortPosts('newest')">Newest</button>
-    </div>
+ <div class="sort-sidebar">
+    <button class="sort-button" :class="{ active: sortOption === 'most-liked' }" @click="sortPosts('most-liked')">General</button>
+    <button class="sort-button" :class="{ active: sortOption === 'most-comments' }" @click="sortPosts('most-comments')">Trending</button>
+    <button class="sort-button" :class="{ active: sortOption === 'newest' }" @click="sortPosts('newest')">Newest</button>
+</div>
+
     <div id="posts" class="posts-feed">
       <div v-for="post in posts" :key="post._id" class="post-card" :data-id="post._id" :data-liked-by="JSON.stringify(post.likedBy || [])" :data-disliked-by="JSON.stringify(post.dislikedBy || [])">
        <div class="post-header">
@@ -38,7 +40,7 @@
   {{ post.dislikes || 0 }}
 </button>
 
-<button class="comment-btn" @click="openFullScreenPost(post._id)" style="color:#ff1100;max-height:40px;margin: 0%;border: none;padding: 0%;">
+<button class="comment-btn" @click="openFullScreenPost(post._id)" style="color:#ffffff;max-height:40px;margin: 0%;border: none;padding: 0%;">
   <svg class="round comments" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style=" display: inline-flex; align-items: center;justify-content: center;margin-bottom: 10px;">
     <path d="M12 3C6.48 3 2 6.92 2 11.5c0 2.14 1.06 4.1 2.83 5.6L4 21l3.65-1.95c1.29.45 2.7.7 4.35.7 5.52 0 10-3.92 10-8.5S17.52 3 12 3z"/>
   </svg>
@@ -60,14 +62,20 @@
           </div>
           <div class="username"><strong>{{ selectedPost.username }}</strong></div>
         </div>
-        <p class="post-message" style="font-size: 16px; margin-top: 10px; font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;">{{ selectedPost.message || "" }}</p>
+        <p class="post-message" style="font-size: 15px; margin-top: 10px; ">{{ selectedPost.message || "" }}</p>
         <img v-if="selectedPost.photo" :src="selectedPost.photo" alt="Post Image" loading="lazy" style="width: 100%; max-height: 50vh; border-radius: 10px; margin-bottom: 10px;" />
         <div class="post-timestamp"><small>{{ formatTimestamp(selectedPost.timestamp) }}</small></div>
         <div class="actions" style="margin: 10px 0;">
-          <button class="like-btn" :class="{ liked: selectedPost.likedBy?.includes(loggedInUsername) }" @click="likePost(selectedPost._id)">👍 {{ selectedPost.likes || 0 }}</button>
-          <button class="dislike-btn" :class="{ disliked: selectedPost.dislikedBy?.includes(loggedInUsername) }" @click="dislikePost(selectedPost._id)">👎 {{ selectedPost.dislikes || 0 }}</button>
-          <button class="comment-btn" style="color:#ff1100;">Comments ({{ selectedPost.comments?.length || 0 }})</button>
-          <button class="view-btn">💫 ({{ selectedPost.views || 0 }})</button>
+          <button class="like-btn" :class="{ liked: selectedPost.likedBy?.includes(loggedInUsername) }" @click="likePost(selectedPost._id)"><svg class="thumbs-up-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+    <path d="M1 21h4V9H1v12zM23 10c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32a1 1 0 0 0-.29-.7L14 2 7.59 8.41A1.98 1.98 0 0 0 7 9.83V19a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2l1-7v-.01L23 10z"/>
+  </svg> {{ selectedPost.likes || 0 }}</button>
+          <button class="dislike-btn" :class="{ disliked: selectedPost.dislikedBy?.includes(loggedInUsername) }" @click="dislikePost(selectedPost._id)"><svg class="thumbs-down-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+    <path d="M1 3h4v12H1V3zm22 11c0 1.1-.9 2-2 2h-6.31l.95 4.57.03.32a1 1 0 0 1-.29.7L14 22l-6.41-6.41A1.98 1.98 0 0 1 7 14.17V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2l1 7v.01L23 14z"/>
+          </svg> {{ selectedPost.dislikes || 0 }}</button>
+          <button class="comment-btn" style="color:#ff1100;">  <svg class="round comments" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style=" display: inline-flex; align-items: center;justify-content: center;margin-bottom: 10px;">
+    <path d="M12 3C6.48 3 2 6.92 2 11.5c0 2.14 1.06 4.1 2.83 5.6L4 21l3.65-1.95c1.29.45 2.7.7 4.35.7 5.52 0 10-3.92 10-8.5S17.52 3 12 3z"/>
+  </svg> ({{ selectedPost.comments?.length || 0 }})</button>
+          <button class="view-btn" style="font-size: 12px;">💫 ({{ selectedPost.views || 0 }})</button>
           <button v-if="selectedPost.username === loggedInUsername || selectedPost.sessionId === sessionId" @click="editPost(selectedPost._id, selectedPost.username)">Edit</button>
           <button v-if="selectedPost.username === loggedInUsername || selectedPost.sessionId === sessionId" @click="deletePost(selectedPost._id)">Delete</button>
         </div>
@@ -80,13 +88,15 @@
                 </div>
                 <div style="flex: 1; color:#ffffff; display: flex; flex-direction: column;">
                   <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: bold; font-size: 16px;">{{ comment.username || "Unknown" }}</span>
+                    <span style="font-size: 16px;">{{ comment.username || "Unknown" }}</span>
                     <span style="font-size: 12px; color: #ccc;">{{ getTimeAgo(new Date(comment.timestamp)) }}</span>
                   </div>
                   <div style="font-size: 14px; color: #fff; margin-top: 5px;">{{ comment.comment || "No comment" }}</div>
                   <div style="font-size: 12px; margin-top: 8px; display: flex; align-items: center; gap: 15px;">
                     <button class="like-comment-btn" :class="{ liked: comment.likedBy?.includes(loggedInUsername) }" @click="likeComment(selectedPost._id, comment.commentId, comment.username)">❤️ <span class="like-count">{{ comment.hearts || 0 }}</span></button>
-                    <button class="reply-btn" @click="toggleReplies(selectedPost._id, comment.commentId, comment.username, $event.target)">💬 <span v-if="comment.replies?.length > 0">({{ comment.replies.length }})</span></button>
+                    <button class="reply-btn" @click="toggleReplies(selectedPost._id, comment.commentId, comment.username, $event.target)">  <svg class="round comments" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style=" display: inline-flex; align-items: center;justify-content: center;margin-bottom: 10px;">
+    <path d="M12 3C6.48 3 2 6.92 2 11.5c0 2.14 1.06 4.1 2.83 5.6L4 21l3.65-1.95c1.29.45 2.7.7 4.35.7 5.52 0 10-3.92 10-8.5S17.52 3 12 3z"/>
+  </svg> <span v-if="comment.replies?.length > 0">({{ comment.replies.length }})</span></button>
                     <button v-if="comment.username === loggedInUsername || comment.sessionId === sessionId" class="delete-comment-btn" @click="deleteComment(selectedPost._id, comment.commentId)">🗑️ Delete</button>
                   </div>
                 </div>
@@ -127,6 +137,8 @@
       </div>
     </div>
   </div>
+
+  </main>
 </template>
 
 <script setup>
@@ -171,7 +183,13 @@ const {
 } = usePosts();
 </script>
 <style src="./Posts.css"></style>
-
+<style scoped>
+/* Main Content */
+.main {
+    flex: 1;
+    margin: 60px 0;
+     flex-wrap: wrap; /* Ensure it wraps on smaller screens */
+}</style>
 
 
 
