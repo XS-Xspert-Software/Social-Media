@@ -7,14 +7,12 @@
 body {
     padding: 10px;
     margin: 0;
-    font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    background-color: #000;
+    background-color: #000;/* ✅ semi-transparent */
     color: #ffffff;
-    /* Only essential GPU acceleration */
     -webkit-overflow-scrolling: touch;
 }
 body .dark-mode {
@@ -26,7 +24,6 @@ body .dark-mode {
     display: flex;
     flex-direction: column;
 }
-
 /* Animations - GPU accelerated only where needed */
 .fade-enter-active, .fade-leave-active {
     transition: opacity 0.3s ease;
@@ -35,10 +32,11 @@ body .dark-mode {
 .fade-enter-from, .fade-leave-to {
     opacity: 0;
 }
+/* Header - Default for small devices */
 header {
-    background-color: #000;
+     background-color: #000;/* ✅ semi-transparent */
     color: #fff;
-    padding: 12px;
+    padding: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -47,66 +45,43 @@ header {
     top: 0;
     left: 0;
     right: 0;
-    z-index: 6;
+    z-index: 66;
+    margin-bottom: 30px;
     border-bottom: 2px solid #581c87;
-    /* GPU acceleration only for fixed elements */
     transform: translateZ(0);
 }
 header .user-section .search-dropdown input {
     border-radius: 9px;
 }
-.dark-mode header,
-.dark-mode body,
-.dark-mode nav,
-.dark-mode .user-section .search-dropdown input,
-.dark-mode .post-card .comment-input,
-.dark-mode .chat-section input,
-.dark-mode .settings-section input,
-.dark-mode .sidebar,
-.dark-mode .footer,
-.dark-mode .modal,
-.dark-mode .button,
-.dark-mode .card,
-.dark-mode .form-control {
-    border-color: orangered;
-    background: linear-gradient(to bottom right, #111827, #581c87);
-    color: #f3f4f6;
-}
-/* Navbar - GPU accelerated for smooth fixed positioning */
+/* Mobile: Bottom navigation bar (default) */
 nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 7px;
-    background-color: #000;
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
-    z-index: 7;
-    transform: translateZ(0);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 5px;
+  background-color: #000;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 7;
+  transform: translateZ(0);
 }
 nav ul {
-    display: flex;
-    justify-content: space-around;
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  display: flex;
+  justify-content: space-around;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 nav li {
-    padding: 9px;
-    border-radius: 50%;
-    font-size: 1.5rem;
-    color: #f3f4f6;
-    cursor: pointer;
-    /* Minimal GPU acceleration for hover */
-    transition: transform 0.2s ease;
+  padding: 9px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  color: #f3f4f6;
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 nav li:hover {
-    transform: scale(1.1);
-}
-/* Main Content */
-main {
-    flex: 1;
-    margin: 60px 0;
+  transform: scale(1.1);
 }
 #posts {
     margin-top: 4px;
@@ -115,16 +90,12 @@ main {
 /* Post & Movie Cards with selective GPU acceleration */
 .post-card, .movie-card {
     font-size: 12px;
-    background-color: #000;
+ background-color: rgba(0, 0, 0, 0.6); /* 👈 semi-transparent black */
     color: white;
     padding: 14px;
-    font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     border-radius: 15px;
     margin: 0 0 15px 0;
-    width: 100%;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    /* GPU acceleration only for interactive cards */
     will-change: transform;
 }
 .post-card:hover, .movie-card:hover {
@@ -149,7 +120,7 @@ main {
 .actions button {
     background-color: transparent;
     border: none;
-    color: #ff1100;
+    color: #ddd;
     cursor: pointer;
     font-size: 9.6px;
     min-width: 60px;
@@ -172,15 +143,7 @@ main {
         min-width: 40px;
     }
 }
-.video-card,
-.chat-section,
-.settings-section {
-    background-color: #000;
-    color: #f3f4f6;
-    padding: 16px;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
+
 .dark-mode .post-card,
 .dark-mode .body,
 .dark-mode .video-card,
@@ -317,54 +280,21 @@ main {
 .movie-timestamp {
     font-size: 12px;
     color: #888;
-    margin-top: 5px;
+    margin-top: 2px;
     text-align: right;
     font-family: Arial, sans-serif;
     line-height: 1.4;
 }
 button {
     margin-top: 10px;
-    padding: 9px 15px;
-    background-color: #e64a3c;
-    color: white;
+    padding: 7px 15px;
+    background-color: rgba(255, 255, 255, 0.482);
+    color: #000;
     border: none;
     border-radius: 15px;
     cursor: pointer;
     font-size: 12px;
     transition: background-color 0.3s ease, transform 0.2s ease;
-}
-button:hover {
-    transform: scale(1.05);
-    background-color: #c0392b;
-}
-.tabs {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 14px;
-}
-.tabs button {
-    padding: 6px 14px;
-    background-color: #1a1a1a;
-    border: 2px solid transparent;
-    border-radius: 18px;
-    color: #00ffe0;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-.tabs button:hover {
-    background: linear-gradient(135deg, #00ffe0, #00bfff);
-    color: #000;
-    box-shadow: 0 0 8px #00ffe0;
-    border-color: #00ffe0;
-    transform: scale(1.05);
-}
-.tabs button.active {
-    background: linear-gradient(135deg, #ff00cc, #3333ff);
-    color: #fff;
-    border-color: #ff00cc;
-    box-shadow: 0 0 10px #ff00cc;
 }
 .image-preview-container {
     position: relative;
@@ -395,33 +325,21 @@ button:hover {
 .remove-image-btn:hover {
     transform: scale(1.1);
 }
-.notification {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 400px;
-    background-color: #4caf50;
-    color: #ffffff;
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-size: 14px;
-    line-height: 1.5;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    opacity: 0;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    z-index: 9;
-    pointer-events: none;
-    will-change: opacity, transform;
+.dark-mode header,
+.dark-mode body,
+.dark-mode nav,
+.dark-mode .user-section .search-dropdown input,
+.dark-mode .post-card .comment-input,
+.dark-mode .chat-section input,
+.dark-mode .settings-section input,
+.dark-mode .sidebar,
+.dark-mode .footer,
+.dark-mode .modal,
+.dark-mode .button,
+.dark-mode .card,
+.dark-mode .form-control {
+    border-color: orangered;
+    background: linear-gradient(to bottom right, #111827, #581c87);
+    color: #f3f4f6;
 }
-.notification.show-notification {
-    opacity: 1;
-    transform: translateX(-50%) translateY(10px);
-    pointer-events: auto;
-}
-.notification.error-notification {
-    background-color: #f44336;
-}
-
 
