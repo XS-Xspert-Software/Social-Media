@@ -49,20 +49,43 @@
   </svg>
 </button>
  
-<div class="profile-picture" 
-     style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center;margin-top: 30px;">
-  <img 
-    :src="userProfile.profilePicture || 'pfp2.jpg'" 
-    :alt="`${userProfile.username}'s profile picture`" 
-    style="width: 100%; height: 100%; object-fit: cover;" />
+<div style="display: flex; align-items: flex-start; gap: 20px; margin-top: 20px;">
+  <!-- Profile Picture (larger and slightly lower) -->
+  <div class="profile-picture" 
+       style="width: 160px; height: 160px; border-radius: 50%; overflow: hidden; margin-top: 20px;">
+    <img 
+      :src="userProfile.profilePicture || 'pfp2.jpg'" 
+      :alt="`${userProfile.username}'s profile picture`" 
+      style="width: 100%; height: 100%; object-fit: cover;" />
+  </div>
 
-      </div>
-      <h2 style="font-size: 24px; margin: 10px 0; color: #fff;">{{ userProfile.username }}</h2>
-      <p v-if="userProfile.description" style="font-size: 14px; color: #ccc; margin: 0;">{{ userProfile.description }}</p>
-      <p v-if="userProfile.location" style="font-size: 14px; color: #ccc; margin: 0;">Location: {{ userProfile.location }}</p>
-      <p v-if="userProfile.status" style="font-size: 14px; color: #ccc; margin: 0;">Status: {{ userProfile.status }}</p>
-      <p v-if="userProfile.profession" style="font-size: 14px; color: #ccc; margin: 0;">Profession: {{ userProfile.profession }}</p>
-      <p v-if="userProfile.hobby" style="font-size: 14px; color: #ccc; margin: 0;">Hobby: {{ userProfile.hobby }}</p>
+  <!-- User Info with fade-in and styling -->
+  <div class="user-info"
+       style="color: #f0f0f0; font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; animation: fadeIn 0.8s ease;">
+       
+    <h2 style="font-size: 26px; margin: 0 0 10px; font-weight: 600;">{{ userProfile.username }}</h2>
+
+    <p v-if="userProfile.description" style="font-size: 15px; color: #ccc; margin: 6px 0;">
+      {{ userProfile.description }}
+    </p>
+
+    <p v-if="userProfile.location" style="font-size: 14px; color: #bbb; margin: 4px 0;">
+      <strong>Location:</strong> {{ userProfile.location }}
+    </p>
+
+    <p v-if="userProfile.status" style="font-size: 14px; color: #bbb; margin: 4px 0;">
+      <strong>Status:</strong> {{ userProfile.status }}
+    </p>
+
+    <p v-if="userProfile.profession" style="font-size: 14px; color: #bbb; margin: 4px 0;">
+      <strong>Profession:</strong> {{ userProfile.profession }}
+    </p>
+
+    <p v-if="userProfile.hobby" style="font-size: 14px; color: #bbb; margin: 4px 0;">
+      <strong>Hobby:</strong> {{ userProfile.hobby }}
+    </p>
+  </div>
+</div>
       
       <!-- Social Action Buttons -->
       <div v-if="userProfile.username !== loggedInUsername" class="social-actions" style="margin: 15px 0; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
@@ -101,10 +124,7 @@
         >
           {{ actionLoading ? 'Loading...' : getFriendButtonText() }}
         </button>
-      </div>
-        
-      <!-- Chat Button -->
-<button
+        <button
   @click="startChat"
   style="
     background-color: #007bff;
@@ -118,6 +138,10 @@
 >
   Message
 </button>
+      </div>
+        
+      <!-- Chat Button -->
+
 
       <!-- Relationship Stats -->
       <div class="relationship-stats" style="margin: 10px 0; display: flex; justify-content: center; gap: 20px; font-size: 12px; color: #aaa;">
@@ -254,6 +278,13 @@
     </div>
 </div>
 </template>
+<!-- Fade-in animation style -->
+<style>
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { debounce } from 'lodash';
@@ -305,18 +336,6 @@ const {
   selectedPost,
 } = usePosts();
 
-// Logging function
-function log(level, ...args) {
-  const ts = new Date().toISOString();
-  if (level === 'error') {
-    console.error(`[${ts}]`, ...args);
-  } else if (level === 'warn') {
-    console.warn(`[${ts}]`, ...args);
-  } else {
-    console.log(`[${ts}]`, ...args);
-  }
-}
-
 // Follow/Unfollow functionality
 const toggleFollow = async () => {
   if (!userProfile.value || actionLoading.value) return;
@@ -347,7 +366,7 @@ const toggleFollow = async () => {
      notify('Successfully unfollowed user', false);
     }
   } catch (error) {
-    log('error', 'Error toggling follow:', error);
+    console.error('Error toggling follow:', error);
    notify('Failed to update follow status', true);
   } finally {
     actionLoading.value = false;
@@ -414,7 +433,7 @@ const toggleFriendship = async () => {
 
     await fetchUserData(userProfile.value.username);
   } catch (error) {
-    log('error', 'Error toggling friendship:', error);
+    console.error('Error toggling friendship:', error);
    notify('Failed to update friendship status', true);
   } finally {
     actionLoading.value = false;
@@ -464,7 +483,7 @@ const checkRelationshipStatus = async (targetUsername) => {
       relationshipStatus.value = { isFollowing: false, friendshipStatus: 'none' };
     }
   } catch (error) {
-    log('error', 'Error checking relationship status:', error);
+    console.error('Error checking relationship status:', error);
     relationshipStatus.value = { isFollowing: false, friendshipStatus: 'none' };
   }
 };
@@ -495,7 +514,7 @@ const fetchUserData = async (usernameToFetch) => {
     searched.value = true;
 
     const user = data.user;
-  log('info', 'Fetched user data:', user);
+  console.log('Fetched user data:', user);
 
     userProfile.value = {
       username: user.username,
@@ -525,7 +544,7 @@ const fetchUserData = async (usernameToFetch) => {
 
     await checkRelationshipStatus(usernameToFetch);
   } catch (error) {
-    log('error', 'Error fetching user data:', error);
+    console.error('Error fetching user data:', error);
     searched.value = true;
     userProfile.value = null;
     posts.value = [];
@@ -549,7 +568,7 @@ const resetSearch = () => {
   searched.value = false;
   searchQuery.value = '';
   relationshipStatus.value = { isFollowing: false, friendshipStatus: 'none' };
-  router.push('/user');
+  router.push('/posts');
 };
 
 const showUserProfile = (username) => {
@@ -676,4 +695,5 @@ defineExpose({
 });
 </script>
 <style src="./Posts.css"></style>
+
 
