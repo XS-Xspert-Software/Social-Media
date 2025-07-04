@@ -1,6 +1,7 @@
 import { db } from '../schema/index.js';
 import { posts, users } from '../schema/schema.js';
 import { eq } from 'drizzle-orm';
+import { ipfs, uploadBufferToIPFS } from './ipfs.js';
 
 export const createPost = async (req, res) => {
     // Security: Require auth unless test mode is enabled and test param is present
@@ -25,8 +26,21 @@ export const createPost = async (req, res) => {
         // If invalid, return 401
     }
     const { username, message, photo } = req.body;
-    if (!username || !message) {
-        return res.status(400).json({ error: 'username and message are required' });
+    let media = null;
+    if (req.file) {
+        // If file upload (e.g., multipart/form-data)
+        try {
+            const buffer = req.file.buffer;
+            const filename = req.file.originalname;
+            const cid = await uploadBufferToIPFS(buffer, filename);
+            media = [{ type: req.file.mimetype, cid, url: `ipfs://${cid}` }];
+        } catch (e) {
+            return res.status(500).json({ error: 'IPFS upload failed', detail: e.message });
+        }
+    } else if (photo) {
+        // If photo is a base64 string or URL, handle accordingly (optional)
+        // For now, treat as a direct URL
+        media = [{ type: 'image', url: photo }];
     }
     // Find user by username
     const user = await db.select().from(users).where(eq(users.username, username));
@@ -38,7 +52,7 @@ export const createPost = async (req, res) => {
     const inserted = await db.insert(posts).values({
         userId,
         content: message,
-        imageUrl: photo || null,
+        media,
         createdAt: new Date(),
     }).returning();
     const newPost = inserted[0];
@@ -46,7 +60,7 @@ export const createPost = async (req, res) => {
         _id: newPost.id,
         username,
         message: newPost.content,
-        photo: newPost.imageUrl,
+        media: newPost.media,
         timestamp: newPost.createdAt,
         likes: 0,
         dislikes: 0,
