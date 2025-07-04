@@ -3,6 +3,9 @@ import { db } from '../schema/index';
 import { posts, users, likes } from '../schema/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import { validate as validateUUID } from 'uuid';
+// @ts-expect-error: No type definitions for './ipfs'
+import { ipfs, uploadBufferToIPFS } from './ipfs';
+import { authenticateToken } from './auth';
 
 export const createPost = async (req: Request, res: Response) => {
   // Security: Require auth unless test mode is enabled and test param is present
@@ -18,17 +21,24 @@ export const createPost = async (req: Request, res: Response) => {
   const allowTest = globalConfig.ALLOW_TEST_POST_UPLOAD === true;
   const isTest = req.body && req.body.test_upload === '1';
   if (!isTest) {
-    // Require token in Authorization header
-    const authHeader = req.headers['authorization'] || '';
-    if (!authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Missing or invalid token' });
-    }
-    // TODO: Validate token (implement your session/token logic here)
-    // If invalid, return 401
+    // Use middleware for token validation
+    // (token is username for MVP)
+    await authenticateToken(req, res, () => {});
+    if ((res as any).headersSent) return;
   }
   const { username, message, photo } = req.body;
-  if (!username || !message) {
-    return res.status(400).json({ error: 'username and message are required' });
+  let media = null;
+  if (req.file) {
+    try {
+      const buffer = req.file.buffer;
+      const filename = req.file.originalname;
+      const cid = await uploadBufferToIPFS(buffer, filename);
+      media = [{ type: req.file.mimetype, cid, url: `ipfs://${cid}` }];
+    } catch (e) {
+      return res.status(500).json({ error: 'IPFS upload failed', detail: e.message });
+    }
+  } else if (photo) {
+    media = [{ type: 'image', url: photo }];
   }
   // Find user by username
   const user = await db.select().from(users).where(eq(users.username, username));
@@ -40,7 +50,7 @@ export const createPost = async (req: Request, res: Response) => {
   const inserted = await db.insert(posts).values({
     userId,
     content: message,
-    imageUrl: photo || null,
+    imageUrl: media && media.length ? media[0].url : null,
     createdAt: new Date(),
   }).returning();
   const newPost = inserted[0];
@@ -49,6 +59,7 @@ export const createPost = async (req: Request, res: Response) => {
     username,
     message: newPost.content,
     photo: newPost.imageUrl,
+    media,
     timestamp: newPost.createdAt,
     likes: 0,
     dislikes: 0,

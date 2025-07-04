@@ -122,12 +122,15 @@ def videopost(request):
         if not video_file:
             logging.warning("videopost POST: No video file provided")
             return JsonResponse({'error': 'No video file provided'}, status=400)
-        filename = default_storage.save(video_file.name, ContentFile(video_file.read()))
-        video_url = default_storage.url(filename)
-        if not video_url.startswith('/media/'):
-            video_url = '/media/' + filename.lstrip('/')
-        logging.info(f"videopost POST: Saved video file {filename} url={video_url}")
-
+        # Upload to IPFS
+        from .ipfs_utils import upload_file_to_ipfs
+        try:
+            cid = upload_file_to_ipfs(video_file)
+            video_url = f"ipfs://{cid}"
+            logging.info(f"videopost POST: Uploaded to IPFS, CID={cid}")
+        except Exception as e:
+            logging.error(f"videopost POST: IPFS upload failed: {e}")
+            return JsonResponse({'error': 'IPFS upload failed', 'detail': str(e)}, status=500)
         # Save VideoPost
         caption = request.POST.get('caption', '')
         VideoPost.objects.create(user=user, caption=caption, video_url=video_url)
