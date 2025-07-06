@@ -19,11 +19,7 @@ body .dark-mode {
     background: linear-gradient(to bottom right, #111827, #581c87);
     color: #ffffff;
 }
-#app {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
+
 /* Animations - GPU accelerated only where needed */
 .fade-enter-active, .fade-leave-active {
     transition: opacity 0.3s ease;
@@ -36,7 +32,7 @@ body .dark-mode {
 header {
      background-color: #000;/* ✅ semi-transparent */
     color: #fff;
-    padding: 8px;
+    padding: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -47,13 +43,12 @@ header {
     right: 0;
     z-index: 66;
     margin-bottom: 30px;
-    border-bottom: 2px solid #581c87;
+    border-bottom: 2px solid red;
     transform: translateZ(0);
 }
 header .user-section .search-dropdown input {
     border-radius: 9px;
 }
-/* Mobile: Bottom navigation bar (default) */
 nav {
   position: fixed;
   bottom: 0;
@@ -83,8 +78,14 @@ nav li {
 nav li:hover {
   transform: scale(1.1);
 }
+    /* Large Screens (Sidebar with Text Only) */
+    @media (min-width: 768px) {
+      nav {
+        display: none;
+      }
+    }
 #posts {
-    margin-top: 4px;
+    margin-top: 40px;
     padding: 0 0px;
 }
 /* Post & Movie Cards with selective GPU acceleration */
@@ -257,6 +258,7 @@ nav li:hover {
     border-radius: 0 8px 8px 0;
 }
 .loading {
+     margin-top: 50px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -342,4 +344,99 @@ button {
     background: linear-gradient(to bottom right, #111827, #581c87);
     color: #f3f4f6;
 }
+
+.sidebar {
+     align-items: flex-start; /* aligns child content to the left */
+    margin-top: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 350px;
+  border-right: 1px solid red;
+ 
+}
+/* Shared layout for both nav tabs and sort buttons */
+.sidebar-tabs, .sidebar-sort {
+  list-style: none; /* Remove the dot */
+  margin-left: 60px;
+     border-bottom: 1px solid #ddd;
+}
+/* Shared style for both li and button */
+.sidebar li,
+.sidebar-sort .sort-button {
+ margin: 0;               /* remove vertical gaps */
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 22px;
+  line-height: 1.2;
+   border-bottom: #6b7280;
+  margin-bottom: 20px;
+  color: inherit;
+  cursor: pointer;
+  display: block;          /* ensure block stacking */
+  width: 100%;
+}
+
+.sidebar li:hover,
+.sidebar-sort .sort-button:hover {
+  background-color: #1a1a1a;
+}
+
+/* Optional separator between tabs and sort */
+.sidebar-sort::before {
+  border-top: 1px solid #333;
+}
+    .sidebar .separator {
+      border-top: 1px solid #333;
+      margin: 10px 0;
+    }
+
+ /* Small Screens (Bottom Navigation with Icons) */
+    @media (max-width: 767px) {
+      .sidebar ,.right-sidebar,.sidebar-sort {
+        display: none;
+      }
+    } 
+    /* Large Screens (Sidebar with Text Only) */
+    @media (min-width: 768px) {
+        .layout-container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  width: 100%;
+  height: 100vh;
+}
+   .sidebar {
+        width: 250px;
+        padding: 10px 0;
+      }
+      .sidebar a .icon {
+        display: none;
+      }
+      .sidebar a {
+        justify-content: flex-start;
+      }
+      .right-sidebar {
+         height: 200vh;
+         border-left: 1px solid red;
+        margin-top: 50px;
+      width: 350px;
+      padding: 10px;
+    }
+       .Sort{
+    display: none;
+}
+.main-content {
+  width: 100%; /* Ensures it fills available space */
+}
+.post-card{
+    margin-right: 60px;
+}
+  main {
+    margin-left: 20px; /* same width as nav and sort-sidebar */
+  }
+}
+
+
 
