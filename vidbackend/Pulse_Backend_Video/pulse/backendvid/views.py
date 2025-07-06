@@ -78,6 +78,12 @@ def videopost(request):
         is_test_upload = CONFIG.get('ALLOW_TEST_VIDEO_UPLOAD') and request.POST.get('test_upload') == '1'
         if is_test_upload:
             user = User.objects.first()  # Assign to first user or None
+            if not user:
+                # If no user exists, allow test upload with a dummy user
+                class DummyUser:
+                    username = 'testuser'
+                    id = None
+                user = DummyUser()
             caption = request.POST.get('caption', '')
             video_file = request.FILES.get('video')
             if not video_file:
@@ -87,9 +93,11 @@ def videopost(request):
             video_url = default_storage.url(filename)
             if not video_url.startswith('/media/'):
                 video_url = '/media/' + filename.lstrip('/')
-            VideoPost.objects.create(user=user, caption=caption, video_url=video_url)
-            logging.warning(f"videopost TEST POST: Unauthenticated test upload by anon or {user.username if user else 'anon'}: {filename}")
-            return JsonResponse({'success': True, 'video_url': video_url, 'user': user.username if user else 'anon', 'caption': caption, 'test_upload': True})
+            # Only create VideoPost if user is a real Django user
+            if hasattr(user, 'id') and user.id is not None:
+                VideoPost.objects.create(user=user, caption=caption, video_url=video_url)
+            logging.warning(f"videopost TEST POST: Unauthenticated test upload by {user.username}: {filename}")
+            return JsonResponse({'success': True, 'video_url': video_url, 'user': user.username, 'caption': caption, 'test_upload': True})
         # All other uploads require token authentication
         auth_header = request.headers.get('Authorization', '')
         logging.info("videopost POST: Authorization header=%s", auth_header)
