@@ -1,22 +1,26 @@
 <template>
-  <div :class="[ 'app-wrapper', { 'chatbox-fullscreen': isChatboxRoute }]">
-    <!-- Header (hidden in Chatbox) -->
-    <header v-if="!isChatboxRoute">
-   <h1 style="font-size: 23px; margin-left: 3%; display: flex; align-items: center; gap: 8px;"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="width:24px; height:24px;"><path d="M32 2 L38 26 L62 32 L38 38 L32 62 L26 38 L2 32 L26 26 Z"/><path d="M32 12 L36 28 L52 32 L36 36 L32 52 L28 36 L12 32 L28 28 Z"/><line x1="32" y1="2" x2="32" y2="62"/><line x1="2" y1="32" x2="62" y2="32"/></svg>𝓢𝔂𝓷𝓬</h1>
+  <div :class="['app-wrapper', { 'Chatbox-fullscreen': iChatboxRoute }]">
+    <!-- Header (hidden in'Chatbox) -->
+    <header v-if="!iChatboxRoute">
+      <h1 style="font-size: 23px; margin-left: 3%; display: flex; align-items: center; gap: 8px;">
+        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="width:24px; height:24px;">
+          <path d="M32 2 L38 26 L62 32 L38 38 L32 62 L26 38 L2 32 L26 26 Z"/>
+          <path d="M32 12 L36 28 L52 32 L36 36 L32 52 L28 36 L12 32 L28 28 Z"/>
+          <line x1="32" y1="2" x2="32" y2="62"/>
+          <line x1="2" y1="32" x2="62" y2="32"/>
+        </svg>
+        𝓢𝔂𝓷𝓬
+      </h1>
 
       <div class="user-section" style="gap: 12px; display: flex; align-items: center;">
         <i
           class="fas fa-search"
           @click="navigateToSearch"
-          style="font-size: 24px;  cursor: pointer;"
+          style="font-size: 24px; cursor: pointer;"
           aria-label="Open search page"
         ></i>
         <div class="relative">
-          <span
-            class="username-display"
-            @click.stop="toggleProfileMenu"
-            style="cursor: pointer;"
-          >
+          <span class="username-display" @click.stop="toggleProfileMenu" style="cursor: pointer;">
             {{ userProfile.username }}
           </span>
           <Transition name="fade">
@@ -33,47 +37,104 @@
       </div>
     </header>
 
-    <!-- Main Content -->
-  <Suspense>
-    <keep-alive include="Posts,Videos,Chat,Settings,Search2">
-      <router-view />
-    </keep-alive>
+  <!-- Layout container adapts based on current route -->
+<div class="layout-container" v-if="!iChatboxRoute">
+    
+    <div class="sidebar" v-if="!iChatboxRoute">
+  <ul class="sidebar-tabs">
+    <li
+      v-for="tab in tabs"
+      :key="tab.name"
+      :class="{ active: currentTab === tab.name }"
+      @click="switchTab(tab.name)"
+    >
+     
+      <span class="tab-label">{{ tab.label }}</span>
 
-    <template #fallback>
-      <div class="loading-spinner">Loading...</div>
-    </template>
-  </Suspense>
+    </li>
+  </ul>
+
+<!-- Add sort buttons only for "posts" tab -->
+<!-- Add sort buttons only for "posts" tab -->
+<div class="sidebar-sort" v-if="currentTab === 'posts'">
+  <button
+    class="sort-button"
+    :class="{ active: selectedSort === 'most-liked' }"
+    @click="emitSort('most-liked')"
+  >General</button>
+
+  <button
+    class="sort-button"
+    :class="{ active: selectedSort === 'most-comments' }"
+    @click="emitSort('most-comments')"
+  >Trending</button>
+
+  <button
+    class="sort-button"
+    :class="{ active: selectedSort === 'newest' }"
+    @click="emitSort('newest')"
+  >Newest</button>
+</div>
+
+</div>
+      <!-- Main Content -->
+      <div class="main-content">
+        <Suspense>
+          <keep-alive include="posts,Videos'Chat,Settings,Search2">
+            <router-view />
+          </keep-alive>
+
+          <template #fallback>
+            <div class="loading-spinner">Loading...</div>
+          </template>
+        </Suspense>
+      </div>
+    </div>
+
+    <!-- If'Chatbox Route (no sidebar) -->
+    <div v-else>
+      <Suspense>
+        <router-view />
+      </Suspense>
+    </div>
 
     <!-- Notifications -->
     <Notification ref="notifier" />
 
-    <!-- Nav (hidden in Chatbox) -->
-    <nav class="glassmorphism" v-if="!isChatboxRoute">
-      <ul>
+    <!-- Bottom nav -->
+    <nav
+      v-if="!iChatboxRoute"
+      style="position: fixed; bottom: 0; left: 0; right: 0; padding: 5px; background-color: #000; box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2); z-index: 7; transform: translateZ(0);"
+    >
+      <ul style="display: flex; justify-content: space-around; list-style: none; margin: 0; padding: 0;">
         <li
           v-for="tab in tabs"
           :key="tab.name"
           :class="{ active: currentTab === tab.name }"
           @click="switchTab(tab.name)"
-          style="cursor: pointer;"
+          style="padding: 9px; border-radius: 50%; font-size: 1.2rem; color: #f3f4f6; cursor: pointer; transition: transform 0.2s ease;"
+          @mouseover="hover = tab.name"
+          @mouseleave="hover = null"
+          :style="hover === tab.name ? hoveredStyle : defaultStyle"
         >
           <i :class="tab.icon"></i>
         </li>
       </ul>
     </nav>
 
-    <!-- Floating Action Button (optional: hide if needed) -->
-    <Float v-if="!isChatboxRoute" />
+    <!-- Floating Action Button -->
+    <Float v-if="!iChatboxRoute" />
   </div>
 </template>
 
-<script>
-import { defineAsyncComponent, shallowReactive } from 'vue'
-import Button from 'primevue/button';
 
-const Posts = defineAsyncComponent(() => import('./Posts.vue'))
+<script>
+import { computed } from 'vue'
+import { defineAsyncComponent, shallowReactive } from 'vue'
+
+const posts = defineAsyncComponent(() => import('./posts.vue'))
 const Videos = defineAsyncComponent(() => import('./Videos.vue'))
-const Chat = defineAsyncComponent(() => import('./Chat.vue'))
+const Chat = defineAsyncComponent(() => import('./chat.vue'))
 const Settings = defineAsyncComponent(() => import('./Settings.vue'))
 const Search2 = defineAsyncComponent(() => import('./Search2.vue'))
 const Float = defineAsyncComponent(() => import('./Float.vue'))
@@ -86,15 +147,17 @@ const jwtCache = new Map()
 export default {
   name: 'App',
   components: {
-    Posts, Videos, Chat, Chatbox, Settings, Search2, Float, Notification
+    posts, Videos,Chat,Chatbox, Settings, Search2, Float, Notification
   },
 
   data() {
     return {
       currentTab: 'posts',
       searchQuery: '',
+      selectedSort: 'most-liked', // ← keep it as a normal string
       showProfileMenu: false,
-      tabRoutes: ['Posts', 'Videos', 'Chat', 'Settings'],
+      tabRoutes: ['posts', 'Videos', 'Chat', 'Settings'],
+      hover: null,
       userProfile: shallowReactive({
         username: localStorage.getItem('username') || 'Guest',
         userId: localStorage.getItem('userId') || null,
@@ -104,18 +167,22 @@ export default {
         darkMode: false,
         notifications: true,
       }),
-      tabs: [
-        { name: 'posts', icon: 'fas fa-home' },
-        { name: 'videos', icon: 'fab fa-youtube' },
-        { name: 'chat', icon: 'fas fa-comment' },
-        { name: 'settings', icon: 'fas fa-cog' },
-      ]
+     tabs: [
+  { name: 'posts', label: 'Posts', icon: 'fas fa-home' },
+  { name: 'videos', label: 'Videos', icon: 'fab fa-youtube' },
+  { name: 'chat', label: 'Chat', icon: 'fas fa-comment' },
+  { name: 'settings', label: 'Settings', icon: 'fas fa-cog' },
+]
     }
   },
 
   provide() {
     return {
-      notify: this.showNotification
+      notify: this.showNotification,
+      selectedSort: computed({
+        get: () => this.selectedSort,
+        set: (val) => { this.selectedSort = val }
+      })
     }
   },
 
@@ -123,15 +190,31 @@ export default {
     isSignedIn() {
       return this.userProfile.username && this.userProfile.username !== 'Guest'
     },
-    isChatboxRoute() {
+    iChatboxRoute() {
       return this.$route.name === 'Chatbox'
     },
+    hoveredStyle() {
+      return {
+        transform: 'scale(1.1)',
+        backgroundColor: '#1f2937',
+        transition: 'transform 0.2s ease'
+      }
+    },
+    defaultStyle() {
+      return {
+        transform: 'scale(1)',
+        transition: 'transform 0.2s ease'
+      }
+    }
   },
 
   methods: {
+    emitSort(type) {
+      this.selectedSort = type // ✅ this works now
+    },
+
     navigateToSearch() {
       this.showProfileMenu = false
-
       if (this.searchQuery.trim()) {
         this.$router.push('/user/' + this.searchQuery.trim())
         this.searchQuery = ''
@@ -156,7 +239,7 @@ export default {
       this.currentTab = tab
 
       const componentMap = {
-        posts: null, // handled locally (root path)
+        posts: null,
         videos: 'Videos',
         chat: 'Chat',
         settings: 'Settings'
@@ -164,7 +247,7 @@ export default {
 
       const routeName = componentMap[tab]
       if (routeName) {
-        this.$router.push({ name: routeName }).catch(() => {}) // ignore redundant navigation
+        this.$router.push({ name: routeName }).catch(() => {})
       } else {
         this.$router.push('/').catch(() => {})
       }
@@ -265,13 +348,12 @@ export default {
       if (to.name && tabRoutes.includes(to.name.toLowerCase())) {
         this.currentTab = to.name.toLowerCase()
       } else {
-        this.currentTab = 'posts' // fallback tab
+        this.currentTab = 'posts'
       }
     },
 
-    // Example method to toggle floating panel from here via store
     toggleFloatingPanel() {
-      this.uiStore.toggleFloatPanel()
+      this.uiStore?.toggleFloatPanel?.()
     }
   },
 
@@ -282,7 +364,7 @@ export default {
     }
   },
 
-  async mounted() {
+  mounted() {
     this.handleRouteChange(this.$route)
 
     const token = localStorage.getItem('authToken')
@@ -299,16 +381,19 @@ export default {
         }, 100)
       }
     }
+
     window.addEventListener('storage', handleStorage, { passive: true })
+
     this.$.appContext.app.config.globalProperties.__onUnmount = () => {
       window.removeEventListener('storage', handleStorage)
       clearTimeout(storageTimeout)
     }
 
     this.updateUserProfile()
-  },
+  }
 }
 </script>
+
 <style scoped>
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.2s ease;
@@ -326,3 +411,5 @@ export default {
   transition: background-color 0.2s;
 }
 </style>
+
+
