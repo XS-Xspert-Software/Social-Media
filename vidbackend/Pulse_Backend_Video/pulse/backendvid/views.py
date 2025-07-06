@@ -74,7 +74,7 @@ def videopost(request):
         return JsonResponse({'video_url': video.video_url, 'caption': video.caption, 'user': video.user.username})
 
     if request.method == 'POST':
-        # Allow unauthenticated test uploads only if config allows and test_upload=1  
+        # Allow unauthenticated test  uploads only if config allows and test_upload=1  
         is_test_upload = CONFIG.get('ALLOW_TEST_VIDEO_UPLOAD') and request.POST.get('test_upload') == '1'
         if is_test_upload:
             user = User.objects.first()  # Assign to first user or None
