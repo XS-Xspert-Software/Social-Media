@@ -3,6 +3,7 @@
     padding: 0;
     box-sizing: border-box;
 }
+
 /* General Styles with minimal GPU acceleration */
 body {
     padding: 10px;
@@ -19,10 +20,11 @@ body .dark-mode {
     background: linear-gradient(to bottom right, #111827, #581c87);
     color: #ffffff;
 }
-#app {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+
+/* Main Content */
+.main {
+    margin: 60px 0;
+     flex-wrap: wrap; /* Ensure it wraps on smaller screens */
 }
 /* Animations - GPU accelerated only where needed */
 .fade-enter-active, .fade-leave-active {
@@ -36,7 +38,7 @@ body .dark-mode {
 header {
      background-color: #000;/* ✅ semi-transparent */
     color: #fff;
-    padding: 8px;
+    padding: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -53,36 +55,15 @@ header {
 header .user-section .search-dropdown input {
     border-radius: 9px;
 }
-/* Mobile: Bottom navigation bar (default) */
-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 5px;
-  background-color: #000;
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
-  z-index: 7;
-  transform: translateZ(0);
-}
-nav ul {
-  display: flex;
-  justify-content: space-around;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-nav li {
-  padding: 9px;
-  border-radius: 50%;
-  font-size: 1.2rem;
-  color: #f3f4f6;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
 nav li:hover {
   transform: scale(1.1);
 }
+    /* Large Screens (Sidebar with Text Only) */
+    @media (min-width: 768px) {
+      nav {
+        display: none;
+      }
+    }
 #posts {
     margin-top: 4px;
     padding: 0 0px;
@@ -342,4 +323,100 @@ button {
     background: linear-gradient(to bottom right, #111827, #581c87);
     color: #f3f4f6;
 }
+.layout-container {
+  display: grid;
+  grid-template-columns: 400px 1fr; /* fixed sidebar + flexible chat */
+  min-height: 0;
+  width: 100%;
+  height: 100vh; /* full height */
+}
+.sidebar {
+    margin-top: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 350px;
+  border-right: 1px solid #333;
+ 
+}
+/* Shared layout for both nav tabs and sort buttons */
+.sidebar-tabs, .sidebar-sort {
+  list-style: none; /* Remove the dot */
+  margin-left: 60px;
+     border-bottom: 1px solid #ddd;
+}
+/* Shared style for both li and button */
+.sidebar li,
+.sidebar-sort .sort-button {
+ margin: 0;               /* remove vertical gaps */
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 22px;
+  line-height: 1.2;
+   border-bottom: #6b7280;
+  margin-bottom: 20px;
+  color: inherit;
+  cursor: pointer;
+  display: block;          /* ensure block stacking */
+  width: 100%;
+}
+
+.sidebar li:hover,
+.sidebar-sort .sort-button:hover {
+  background-color: #1a1a1a;
+}
+
+/* Optional separator between tabs and sort */
+.sidebar-sort::before {
+  border-top: 1px solid #333;
+}
+    .sidebar .separator {
+      border-top: 1px solid #333;
+      margin: 10px 0;
+    }
+
+ /* Small Screens (Bottom Navigation with Icons) */
+    @media (max-width: 767px) {
+      .sidebar ,.right-sidebar,.sidebar-sort {
+        display: none;
+      }
+    } 
+    /* Large Screens (Sidebar with Text Only) */
+    @media (min-width: 768px) {   .sidebar {
+        width: 250px;
+        padding: 10px 0;
+      }
+      .sidebar a .icon {
+        display: none;
+      }
+      .sidebar a {
+        justify-content: flex-start;
+      }
+      .right-sidebar {
+         border-left: 1px solid #333;
+        margin-top: 50px;
+      width: 350px;
+      padding: 10px;
+    }
+       .Sort{
+    display: none;
+}
+.main-content {
+  width: 100%; /* Ensures it fills available space */
+  display: flex;
+  flex-direction: column;
+}
+.post-card{
+    margin-right: 60px;
+    margin-top: 50px;
+}
+  main {
+    margin-left: 70px; /* same width as nav and sort-sidebar */
+    margin-top: 50px;
+  }
+}
+
+
 
