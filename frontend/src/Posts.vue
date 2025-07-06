@@ -1,13 +1,14 @@
 <template>
-<main>
   <div>
     <div id="loading" v-show="loading" class="loading"><div class="spinner"></div></div>
- <div class="sort-sidebar">
-    <button class="sort-button" :class="{ active: sortOption === 'most-liked' }" @click="sortPosts('most-liked')">General</button>
-    <button class="sort-button" :class="{ active: sortOption === 'most-comments' }" @click="sortPosts('most-comments')">Trending</button>
-    <button class="sort-button" :class="{ active: sortOption === 'newest' }" @click="sortPosts('newest')">Newest</button>
+  <div class="Sort" v-if="showInlineSort">
+  <button class="sort-button" :class="{ active: sortOption === 'most-liked' }" @click="sortPosts('most-liked')">General</button>
+  <button class="sort-button" :class="{ active: sortOption === 'most-comments' }" @click="sortPosts('most-comments')">Trending</button>
+  <button class="sort-button" :class="{ active: sortOption === 'newest' }" @click="sortPosts('newest')">Newest</button>
 </div>
 
+
+   <div class="content-wrapper">
     <div id="posts" class="posts-feed">
       <div v-for="post in posts" :key="post._id" class="post-card" :data-id="post._id" :data-liked-by="JSON.stringify(post.likedBy || [])" :data-disliked-by="JSON.stringify(post.dislikedBy || [])">
        <div class="post-header">
@@ -21,7 +22,6 @@
     </span>
   </div>
 </div>
-
         <p class="post-message" style="font-size: 13px; margin-top: 8px; font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif; cursor: pointer;" @click="openFullScreenPost(post._id)">{{ post.message || "" }}</p>
         <img v-if="post.photo" :src="post.photo" alt="Post Image" style="width: 100%; max-width:300px; max-height:280px; border-radius: 10px; margin-bottom: 10px; cursor: pointer;" @click="openFullScreenPost(post._id)" />
         <div class="post-timestamp"><small>{{ formatTimestamp(post.timestamp) }}</small></div>
@@ -125,7 +125,7 @@
             <button @click="addComment(selectedPost._id)" style="background-color: #007bff; color: white; padding: 5px 10px; border: none; border-radius: 25px; transition: background-color 0.3s ease; cursor: pointer; font-size: 14px; box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);">Post</button>
           </div>
         </div>
-      </div>
+    </div>
     </div>
     <div v-if="showModal" class="modal">
       <div class="modal-content">
@@ -136,28 +136,48 @@
         </div>
       </div>
     </div>
-  </div>
+    <div class="right-sidebar">
+      What A day That was perfect 
+      handleInputChange
 
-  </main>
+      What A day That was perfect 
+      handleInputChange
+
+      What A day That was perfect 
+      handleInputChange
+
+      What A day That was perfect 
+      handleInputChange
+
+      What A day That was perfect 
+      handleInputChange
+
+      Can be used for anything like ads/top accounts/so on
+      </div>
+  </div>
+  </div>
+   
 </template>
+<style scoped>
+.content-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+</style>
 
 <script setup>
-import usePosts from './Posts.js';
-import { useRouter } from 'vue-router';
+import usePosts from './Posts.js'
+import { useRouter } from 'vue-router'
+import { inject, watch } from 'vue'
 
-const router = useRouter();
+const selectedSort = inject('selectedSort')
 
-// ✅ This just changes the route, no logic or fetching here
-function redirectToUserProfile(username) {
-  router.push({ name: 'UserProfile', params: { username } });
-}
-
-// Use general post state and actions only
 const {
   posts,
   loading,
   sortOption,
-  sortPosts,
+  sortPosts, // ✅ This is the real sort function from usePosts
   formatTimestamp,
   getTimeAgo,
   likePost,
@@ -180,16 +200,31 @@ const {
   selectedPost,
   loggedInUsername,
   sessionId,
-} = usePosts();
+} = usePosts()
+
+// Just watch selectedSort and trigger sorting when it changes
+watch(selectedSort, (newVal) => {
+  sortPosts(newVal)
+}, { immediate: true }) // ✅ call immediately on mount
+
+// Expose method to allow external sort from App.vue 
+function onExternalSort(type) {
+  sortPosts(type)
+}
+
+defineExpose({
+  onExternalSort
+})
+
+const router = useRouter()
+
+function redirectToUserProfile(username) {
+  router.push({ name: 'UserProfile', params: { username } })
+}
 </script>
+
 <style src="./Posts.css"></style>
-<style scoped>
-/* Main Content */
-.main {
-    flex: 1;
-    margin: 60px 0;
-     flex-wrap: wrap; /* Ensure it wraps on smaller screens */
-}</style>
+
 
 
 
