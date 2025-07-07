@@ -10,83 +10,10 @@ body{font-family:'Whitney','Helvetica Neue',Helvetica,Arial,sans-serif}
 
 .close-full-screen-btn{position:absolute;top:12px;right:12px;background:#222;color:#fff;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;will-change:background-color}
 .close-full-screen-btn:hover{background: #dd1010;}
-
-.sort-button {padding: 5px 15px; margin-top: 56px; margin-left: 30px; border: 1.5px solid white; border-radius: 30px; background: #5555550c; color: #fff; cursor: pointer; transition: all 0.25s ease-in-out;}
+ .sort-button {position: relative;overflow:hidden;padding: 5px 15px; margin-top: 56px; margin-left: 30px; border: 1.5px solid white; border-radius: 30px; background: #5555550c; color: #fff; cursor: pointer; transition: all 0.25s ease-in-out;}
 .sort-button:hover {background: #00e6d8; color: #000; border-color: #00e6d8;}
-#sort-options { gap: 18px;}
+#sort-options { gap: 15px;}
 
-@media (min-width: 1025px) {
-  .sort-sidebar {
-    position: fixed;
-    top: 80px;                /* adjust based on height of nav top icons */
-    left: 0;                  /* align with nav */
-    width: 120px;              /* match nav width */
-    height: auto;
-    display: flex;
-    flex-direction: column;
-    z-index: 18;             /* under nav, but above main content */
-  }
-  .sort-button {
-    width: 100%;
-    margin-right: 5px;
-    border: none;
-    border-bottom: 2px solid white;
-    background: #000;
-    color: #fff;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-  .sort-button:hover {
-    background-color: #00e6d8;
-    color: #000;
-    border-color: #00e6d8;
-  }
-  main {
-    margin-left: 130px; /* same width as nav and sort-sidebar */
-    margin-top: 40px;
-  }
-}
-.posts-feed {
-  column-count: 3;
-  column-gap: 1.5rem; /* add some gap between columns */
-}
-.post-card {
-  min-height: 200px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between; /* or center */
-  width: 100%;
-  break-inside: avoid;
-  margin-bottom: 15px;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-/* New styles for actions */
-.actions {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 10px; /* space between buttons */
-  break-inside: avoid; /* prevent actions from breaking across columns */
-  margin-top: 8px; /* some spacing above */
-  justify-content: flex-start; /* align buttons left */
-  align-items: center;
-}
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-  .posts-feed {
-    column-count: 2;
-  }
-
-}
-@media (max-width: 768px) {
-  .posts-feed {
-    column-count: 1;
-  }
-  .actions {
-    flex-wrap: wrap; /* allow wrapping on small screens */
-    justify-content: center;
-  }
-}
 .post-header{display:flex;align-items:center;padding:5px 10px}
 .post-header .profile-picture img{width:29px;height:29px;border-radius:50%;object-fit:cover}
 .post-header .username{font-size:14px;margin-left:15px;margin-bottom:5px}
