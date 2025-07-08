@@ -137,23 +137,16 @@
       </div>
     </div>
     <div class="right-sidebar">
-      What A day That was perfect 
-      handleInputChange
-
-      What A day That was perfect 
-      handleInputChange
-
-      What A day That was perfect 
-      handleInputChange
-
-      What A day That was perfect 
-      handleInputChange
-
-      What A day That was perfect 
-      handleInputChange
-
-      Can be used for anything like ads/top accounts/so on
+      <div v-if="!loggedInUsername" style="display: flex; flex-direction: column; align-items: center; margin-top: 40px;">
+        <a
+          href="https://latestnewsandaffairs.site/public/signup"
+          target="_blank"
+          style="display: block; background: linear-gradient(90deg, #000000 0%, #ff9900 50%, #000000 100%); color: #fff; font-size: 1.0rem; font-weight: bold; padding: 20px 40px; border-radius: 12px; text-decoration: none; box-shadow: 0 4px 16px rgba(0,0,0,0.15); transition: background 0.2s; margin-bottom: 20px;"
+        >
+          New to Sync? Sign Up
+        </a>
       </div>
+    </div>
   </div>
   </div>
    

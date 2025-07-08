@@ -128,10 +128,10 @@
 import { computed } from 'vue'
 import { defineAsyncComponent, shallowReactive } from 'vue'
 
-const posts = defineAsyncComponent(() => import('./posts.vue'))
+const posts = defineAsyncComponent(() => import('./Posts.vue'))
 const Videos = defineAsyncComponent(() => import('./Videos.vue'))
-const Chat = defineAsyncComponent(() => import('./chat.vue'))
-const Settings = defineAsyncComponent(() => import('./settings.vue'))
+const Chat = defineAsyncComponent(() => import('./Chat.vue'))
+const Settings = defineAsyncComponent(() => import('./Settings.vue'))
 const Search2 = defineAsyncComponent(() => import('./Search2.vue'))
 const Float = defineAsyncComponent(() => import('./Float.vue'))
 
