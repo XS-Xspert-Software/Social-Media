@@ -48,6 +48,7 @@
       :key="tab.name"
       :class="{ active: currentTab === tab.name }"
       @click="switchTab(tab.name)"
+      class="sidebar-tab-btn"
     >
      
       <span class="tab-label">{{ tab.label }}</span>
@@ -58,19 +59,19 @@
 <!-- Add sort buttons only for "posts" tab -->
 <div class="sidebar-sort" v-if="currentTab === 'posts'">
   <button
-    class="sort-button"
+    class="sort-button sort-general"
     :class="{ active: selectedSort === 'most-liked' }"
     @click="emitSort('most-liked')"
   >General</button>
 
   <button
-    class="sort-button"
+    class="sort-button sort-trending"
     :class="{ active: selectedSort === 'most-comments' }"
     @click="emitSort('most-comments')"
   >Trending</button>
 
   <button
-    class="sort-button"
+    class="sort-button sort-newest"
     :class="{ active: selectedSort === 'newest' }"
     @click="emitSort('newest')"
   >Newest</button>
@@ -103,12 +104,13 @@
 
     <!-- Bottom nav -->
   <nav v-if="!isChatboxRoute">
-    <ul>
+    <ul class="bottom-nav">
         <li
           v-for="tab in tabs"
           :key="tab.name"
           :class="{ active: currentTab === tab.name }"
           @click="switchTab(tab.name)"
+          class="bottom-nav-btn"
           style="cursor: pointer;"
         >
           <i :class="tab.icon"></i>
@@ -393,6 +395,158 @@ export default {
   margin-top: 30%;
   border-radius: 4px;
   transition: background-color 0.2s;
+}
+
+/* Sidebar tab buttons */
+.sidebar-tabs {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px 0;
+}
+.sidebar-tab-btn {
+  margin-bottom: 8px;
+  border-radius: 8px;
+  background: #f5f6fa;
+  color: #222;
+  padding: 10px 18px;
+  font-weight: 500;
+  font-size: 17px;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  display: flex;
+  align-items: center;
+}
+.sidebar-tab-btn:hover,
+.sidebar-tab-btn.active {
+  background: linear-gradient(90deg, #6a82fb 0%, #fc5c7d 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(108, 99, 255, 0.10);
+}
+
+/* Sort buttons */
+.sidebar-sort {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+  margin-left: -16px;
+  margin-right: -16px;
+  padding: 0 16px;
+}
+.sort-button {
+  border: none;
+  border-radius: 16px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  color: #fff;
+  width: 100%;
+  text-align: left;
+}
+
+/* General button */
+.sort-general {
+  background: linear-gradient(90deg, #43cea2 0%, #185a9d 100%);
+}
+.sort-general:not(.active) {
+  background: linear-gradient(90deg, rgba(67, 206, 162, 0.6) 0%, rgba(24, 90, 157, 0.6) 100%);
+  opacity: 0.7;
+}
+.sort-general.active {
+  box-shadow: 0 4px 15px rgba(67, 206, 162, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Trending button */
+.sort-trending {
+  background: linear-gradient(90deg, #ff9800 0%, #ff512f 100%);
+}
+.sort-trending:not(.active) {
+  background: linear-gradient(90deg, rgba(255, 152, 0, 0.6) 0%, rgba(255, 81, 47, 0.6) 100%);
+  opacity: 0.7;
+}
+.sort-trending.active {
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Newest button */
+.sort-newest {
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+.sort-newest:not(.active) {
+  background: linear-gradient(90deg, rgba(102, 126, 234, 0.6) 0%, rgba(118, 75, 162, 0.6) 100%);
+  opacity: 0.7;
+}
+.sort-newest.active {
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Bottom nav styling */
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: #fff;
+  border-top: 1px solid #ececec;
+  padding: 8px 0;
+  margin: 0;
+  list-style: none;
+}
+.bottom-nav-btn {
+  flex: 1;
+  text-align: center;
+  border-radius: 50%;
+  padding: 8px;
+  transition: background 0.18s, color 0.18s;
+  color: #888;
+  font-size: 22px;
+  border: none;
+  background: none;
+}
+.bottom-nav-btn.active,
+.bottom-nav-btn:hover {
+  background: linear-gradient(90deg, #fc5c7d 0%, #6a82fb 100%);
+  color: #fff;
+}
+
+/* Layout containers */
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+header {
+  flex-shrink: 0;
+}
+
+.layout-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+nav {
+  flex-shrink: 0;
 }
 </style>
 
