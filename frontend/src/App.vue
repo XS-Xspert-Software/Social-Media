@@ -80,7 +80,7 @@
       <!-- Main Content -->
       <div class="main-content">
         <Suspense>
-          <keep-alive include="posts,Videos'Chat,Settings,Search2">
+          <keep-alive include="Posts,Videos'Chat,Settings,Search2">
             <router-view />
           </keep-alive>
 
@@ -117,7 +117,9 @@
     </nav>
 
     <!-- Floating Action Button -->
-    <Float v-if="!iChatboxRoute" />
+  <Float />
+  
+  
   </div>
 </template>
 
@@ -126,10 +128,10 @@
 import { computed } from 'vue'
 import { defineAsyncComponent, shallowReactive } from 'vue'
 
-const posts = defineAsyncComponent(() => import('./Posts.vue'))
+const posts = defineAsyncComponent(() => import('./posts.vue'))
 const Videos = defineAsyncComponent(() => import('./Videos.vue'))
-const Chat = defineAsyncComponent(() => import('./Chat.vue'))
-const Settings = defineAsyncComponent(() => import('./Settings.vue'))
+const Chat = defineAsyncComponent(() => import('./chat.vue'))
+const Settings = defineAsyncComponent(() => import('./settings.vue'))
 const Search2 = defineAsyncComponent(() => import('./Search2.vue'))
 const Float = defineAsyncComponent(() => import('./Float.vue'))
 
@@ -393,4 +395,6 @@ export default {
   transition: background-color 0.2s;
 }
 </style>
+
+
 
