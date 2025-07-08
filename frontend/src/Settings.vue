@@ -28,12 +28,19 @@
               <div class="mb-3">
                 <strong>Profile Picture:</strong>
                 <div class="d-flex align-items-center mt-2">
-                  <img
-                    :src="userProfile.profilePicture"
-                    alt="Profile Picture"
-                    class="rounded-circle me-3"
-                    style="width: 60px; height: 60px; object-fit: cover;"
-                  />
+                  <a
+                    :href="profileLink"
+                    target="_blank"
+                    style="display: inline-block;"
+                    title="Go to your profile"
+                  >
+                    <img
+                      :src="userProfile.profilePicture"  
+                      alt="Profile Picture"
+                      class="rounded-circle me-3"
+                      style="width: 60px; height: 60px; object-fit: cover;"
+                    />
+                  </a>
                   <i class="fas fa-edit edit-icon" @click="triggerFileInput"></i>
                   <input
                     type="file"
@@ -192,46 +199,10 @@
       <!-- Separator -->
       <hr class="sidebar-divider mb-4">
 
-      <!-- Payment Settings Section -->
-      <div class="mb-4">
-        <h6 class="section-header text-uppercase mb-2">Payment Settings</h6>
-        <ul class="nav flex-column">
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Quests</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Server Boost</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Nitro Gifting</a>
-          </li>
-        </ul>
-      </div>
-
       <!-- Separator -->
       <hr class="sidebar-divider mb-4">
 
       <!-- App Settings Section -->
-      <div class="mb-4">
-        <h6 class="section-header text-uppercase mb-2">App Settings</h6>
-        <ul class="nav flex-column">
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Voice</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Appearance</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Accessibility</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Language</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Chat</a>
-          </li>
-        </ul>
-      </div>
     </div>
   </section>
 </template>
@@ -456,6 +427,10 @@ export default {
         { key: 'showOnlineStatus', label: 'Show Online Status' },
         { key: 'twoFactorAuth', label: 'Two-Factor Authentication' }
       ];
+    },
+    profileLink() {
+      const userId = localStorage.getItem('userId');
+      return userId ? `/profile/${userId}` : '#';
     }
   },
   methods: {
