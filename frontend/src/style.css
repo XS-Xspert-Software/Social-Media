@@ -41,9 +41,8 @@ header {
     top: 0;
     left: 0;
     right: 0;
-    z-index: 66;
+    z-index: 9;
     margin-bottom: 30px;
-    border-bottom: 2px solid red;
     transform: translateZ(0);
 }
 header .user-section .search-dropdown input {
@@ -437,6 +436,7 @@ button {
     margin-left: 20px; /* same width as nav and sort-sidebar */
   }
 }
+
 
 
 
