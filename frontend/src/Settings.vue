@@ -204,6 +204,22 @@
 
       <!-- App Settings Section -->
     </div>
+
+    <!-- Modal for displaying info -->
+    <div v-if="modal.visible" class="modal-backdrop" @click.self="closeModal">
+      <div class="modal-content-custom">
+        <div class="modal-header-custom">
+          <span>{{ modal.title }}</span>
+          <button class="close-btn" @click="closeModal">&times;</button>
+        </div>
+        <div class="modal-body-custom">
+          <div v-html="modal.body"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast message -->
+    <div v-if="message" class="toast-message">{{ message }}</div>
   </section>
 </template>
 
@@ -388,6 +404,64 @@ padding: 0 15px 15px 15px;
 .dark-mode .sidebar-divider {
   border-top: 1px solid #202225;
 }
+
+.modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-content-custom {
+  background: #222;
+  color: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  min-width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+  position: relative;
+}
+.modal-header-custom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+.close-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+}
+.modal-body-custom {
+  font-size: 15px;
+}
+.toast-message {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #222;
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 6px;
+  z-index: 2000;
+  font-size: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  animation: fadeInOut 2.5s;
+}
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
+}
 </style>
 <script>
 import { nodeAPI } from './config/api.js';
@@ -415,7 +489,12 @@ export default {
         twoFactorAuth: false
       },
       loading: false,
-      message: ''
+      message: '',
+      modal: {
+        visible: false,
+        title: '',
+        body: ''
+      }
     };
   },
   computed: {
@@ -615,20 +694,51 @@ export default {
       }
     },
     openBlockedUsers() {
-      this.message = 'Blocked users feature coming soon!';
+      this.showModal(
+        'Blocked Users',
+        '<p>This feature will allow you to manage your blocked users.<br><br><em>Coming soon!</em></p>'
+      );
     },
     viewMyActivity() {
-      this.message = 'Activity history feature coming soon!';
+      this.showModal(
+        'My Activity',
+        '<p>Your activity history will be shown here.<br><br><em>Coming soon!</em></p>'
+      );
     },
     viewAboutUs() {
-      this.message = 'About us page coming soon!';
+      this.showModal(
+        'About Us',
+        `<p><strong>Pulse</strong> is a modern social platform.<br>
+        <br>Version: 1.0.0<br>
+        <br>Made with ❤️ by the Pulse Team.<br>
+        <br>Contact: <a href="mailto:support@pulse.com" style="color:#5865F2">support@pulse.com</a></p>`
+      );
     },
     viewTerms() {
-      this.message = 'Terms and conditions page coming soon!';
+      this.showModal(
+        'Terms and Conditions',
+        `<p>By using Pulse, you agree to our terms and conditions.<br>
+        <br><em>Full terms and conditions coming soon!</em></p>`
+      );
+    },
+    showModal(title, body) {
+      this.modal.title = title;
+      this.modal.body = body;
+      this.modal.visible = true;
+    },
+    closeModal() {
+      this.modal.visible = false;
     },
     logOut() {
       localStorage.clear();
       window.location.reload();
+    }
+  },
+  watch: {
+    message(val) {
+      if (val) {
+        setTimeout(() => { this.message = ''; }, 2000);
+      }
     }
   },
   mounted() {
