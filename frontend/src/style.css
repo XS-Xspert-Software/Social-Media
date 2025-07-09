@@ -5,8 +5,10 @@
 }
 /* General Styles with minimal GPU acceleration */
 body {
-    padding: 10px;
+    padding: 0;
     margin: 0;
+    height: 100vh;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -401,33 +403,51 @@ button {
     } 
     /* Large Screens (Sidebar with Text Only) */
     @media (min-width: 768px) {
-        .layout-container {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  width: 100%;
-  height: 100vh;
+        header {
+    height: 56px;
+  }
+  .layout-container {
+    display: grid;
+    grid-template-columns: 250px 1fr 320px;
+    width: 100%;
+    height: calc(100vh - 56px);
+    margin-top: 56px;
+    overflow: hidden;
+  }
+  .sidebar {
+    width: 250px;
+    padding: 10px 0;
+    height: 100%;
+    overflow: visible;
+  }
+  .main-content {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+  }
+  .main-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
-   .sidebar {
-        width: 250px;
-        padding: 10px 0;
-      }
-      .sidebar a .icon {
-        display: none;
-      }
-      .sidebar a {
-        justify-content: flex-start;
-      }
-       .Sort{
-    display: none;
-}
-.main-content {
-  width: 100%; /* Ensures it fills available space */
-}
-.post-card{
-    margin-right: 60px;
-}
+  .right-sidebar {
+    width: 320px;
+    padding: 0 20px;
+    height: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background: none;
+    box-shadow: none;
+    border-left: 1.5px solid red;
+  }
+  .posts-feed, .content-wrapper {
+    height: auto !important;
+    overflow: visible !important;
+  }
   main {
-    margin-left: 20px; /* same width as nav and sort-sidebar */
+    margin-left: 20px;
   }
 }
 
