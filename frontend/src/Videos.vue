@@ -82,6 +82,25 @@
 
 import Avatar from 'primevue/avatar';
 
+// Add global djangoAPI object for API calls
+const djangoAPI = {
+  baseURL: 'https://syncapi.pythonanywhere.com',
+  async request(endpoint, options = {}) {
+    const res = await fetch(this.baseURL + endpoint, options);
+    return res.json();
+  },
+  async createVideoPost(formData) {
+    const res = await fetch(this.baseURL + '/api/videopost/', {
+      method: 'POST',
+      body: formData
+    });
+    return res.json();
+  },
+  async trackVideoWatch(videoId, userId) {
+    await fetch(this.baseURL + `/api/track-watch/?video_id=${videoId}&user_id=${userId || 'anonymous'}`);
+  }
+};
+
 export default {
   props: ['searchQuery', 'userId'],
    
@@ -117,8 +136,9 @@ export default {
       try {
         const response = await djangoAPI.request(`/api/feed-json/?user_id=${this.userId || 'anonymous'}`);
         
-        if (response.success) {
-          this.videos = response.feed;
+        // Use response.videos instead of response.feed
+        if (response.videos) {
+          this.videos = response.videos;
         } else {
           this.error = 'Failed to load videos';
         }
@@ -187,9 +207,9 @@ export default {
     }
   }
 };
-definePageMeta({
-  ssr: false
-})
+// definePageMeta({
+//   ssr: false
+// })
 </script>
 
 <style scoped>

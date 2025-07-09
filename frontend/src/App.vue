@@ -107,11 +107,12 @@
         </Suspense>
       </div>
     <div class="right-sidebar">
-      <div v-if="!userProfile.username || userProfile.username === 'Guest'" style="display: flex; flex-direction: column; align-items: center; margin-top: 80px;">
+      <div v-if="!userProfile.username || userProfile.username === 'Guest'">
         <a
           href="https://latestnewsandaffairs.site/public/signup"
           target="_blank"
-          style="display: block; background: linear-gradient(90deg, #000000 0%, #ff9900 50%, #000000 100%); color: #fff; font-size: 0.95rem; font-weight: bold; padding: 20px 40px; border-radius: 12px; text-decoration: none; box-shadow: 0 4px 16px rgba(0,0,0,0.15); transition: background 0.2s; margin-bottom: 20px;"
+          class="signup-btn"
+          style="display: block; margin: 32px auto 0 auto;"
         >
           New to Sync? Sign Up
         </a>
@@ -626,6 +627,28 @@ nav {
 
 .patreon-link i {
   font-size: 16px;
+}
+
+/* Signup button styling */
+.signup-btn {
+  display: block;
+  background: #fff;
+  color: #111;
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 16px 32px;
+  border-radius: 10px;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  border: 1px solid #111;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  margin-bottom: 32px;
+}
+.signup-btn:hover {
+  background: #111;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+  text-decoration: none;
 }
 </style>
 
