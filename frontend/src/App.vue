@@ -77,6 +77,23 @@
   >Newest</button>
 </div>
 
+<!-- Support Us Section -->
+<div class="sidebar-support">
+  <div class="support-header">
+    <i class="fas fa-heart"></i>
+    <span>Support Us</span>
+  </div>
+  <a 
+    href="https://patreon.com/syncsocial" 
+    target="_blank" 
+    class="patreon-link"
+    rel="noopener noreferrer"
+  >
+    <i class="fab fa-patreon"></i>
+    <span>Patreon</span>
+  </a>
+</div>
+
 </div>
       <!-- Main Content -->
       <div class="main-content">
@@ -547,6 +564,58 @@ header {
 
 nav {
   flex-shrink: 0;
+}
+
+/* Support section styles */
+.sidebar-support {
+  margin-top: 24px;
+  padding: 16px;
+  margin-left: -16px;
+  margin-right: -16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.support-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.support-header i {
+  color: #ff6b6b;
+  font-size: 16px;
+}
+
+.patreon-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: linear-gradient(90deg, #ff424d 0%, #ff6b35 100%);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.18s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.patreon-link:hover {
+  background: linear-gradient(90deg, #e63946 0%, #f77f00 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(255, 66, 77, 0.3);
+  text-decoration: none;
+  color: #fff;
+}
+
+.patreon-link i {
+  font-size: 16px;
 }
 </style>
 

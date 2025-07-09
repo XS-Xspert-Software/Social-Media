@@ -346,7 +346,7 @@ button {
 
 .sidebar {
      align-items: flex-start; /* aligns child content to the left */
-    margin-top: 50px;
+    margin-top: 35px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -358,6 +358,7 @@ button {
 .sidebar-tabs, .sidebar-sort {
   list-style: none; /* Remove the dot */
   margin-left: 60px;
+  margin-top: 10px;
      border-bottom: 1px solid #ddd;
 }
 /* Shared style for both li and button */
@@ -394,7 +395,7 @@ button {
 
  /* Small Screens (Bottom Navigation with Icons) */
     @media (max-width: 767px) {
-      .sidebar ,.right-sidebar,.sidebar-sort {
+      .sidebar,.sidebar-sort {
         display: none;
       }
     } 
@@ -416,13 +417,6 @@ button {
       .sidebar a {
         justify-content: flex-start;
       }
-      .right-sidebar {
-         height: 200vh;
-         border-left: 1px solid red;
-        margin-top: 50px;
-      width: 350px;
-      padding: 10px;
-    }
        .Sort{
     display: none;
 }
