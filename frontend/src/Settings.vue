@@ -1,9 +1,14 @@
 <template>
   <section class="settings-section">
+    <!-- Feedback/Message Area -->
+    <div v-if="message" class="settings-message" :class="{ error: message.toLowerCase().includes('fail') }">
+      <i v-if="message.toLowerCase().includes('fail')" class="fas fa-exclamation-triangle"></i>
+      <i v-else class="fas fa-check-circle"></i>
+      {{ message }}
+    </div>
     <!-- SSBAR -->
     <div class="SSBAR">
       <h2 class="SSBAR-title">Settings</h2>
-
       <!-- User Settings Section -->
       <div class="settings-group">
         <h6 class="section-header">USER SETTINGS</h6>
@@ -15,6 +20,8 @@
               :class="{ active: activeSection === 'profile' }"
               @click="toggleSection('profile')"
               href="#profile"
+              aria-current="profile"
+              tabindex="0"
             >
               <i class="fas fa-user"></i> Profile
             </a>
@@ -22,21 +29,23 @@
               <div class="profile-item">
                 <strong>Username:</strong>
                 <span>{{ userProfile.username || 'Loading...' }}</span>
-                <i class="fas fa-edit edit-icon" @click="changeUsername"></i>
+                <i class="fas fa-edit edit-icon" @click="changeUsername" title="Edit Username" tabindex="0" aria-label="Edit Username"></i>
               </div>
               <hr class="divider">
               <div class="profile-item">
                 <strong>Profile Picture:</strong>
                 <div class="picture-controls">
                   <img
-                    :src="userProfile.profilePicture"
+                    :src="userProfile.profile_picture"
                     alt="Profile Picture"
                     class="profile-img"
+                    @error="e => e.target.src = 'https://latestnewsandaffairs.site/public/pfp.jpg'"
                   />
-                  <i class="fas fa-edit edit-icon" @click="triggerFileInput"></i>
+                  <i class="fas fa-edit edit-icon" @click="triggerFileInput" title="Change Profile Picture" tabindex="0" aria-label="Change Profile Picture"></i>
                   <input
                     type="file"
                     ref="profileFileInput"
+                    id="profileFileInput"
                     @change="handleProfilePictureChange"
                     accept="image/*"
                     style="display: none;"
@@ -54,31 +63,31 @@
               <div class="profile-item">
                 <strong>Description:</strong>
                 <span>{{ userProfile.description || 'No description available' }}</span>
-                <i class="fas fa-edit edit-icon" @click="editDescription"></i>
+                <i class="fas fa-edit edit-icon" @click="editDescription" title="Edit Description" tabindex="0" aria-label="Edit Description"></i>
               </div>
               <hr class="divider">
               <div class="profile-item">
                 <strong>Location:</strong>
                 <span>{{ userProfile.location || 'Location not available' }}</span>
-                <i class="fas fa-edit edit-icon" @click="editLocation"></i>
+                <i class="fas fa-edit edit-icon" @click="editLocation" title="Edit Location" tabindex="0" aria-label="Edit Location"></i>
               </div>
               <hr class="divider">
               <div class="profile-item">
                 <strong>Status:</strong>
                 <span>{{ userProfile.status || 'Status not available' }}</span>
-                <i class="fas fa-edit edit-icon" @click="editStatus"></i>
+                <i class="fas fa-edit edit-icon" @click="editStatus" title="Edit Status" tabindex="0" aria-label="Edit Status"></i>
               </div>
               <hr class="divider">
               <div class="profile-item">
                 <strong>Profession:</strong>
                 <span>{{ userProfile.profession || 'Profession not available' }}</span>
-                <i class="fas fa-edit edit-icon" @click="editProfession"></i>
+                <i class="fas fa-edit edit-icon" @click="editProfession" title="Edit Profession" tabindex="0" aria-label="Edit Profession"></i>
               </div>
               <hr class="divider">
               <div class="profile-item">
                 <strong>Hobby:</strong>
                 <span>{{ userProfile.hobby || 'Hobby not available' }}</span>
-                <i class="fas fa-edit edit-icon" @click="editHobby"></i>
+                <i class="fas fa-edit edit-icon" @click="editHobby" title="Edit Hobby" tabindex="0" aria-label="Edit Hobby"></i>
               </div>
             </div>
           </li>
@@ -89,6 +98,8 @@
               :class="{ active: activeSection === 'general' }"
               @click="toggleSection('general')"
               href="#general"
+              aria-current="general"
+              tabindex="0"
             >
               <i class="fas fa-cog"></i> General
             </a>
@@ -109,14 +120,16 @@
                     @keydown.space.prevent="toggleSetting(item.key)"
                     @keydown.enter.prevent="toggleSetting(item.key)"
                     :style="getToggleStyle(item.key)"
+                    :aria-label="'Toggle ' + item.label"
                   >
                     <div class="toggle-knob" :style="getKnobStyle(item.key)"></div>
                   </div>
                   <span class="status-text">{{ getStatusText(item.key) }}</span>
                 </div>
               </div>
-              <button class="btn btn-primary full-width" @click="saveSettings">
-                Save Settings
+              <button class="btn btn-primary full-width" @click="saveSettings" :disabled="loading">
+                <span v-if="loading"><i class="fas fa-spinner fa-spin"></i> Saving...</span>
+                <span v-else>Save Settings</span>
               </button>
             </div>
           </li>
@@ -127,6 +140,8 @@
               :class="{ active: activeSection === 'history' }"
               @click="toggleSection('history')"
               href="#history"
+              aria-current="history"
+              tabindex="0"
             >
               <i class="fas fa-history"></i> History
             </a>
@@ -143,6 +158,8 @@
               :class="{ active: activeSection === 'About' }"
               @click="toggleSection('About')"
               href="#About"
+              aria-current="About"
+              tabindex="0"
             >
               <i class="fas fa-info-circle"></i> About
             </a>
@@ -159,6 +176,8 @@
               :class="{ active: activeSection === 'Terms' }"
               @click="toggleSection('Terms')"
               href="#Terms"
+              aria-current="Terms"
+              tabindex="0"
             >
               <i class="fas fa-file-alt"></i> Terms and Conditions
             </a>
@@ -175,6 +194,8 @@
               :class="{ active: activeSection === 'account' }"
               @click="toggleSection('account')"
               href="#account"
+              aria-current="account"
+              tabindex="0"
             >
               <i class="fas fa-shield-alt"></i> Account
             </a>
@@ -187,10 +208,8 @@
           </li>
         </ul>
       </div>
-
       <!-- Separator -->
       <hr class="section-divider">
-
       <!-- Payment Settings Section -->
       <div class="settings-group">
         <h6 class="section-header">PAYMENT SETTINGS</h6>
@@ -206,10 +225,8 @@
           </li>
         </ul>
       </div>
-
       <!-- Separator -->
       <hr class="section-divider">
-
       <!-- App Settings Section -->
       <div class="settings-group">
         <h6 class="section-header">APP SETTINGS</h6>
@@ -584,6 +601,8 @@ onMounted(() => {
 .nav-link.active {
   background-color: #E3E5E8;
   color: #060607;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(88,101,242,0.08);
 }
 
 .nav-link.disabled {
@@ -794,5 +813,51 @@ onMounted(() => {
 .dark-mode .divider,
 .dark-mode .section-divider {
   border-top: 1px solid #202225;
+}
+
+/* New styles */
+.settings-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #23272a;
+  color: #43b581;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 16px;
+  border-radius: 6px;
+  margin-bottom: 18px;
+  gap: 8px;
+  border: 1px solid #43b581;
+  transition: background 0.2s, color 0.2s;
+}
+.settings-message.error {
+  color: #ed4245;
+  border-color: #ed4245;
+  background: #2f1a1a;
+}
+
+/* Focus style for toggles and edit icons for accessibility */
+.toggle-switch:focus, .edit-icon:focus {
+  outline: 2px solid #5865F2;
+  outline-offset: 2px;
+}
+
+/* Improve nav-link active/hover for clarity */
+.nav-link.active {
+  background-color: #E3E5E8;
+  color: #060607;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(88,101,242,0.08);
+}
+.nav-link:hover:not(.disabled) {
+  background-color: #F2F3F5;
+  color: #060607;
+  font-weight: 600;
+}
+
+/* Loading spinner for save button */
+.fa-spinner {
+  margin-right: 6px;
 }
 </style>
