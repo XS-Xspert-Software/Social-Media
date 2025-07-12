@@ -111,10 +111,23 @@
         <a
           href="https://latestnewsandaffairs.site/public/signup"
           target="_blank"
-          class="signup-btn"
-          style="display: block; margin: 32px auto 0 auto;"
+          class="sidebar-action-btn signup-btn"
         >
-          New to Sync? Sign Up
+          <i class="fas fa-user-plus"></i> Sign Up
+        </a>
+        <a
+          href="https://latestnewsandaffairs.site/public/signup"
+          target="_blank"
+          class="sidebar-action-btn login-btn"
+        >
+          <i class="fas fa-sign-in-alt"></i> Log In
+        </a>
+        <a
+          href="https://patreon.com/syncsocial"
+          target="_blank"
+          class="sidebar-action-btn patreon-btn"
+        >
+          <i class="fab fa-patreon"></i> Support on Patreon
         </a>
       </div>
     </div>
@@ -649,6 +662,63 @@ nav {
   color: #fff;
   box-shadow: 0 4px 16px rgba(0,0,0,0.13);
   text-decoration: none;
+}
+
+/* Sidebar action buttons */
+.sidebar-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  color: #222;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 14px 28px;
+  border-radius: 12px;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  border: 1.5px solid #222;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s, border 0.18s;
+  margin-bottom: 18px;
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+  justify-content: center;
+}
+.sidebar-action-btn i {
+  font-size: 1.1em;
+}
+.signup-btn {
+  border-color: #111;
+}
+.signup-btn:hover {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+.login-btn {
+  border-color: #007bff;
+}
+.login-btn:hover {
+  background: #007bff;
+  color: #fff;
+  border-color: #007bff;
+}
+.forgot-btn {
+  border-color: #ff9800;
+}
+.forgot-btn:hover {
+  background: #ff9800;
+  color: #fff;
+  border-color: #ff9800;
+}
+.patreon-btn {
+  border-color: #ff424d;
+}
+.patreon-btn:hover {
+  background: #ff424d;
+  color: #fff;
+  border-color: #ff424d;
 }
 </style>
 
