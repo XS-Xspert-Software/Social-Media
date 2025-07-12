@@ -354,6 +354,7 @@ button {
   align-items: flex-start;
   width: 350px;
   border-right: 1px solid red;
+  min-height: 400px;
  
 }
 /* Shared layout for both nav tabs and sort buttons */
@@ -435,6 +436,7 @@ button {
     width: 320px;
     padding: 0 20px;
     height: 100%;
+    min-height: 400px;
     display: flex;
     align-items: flex-start;
     justify-content: center;
