@@ -1,8 +1,8 @@
 <template>
-  <div :class="['app-wrapper', { 'Chatbox-fullscreen': iChatboxRoute }]">
+  <div :class="['app-wrapper', { 'Chatbox-fullscreen': isChatboxRoute }]">
 
     <!-- Header (hidden in'Chatbox) -->
-    <header v-if="!iChatboxRoute">
+    <header v-if="!isChatboxRoute">
       <h1 style="font-size: 23px; margin-left: 3%; display: flex; align-items: center; gap: 8px;">
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="width:24px; height:24px;">
           <path d="M32 2 L38 26 L62 32 L38 38 L32 62 L26 38 L2 32 L26 26 Z"/>
@@ -39,8 +39,8 @@
     </header>
 
   <!-- Layout container adapts based on current route -->
-<div class="layout-container" v-if="!iChatboxRoute">
-    <div class="sidebar" v-if="!iChatboxRoute">
+<div class="layout-container" v-if="!isChatboxRoute">
+    <div class="sidebar" v-if="!isChatboxRoute">
   <ul class="sidebar-tabs">
     <li
       v-for="tab in tabs"

@@ -12,19 +12,88 @@
       <!-- User Settings Section -->
       <div class="settings-group">
         <h6 class="section-header">USER SETTINGS</h6>
-        <ul class="nav">
-          <!-- Profile -->
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              :class="{ active: activeSection === 'profile' }"
-              @click="toggleSection('profile')"
-              href="#profile"
-              aria-current="profile"
-              tabindex="0"
-            >
-              <i class="fas fa-user"></i> Profile
-            </a>
+        <div style="display: flex; flex-direction: row; align-items: flex-start;">
+          <ul class="nav" style="min-width: 180px;">
+            <!-- Profile -->
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                :class="{ active: activeSection === 'profile' }"
+                @click.prevent="toggleSection('profile')"
+                href="javascript:void(0)"
+                aria-current="profile"
+                tabindex="0"
+              >
+                <i class="fas fa-user"></i> Profile
+              </a>
+            </li>
+            <!-- General -->
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                :class="{ active: activeSection === 'general' }"
+                @click.prevent="toggleSection('general')"
+                href="javascript:void(0)"
+                aria-current="general"
+                tabindex="0"
+              >
+                <i class="fas fa-cog"></i> General
+              </a>
+            </li>
+            <!-- History -->
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                :class="{ active: activeSection === 'history' }"
+                @click.prevent="toggleSection('history')"
+                href="javascript:void(0)"
+                aria-current="history"
+                tabindex="0"
+              >
+                <i class="fas fa-history"></i> History
+              </a>
+            </li>
+            <!-- About -->
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                :class="{ active: activeSection === 'About' }"
+                @click.prevent="toggleSection('About')"
+                href="javascript:void(0)"
+                aria-current="About"
+                tabindex="0"
+              >
+                <i class="fas fa-info-circle"></i> About
+              </a>
+            </li>
+            <!-- Terms -->
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                :class="{ active: activeSection === 'Terms' }"
+                @click.prevent="toggleSection('Terms')"
+                href="javascript:void(0)"
+                aria-current="Terms"
+                tabindex="0"
+              >
+                <i class="fas fa-file-alt"></i> Terms and Conditions
+              </a>
+            </li>
+            <!-- Account -->
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                :class="{ active: activeSection === 'account' }"
+                @click.prevent="toggleSection('account')"
+                href="javascript:void(0)"
+                aria-current="account"
+                tabindex="0"
+              >
+                <i class="fas fa-shield-alt"></i> Account
+              </a>
+            </li>
+          </ul>
+          <div style="flex: 1;">
             <div v-if="activeSection === 'profile'" class="section-details">
               <div class="profile-item">
                 <strong>Username:</strong>
@@ -90,19 +159,6 @@
                 <i class="fas fa-edit edit-icon" @click="editHobby" title="Edit Hobby" tabindex="0" aria-label="Edit Hobby"></i>
               </div>
             </div>
-          </li>
-          <!-- General -->
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              :class="{ active: activeSection === 'general' }"
-              @click="toggleSection('general')"
-              href="#general"
-              aria-current="general"
-              tabindex="0"
-            >
-              <i class="fas fa-cog"></i> General
-            </a>
             <div v-if="activeSection === 'general'" class="section-details">
               <div
                 v-for="item in toggleSettings"
@@ -132,81 +188,29 @@
                 <span v-else>Save Settings</span>
               </button>
             </div>
-          </li>
-          <!-- History -->
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              :class="{ active: activeSection === 'history' }"
-              @click="toggleSection('history')"
-              href="#history"
-              aria-current="history"
-              tabindex="0"
-            >
-              <i class="fas fa-history"></i> History
-            </a>
             <div v-if="activeSection === 'history'" class="section-details">
               <button class="btn btn-primary full-width" @click="viewMyActivity">
                 View My Activity
               </button>
             </div>
-          </li>
-          <!-- About -->
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              :class="{ active: activeSection === 'About' }"
-              @click="toggleSection('About')"
-              href="#About"
-              aria-current="About"
-              tabindex="0"
-            >
-              <i class="fas fa-info-circle"></i> About
-            </a>
             <div v-if="activeSection === 'About'" class="section-details">
               <button class="btn btn-primary full-width" @click="viewAboutUs">
                 View About Us
               </button>
             </div>
-          </li>
-          <!-- Terms -->
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              :class="{ active: activeSection === 'Terms' }"
-              @click="toggleSection('Terms')"
-              href="#Terms"
-              aria-current="Terms"
-              tabindex="0"
-            >
-              <i class="fas fa-file-alt"></i> Terms and Conditions
-            </a>
             <div v-if="activeSection === 'Terms'" class="section-details">
               <button class="btn btn-primary full-width" @click="viewTerms">
                 View Terms and Conditions
               </button>
             </div>
-          </li>
-          <!-- Account -->
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              :class="{ active: activeSection === 'account' }"
-              @click="toggleSection('account')"
-              href="#account"
-              aria-current="account"
-              tabindex="0"
-            >
-              <i class="fas fa-shield-alt"></i> Account
-            </a>
             <div v-if="activeSection === 'account'" class="section-details">
               <button class="btn btn-primary full-width" @click="openBlockedUsers">
                 Blocked Users
               </button>
               <button class="btn btn-danger full-width" @click="logOut">Log Out</button>
             </div>
-          </li>
-        </ul>
+          </div>
+        </div>
       </div>
       <!-- Separator -->
       <hr class="section-divider">
@@ -310,6 +314,20 @@ const fetchUserSettings = async () => {
       description: user.description || 'No description available',
       profile_picture: user.profile_picture || 'https://latestnewsandaffairs.site/public/pfp.jpg'
     };
+    // Load settings from backend preferences if available
+    if (user.preferences) {
+      Object.keys(settings.value).forEach(key => {
+        if (user.preferences.hasOwnProperty(key)) {
+          settings.value[key] = user.preferences[key];
+        }
+      });
+      // Sync dark mode UI
+      if (settings.value.darkMode) {
+        document.documentElement.classList.add('dark-mode');
+      } else {
+        document.documentElement.classList.remove('dark-mode');
+      }
+    }
   } catch (error) {
     message.value = 'Error fetching user settings.';
     console.error('Error fetching user settings:', error);
@@ -319,9 +337,11 @@ const fetchUserSettings = async () => {
 };
 
 const updateUserProfileField = async (field, newValue) => {
+  loading.value = true;
   const username = localStorage.getItem('username');
   if (!username) {
     message.value = 'Username not found!';
+    loading.value = false;
     return;
   }
   try {
@@ -343,6 +363,8 @@ const updateUserProfileField = async (field, newValue) => {
   } catch (error) {
     message.value = `Failed to update ${field}`;
     console.error(`Error updating ${field}:`, error);
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -407,16 +429,19 @@ const handleProfilePictureChange = (event) => {
 
 const saveProfilePicture = async () => {
   if (!newProfilePicture.value) return;
+  loading.value = true;
   try {
     const username = localStorage.getItem('username');
     if (!username) {
       message.value = 'Username not found!';
+      loading.value = false;
       return;
     }
+    // Use correct field name for backend compatibility
     const response = await fetch('https://sports321.vercel.app/api/posts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, profilePicture: newProfilePicture.value })
+      body: JSON.stringify({ username, profile_picture: newProfilePicture.value })
     });
     if (response.ok) {
       userProfile.value.profile_picture = newProfilePicture.value;
@@ -429,14 +454,18 @@ const saveProfilePicture = async () => {
   } catch (error) {
     message.value = 'Failed to update profile picture';
     console.error('Error updating profile picture:', error);
+  } finally {
+    loading.value = false;
   }
 };
 
-const toggleSetting = (key) => {
+const toggleSetting = async (key) => {
   settings.value[key] = !settings.value[key];
   if (key === 'darkMode') {
     toggleDarkMode();
   }
+  // Save immediately for instant feedback
+  await saveSettings();
 };
 
 const toggleDarkMode = () => {
@@ -477,9 +506,11 @@ const getKnobStyle = (key) => ({
 });
 
 const saveSettings = async () => {
+  loading.value = true;
   const username = localStorage.getItem('username');
   if (!username) {
     message.value = 'Username not found!';
+    loading.value = false;
     return;
   }
   try {
@@ -496,6 +527,8 @@ const saveSettings = async () => {
   } catch (error) {
     message.value = 'Failed to save settings';
     console.error('Error saving settings:', error);
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -541,6 +574,8 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   margin-top: 50PX;
+  position: relative;
+  z-index: 1000; /* Ensure sidebar is above overlays */
 }
 
 .SSBAR {
@@ -550,6 +585,8 @@ onMounted(() => {
   overflow-y: auto;
   padding: 15px;
   border-radius: 8px;
+  position: relative;
+  z-index: 1001; /* Ensure sidebar content is above overlays */
 }
 
 .SSBAR-title {
@@ -579,6 +616,9 @@ onMounted(() => {
 
 .nav-item {
   margin-bottom: 0;
+  pointer-events: auto;
+  z-index: 1002;
+  position: relative;
 }
 
 .nav-link {
@@ -591,6 +631,9 @@ onMounted(() => {
   cursor: pointer;
   text-decoration: none;
   display: block;
+  pointer-events: auto;
+  z-index: 1003;
+  position: relative;
 }
 
 .nav-link:hover {
@@ -604,6 +647,8 @@ onMounted(() => {
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(88,101,242,0.08);
 }
+
+/* Remove debug box-shadow */
 
 .nav-link.disabled {
   color: #A3A6AA;
