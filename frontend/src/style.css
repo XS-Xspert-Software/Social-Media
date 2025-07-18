@@ -5,10 +5,8 @@
 }
 /* General Styles with minimal GPU acceleration */
 body {
-    padding: 0;
+    padding: 10px;
     margin: 0;
-    height: 100vh;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -122,9 +120,9 @@ nav li:hover {
 .actions button {
     background-color: transparent;
     border: none;
-    color: #ddd;
+    color: #1DA1F2;
     cursor: pointer;
-    font-size: 9.6px;
+    font-size: 7px;
     min-width: 60px;
     text-align: center;
     transition: transform 0.2s ease;
@@ -345,29 +343,35 @@ button {
     background: linear-gradient(to bottom right, #111827, #581c87);
     color: #f3f4f6;
 }
-
-.sidebar {
-     align-items: flex-start; /* aligns child content to the left */
-    margin-top: 35px;
+/* Make sure .sidebar is fixed as discussed */
+.layout-container {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 350px;
-  border-right: 1px solid red;
-  min-height: 400px;
- 
+  width: 100%;
+  height: 100%;
 }
-/* Shared layout for both nav tabs and sort buttons */
+
+/* Fixed Sidebar */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 290px;
+  height: 100vh;
+  background-color: #000;
+  border-right: 1px solid red;
+  padding-top: 50px;
+  overflow-y: auto;
+  z-index: 10;
+}
 .sidebar-tabs, .sidebar-sort {
   list-style: none; /* Remove the dot */
   margin-left: 60px;
-  margin-top: 10px;
      border-bottom: 1px solid #ddd;
 }
 /* Shared style for both li and button */
 .sidebar li,
 .sidebar-sort .sort-button {
- margin: 0;               /* remove vertical gaps */
+ margin: 0;         /* remove vertical gaps */
   padding: 12px 16px;
   border: none;
   background: none;
@@ -386,8 +390,6 @@ button {
 .sidebar-sort .sort-button:hover {
   background-color: #1a1a1a;
 }
-
-/* Optional separator between tabs and sort */
 .sidebar-sort::before {
   border-top: 1px solid #333;
 }
@@ -395,64 +397,68 @@ button {
       border-top: 1px solid #333;
       margin: 10px 0;
     }
+       @media (min-width: 768px) {
+ .Sort{
+    display: none;
+}
+       }
+.main-content {
+  margin-left: 350px;    /* Push away from left sidebar */
+  margin-right: 350px;   /* Push away from right sidebar */
+  box-sizing: border-box;
+  width: calc(100% - 600px);  /* Total space minus both sidebar widths */
+  overflow-x: hidden;
+}
 
- /* Small Screens (Bottom Navigation with Icons) */
-    @media (max-width: 767px) {
-      .sidebar,.sidebar-sort {
-        display: none;
-      }
-    } 
-    /* Large Screens (Sidebar with Text Only) */
-    @media (min-width: 768px) {
-        header {
-    height: 56px;
-  }
-  .layout-container {
-    display: grid;
-    grid-template-columns: 250px 1fr 320px;
-    width: 100%;
-    height: calc(100vh - 56px);
-    margin-top: 56px;
-    overflow: hidden;
-  }
-  .sidebar {
-    width: 250px;
-    padding: 10px 0;
-    height: 100%;
-    overflow: visible;
+.right-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 310px;
+  height: 100vh;
+  border-left: 1px solid red;
+  margin-top: 50px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+/* Responsive: Hide sidebar on small screens */
+@media (max-width: 767px) {
+  .sidebar, .right-sidebar,.sidebar-sort  {
+   display: none;
   }
   .main-content {
+    margin: 0;
     width: 100%;
-    height: 100%;
-    overflow-y: auto !important;
-    overflow-x: hidden;
-    scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE 10+ */
-  }
-  .main-content::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
-  .right-sidebar {
-    width: 320px;
-    padding: 0 20px;
-    height: 100%;
-    min-height: 400px;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    background: none;
-    box-shadow: none;
-    border-left: 1.5px solid red;
-  }
-  .posts-feed, .content-wrapper {
-    height: auto !important;
-    overflow: visible !important;
-  }
-  main {
-    margin-left: 20px;
   }
 }
 
+.notification {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4caf50;
+  color: white;
+  padding: 6px 14px;       /* slightly smaller padding */
+  border-radius: 20px;     /* more rounded */
+  border: 1px solid #388e3c; /* small, subtle border */
+  font-size: 14px;
+  z-index: 9999;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  max-width: 80%;
+  text-align: center;
+}
+
+.error-notification {
+  background-color: #f44336;
+}
+
+.show-notification {
+  opacity: 1;
+}
 
 
 
