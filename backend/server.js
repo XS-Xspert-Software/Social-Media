@@ -5,6 +5,8 @@ import fetch from 'node-fetch';
 import { registerUser, loginUser, getUserInfo, updateUserProfile } from './controller/user.js';
 import rateLimit from 'express-rate-limit';
 import { createPost, getPosts } from './controller/post.js';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 dotenv.config();
 const PORT = process.env.PORT || 3000;
 const app = express();
@@ -25,6 +27,32 @@ function log(level, ...args) {
     console.log(`[${ts}]`, ...args);
   }
 }
+
+// --- Socket.IO Global Chat Setup ---
+const server = createServer(app);
+const io = new SocketIOServer(server, { cors: { origin: '*' } });
+
+let globalMessages = [];
+// Clean up messages older than 24 hours every minute
+setInterval(() => {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  globalMessages = globalMessages.filter(msg => new Date(msg.timestamp).getTime() > cutoff);
+}, 60 * 1000);
+
+io.on('connection', (socket) => {
+  console.log('[Socket.IO] New client connected:', socket.id);
+  // Send last 24h messages to new client
+  socket.emit('global-messages', globalMessages);
+  // Listen for new messages
+  socket.on('global-message', (msg) => {
+    console.log('[Socket.IO] Received global-message:', msg);
+    globalMessages.push(msg);
+    io.emit('global-message', msg); // Broadcast to all clients
+  });
+  socket.on('disconnect', () => {
+    console.log('[Socket.IO] Client disconnected:', socket.id);
+  });
+});
 
 app.get('/', (req, res) => {
     res.send('Welcome to the backend server!');
@@ -180,6 +208,6 @@ app.post('/federation/inbox', (req, res) => {
 });
 
 export default app;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     log('info', `Server is running on port ${PORT}`);
 });

@@ -22,7 +22,7 @@
               <div v-for="message in messages" :key="message.id" class="message">
                 <div class="bubble">
                   <div class="text-row">
-                    <div class="username" :style="getusernameStyle(message.username)">{{ message.username || 'Unknown' }}</div>
+                    <div class="username" :style="getUsernameStyle(message.username)">{{ message.username || 'Unknown' }}</div>
                     <span class="message-text">{{ message.text || '[Empty Message]' }}</span>
                   </div>
                 </div>

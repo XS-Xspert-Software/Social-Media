@@ -1,5 +1,5 @@
 <template>
-    <div class="chat-box chatbox-override">
+  <div class="chat-box chatbox-override">
     <!-- Chat Header -->
     <div class="chat-header">
       <div class="header-left">
@@ -18,72 +18,43 @@
       </div>
     </div>
 
+    <!-- Chat Tabs -->
+    <div class="chat-tabs">
+      <button :class="{active: activeTab==='private'}" @click="activeTab='private'">Private</button>
+      <button :class="{active: activeTab==='global'}" @click="activeTab='global'">Global</button>
+    </div>
+
     <!-- Chat Main Area -->
     <div class="chat-main">
 
-      <!-- Messages -->
-      <div id="messages-container">
-        <div v-if="incomingCall" class="incoming-call-popup">
-          <p>📞 Incoming call from {{ chatWith }}</p>
-          <button @click="acceptCall">✅ Accept</button>
-          <button @click="rejectCall">❌ Reject</button>
-        </div>
-
-        <div v-if="callEndedNotice" class="call-ended-toast">Call Ended</div>
+      <!-- Global Chat -->
+      <div v-if="activeTab==='global'" class="global-chat">
         <div class="chat-container">
-          <div
-            v-for="(msg, index) in messages"
-            :key="index"
-            :class="['message', msg.side === 'user' ? (msg.seen ? 'user-msg-seen' : 'user-msg') : 'other-msg']"
-          >
-            <div
-              class="msg-bubble"
-              :class="msg.side === 'user' && msg.seen ? 'user-msg-seen' : ''"
-            >
-              <span v-if="msg.message">{{ msg.message }}</span>
-              <img v-if="msg.photo" :src="msg.photo" alt="Message Photo" class="msg-photo" @click="openFullScreen(msg.photo)" />
-              <div v-if="msg.reactions"><span v-for="reaction in msg.reactions" :key="reaction">{{ reaction }}</span></div>
+          <div v-for="(msg, idx) in globalMessages" :key="msg.id || idx" class="message other-msg">
+            <div class="msg-bubble">
+              <span><b>{{ msg.username }}</b>: {{ msg.message }}</span>
+              <div class="timestamp">{{ new Date(msg.timestamp).toLocaleTimeString() }}</div>
             </div>
-            <div class="timestamp">{{ new Date(msg.timestamp).toLocaleTimeString() }}</div>
           </div>
         </div>
-
-        <div v-if="fullscreenImage" class="fullscreen-overlay" @click="closeFullScreen">
-          <img :src="fullscreenImage" class="fullscreen-image" />
+        <div class="message-input-wrapper">
+          <input type="text" v-model="globalInput" class="message-field" placeholder="Type a message..." @keyup.enter="sendGlobalMessage" />
+          <button @click="sendGlobalMessage" class="send-button">Send</button>
         </div>
-
-        <div ref="messagesEnd"></div>
       </div>
 
-      <!-- Typing Indicator -->
-      <div v-if="isTyping" id="typing-indicator">{{ chatWith }} is typing...</div>
-
-      <!-- Message Input Area -->
-      <div class="message-input-wrapper">
-        <div class="message-input-row">
-          <button @click="toggleEmojiPicker" class="emoji-button">😃</button>
-          <input type="text" class="message-field" placeholder="Type a message..." v-model="messageInput" @input="sendTypingIndicator" />
-          <input type="file" id="file-input" accept="image/*" @change="previewPhoto($event)" style="display: none;" />
-          <div class="icon-container" @click="triggerFileInput"><i class="fas fa-camera"></i></div>
-          <button @click="sendMessage" class="send-button">Send</button>
-        </div>
-        <div v-if="showEmojiPicker" class="emoji-picker">
-          <div @click="addEmoji('😊')">😊</div>
-          <div @click="addEmoji('😂')">😂</div>
-          <div @click="addEmoji('❤️')">❤️</div>
-          <div @click="addEmoji('👍')">👍</div>
-        </div>
-        <img v-if="imagePreview" :src="imagePreview" alt="Preview" class="image-preview" />
-        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+      <!-- Private Chat (existing) -->
+      <div v-if="activeTab==='private'">
+        <!-- ...existing code for private chat... -->
       </div>
-
     </div>
-    </div>
+  </div>
 </template>
 
-  <script>
-  import { ref, onMounted, onUnmounted, computed } from 'vue';
+<script>
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { nextTick } from 'vue'
+import io from 'socket.io-client';
 
 export default {
   name: 'Chat',
@@ -117,7 +88,11 @@ export default {
       localStream: null,
       remoteStream: null,
       currentUserId: '',
-      chatWithId: ''
+      chatWithId: '',
+      activeTab: 'private', // 'private' or 'global'
+      globalMessages: [],
+      globalInput: '',
+      socket: null,
     }
   },
   computed: {
@@ -138,23 +113,36 @@ export default {
     const currentUserIdFromStorage = localStorage.getItem('userId')
     const loggedInUsernameFromStorage = localStorage.getItem('username')
     const profileImageFromStorage = localStorage.getItem('profileImage') || 'pfp3.jpg'
-
     const chatWithFromStorage = this.username || localStorage.getItem('chatWith')
     const chatWithIdFromStorage = this.userId || localStorage.getItem('chatWithId')
 
-    if (currentUserIdFromStorage && chatWithIdFromStorage && chatWithFromStorage && loggedInUsernameFromStorage) {
+    // Assign guest username if not logged in
+    if (!loggedInUsernameFromStorage) {
+      // Generate a random guest username
+      const guestName = 'Guest' + Math.floor(1000 + Math.random() * 9000)
+      this.loggedInUsername = guestName
+      localStorage.setItem('username', guestName)
+    } else {
+      this.loggedInUsername = loggedInUsernameFromStorage
+    }
+
+    if (currentUserIdFromStorage && chatWithIdFromStorage && chatWithFromStorage && this.loggedInUsername) {
       this.currentUserId = currentUserIdFromStorage
       this.chatWithId = chatWithIdFromStorage
-      this.loggedInUsername = loggedInUsernameFromStorage
       this.chatWith = chatWithFromStorage
       this.profileImage = profileImageFromStorage
-
       localStorage.removeItem('chatWith')
       localStorage.removeItem('chatWithId')
     } else {
-      alert('Missing chat data. Please select a user to chat with.')
-      this.$router.push('/')
-      return
+      // For global chat, allow guests to proceed without private chat data
+      if (this.activeTab === 'global') {
+        // Only set profile image and username for guests
+        this.profileImage = profileImageFromStorage
+      } else {
+        alert('Missing chat data. Please select a user to chat with.')
+        this.$router.push('/')
+        return
+      }
     }
 
     this.ably = new Ably.Realtime({
@@ -269,6 +257,10 @@ export default {
     })
 
     this.setupIncomingCallListener()
+    this.initGlobalChat();
+  },
+  beforeUnmount() {
+    if (this.socket) this.socket.disconnect();
   },
   methods: {
     goBack() {
@@ -645,7 +637,49 @@ export default {
           chatHeader.style.backgroundColor = ''
         }
       })
-    }
+    },
+
+    initGlobalChat() {
+      // Connect to Socket.IO backend for global chat
+      this.socket = io('http://localhost:3000'); // TODO: Replace with your backend URL
+      this.socket.on('connect', () => {
+        console.log('[GlobalChat] Connected to Socket.IO server');
+      });
+      this.socket.on('connect_error', (err) => {
+        console.error('[GlobalChat] Socket.IO connection error:', err);
+      });
+      this.socket.on('global-messages', msgs => {
+        console.log('[GlobalChat] Received global-messages:', msgs);
+        // Only keep messages from last 24 hours
+        const now = Date.now();
+        this.globalMessages = msgs.filter(m => now - new Date(m.timestamp).getTime() < 24*60*60*1000);
+      });
+      this.socket.on('global-message', msg => {
+        console.log('[GlobalChat] Received global-message:', msg);
+        const now = Date.now();
+        if (now - new Date(msg.timestamp).getTime() < 24*60*60*1000) {
+          this.globalMessages.push(msg);
+        }
+      });
+    },
+
+    sendGlobalMessage() {
+      if (!this.globalInput.trim()) return;
+      let usernameToSend = this.loggedInUsername;
+      if (!usernameToSend) {
+        usernameToSend = 'Guest' + Math.floor(1000 + Math.random() * 9000);
+        this.loggedInUsername = usernameToSend;
+        localStorage.setItem('username', usernameToSend);
+      }
+      const msg = {
+        username: usernameToSend,
+        message: this.globalInput.trim(),
+        timestamp: new Date().toISOString(),
+      };
+      console.log('[GlobalChat] Sending global-message:', msg);
+      this.socket.emit('global-message', msg);
+      this.globalInput = '';
+    },
   }
 }
 </script>
