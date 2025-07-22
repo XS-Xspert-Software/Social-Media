@@ -23,7 +23,7 @@ const routes = [
   { path: '/chatbox', name: 'Chatbox', component: Chatbox },
   { path: '/chat/:groupId/:groupName', name: 'GroupChatbox', component: GroupChatbox },
   { path: '/notification', name: 'Notification', component: Notification },
-  { path: '/post/:id', name: 'PostPage', component: PostPage }, // ✅ Added route name (optional but good practice)
+  { path: '/post/:id', name: 'PostPage', component: PostPage }, 
   { path: '/:catchAll(.*)', redirect: '/' }
 ]
 
