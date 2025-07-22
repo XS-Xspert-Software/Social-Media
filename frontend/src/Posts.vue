@@ -98,7 +98,6 @@
     </div>
 </template>
 
-
 <script setup>
 import { usePostsStore } from './stores/postsStore';
 import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router';
@@ -116,48 +115,19 @@ const notify = inject('notify'); // Inject the notify function from App.vue
 if (notify) {
   postsStore.initialize(notify);
 }
-
 // Navigate to Upload.vue for tweeting/replying
 function tweetPost(postId, username) {
   router.push({ path: '/float', query: { replyToPostId: postId, replyToUsername: username } });
 }
-
-// Watch for sort changes
-watch(selectedSort, (newVal) => {
-  postsStore.sortPosts(newVal);
-}, { immediate: true });
-
-// Handle route reset query
-watch(
-  () => route.query.reset,
-  (val) => {
-    if (val === 'true') {
-      posts.value = [];
-      router.replace({ query: { ...route.query, reset: undefined } });
-    }
-  },
-  { immediate: true }
-);
-
-// Clear posts when navigating back from Search2
-onBeforeRouteUpdate((to, from, next) => {
-  if (to.name === 'Posts' && from.name === 'Search2') {
-    posts.value = [];
-  }
-  next();
-});
-
 // Route to user profile
 function redirectToUserProfile(username) {
   router.push({ name: 'UserProfile', params: { username } });
 }
-
 // Expose sort function externally
 defineExpose({
   onExternalSort: (type) => postsStore.sortPosts(type),
 });
 </script>
-
 <style src="./Posts.css"></style>
 
 
