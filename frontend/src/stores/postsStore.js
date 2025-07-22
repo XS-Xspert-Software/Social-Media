@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import Ably from 'ably';
+import { useRouter, useRoute } from 'vue-router';
+import { getLocalStorage, setLocalStorage } from '@/utils/localStorage';
 
 export const usePostsStore = defineStore('posts', {
   state: () => ({
@@ -13,15 +15,17 @@ export const usePostsStore = defineStore('posts', {
     imagePreview: null,
     imageData: null,
     lastSentPostId: null,
-    loggedInUsername: localStorage.getItem('username') || '',
-    userId: localStorage.getItem('userId') || '',
-    sessionId: localStorage.getItem('sessionId') || null,
+    loggedInUsername: getLocalStorage('username') || '',
+    userId: getLocalStorage('userId') || '',
+    sessionId: getLocalStorage('sessionId') || null,
     showModal: false,
     modalMessage: '',
     modalAction: null,
     modalActionText: '',
     selectedPost: null,
+    selectedCommentId: null, // Track which comment's replies are open
     ably: new Ably.Realtime('eCkrsA.JzcmYQ:JLywAltPtm-KWD6Rd0MItQRgi-I4R7zn6BpI1UVQ3Eg'),
+    notify: null, // Store the notify function
   }),
 
   getters: {
@@ -33,6 +37,11 @@ export const usePostsStore = defineStore('posts', {
   },
 
   actions: {
+    // Set the notify function
+    setNotify(notifyFunction) {
+      this.notify = notifyFunction;
+    },
+
     generateSessionId() {
       const array = new Uint8Array(16);
       window.crypto.getRandomValues(array);
@@ -41,20 +50,23 @@ export const usePostsStore = defineStore('posts', {
 
     async fetchPosts(page = 1, sort = 'newest') {
       try {
+        this.loading = true;
         const response = await fetch(
-          `https://sports321.vercel.app/api/posts?page=${page}&limit=16&sort=${sort}`
+          `https://sports321.vercel.app/api/posts?page=${page}&limit=6&sort=${sort}`
         );
         if (!response.ok) throw new Error('Failed to load posts');
-        return await response.json();
+        const data = await response.json();
+        return data;
       } catch (error) {
-        console.error('Error fetching posts:', error);
+        this.notify?.('Error fetching posts: ' + error.message, true);
         return { posts: [], hasMorePosts: false };
+      } finally {
+        this.loading = false;
       }
     },
 
     async loadMorePosts() {
       if (this.loading || !this.hasMorePosts) return;
-      this.loading = true;
       const newPosts = await this.fetchPosts(this.currentPage, this.sortOption);
       if (newPosts?.posts?.length > 0) {
         this.posts.push(
@@ -66,7 +78,7 @@ export const usePostsStore = defineStore('posts', {
               replies: Array.isArray(comment.replies) ? comment.replies : [],
             })) || [],
             likedBy: post.likedBy || [],
-            dislikedBy: post.dislikedBy || [],
+            isBookmarked: false, // Initialize bookmark state
           }))
         );
         this.currentPage++;
@@ -74,7 +86,6 @@ export const usePostsStore = defineStore('posts', {
       } else {
         this.hasMorePosts = false;
       }
-      this.loading = false;
     },
 
     sortPosts(sortBy) {
@@ -90,22 +101,19 @@ export const usePostsStore = defineStore('posts', {
       const formattedPost = {
         ...post,
         likes: post.likes || 0,
-        dislikes: post.dislikes || 0,
         comments: post.comments?.map(comment => ({
           ...comment,
           showReplies: false,
           replies: Array.isArray(comment.replies) ? comment.replies : [],
         })) || [],
-        views: post.views || 0,
         likedBy: post.likedBy || [],
-        dislikedBy: post.dislikedBy || [],
+        isBookmarked: false,
       };
       if (isNewPost) {
         this.posts.unshift(formattedPost);
       } else {
         this.posts.push(formattedPost);
       }
-      this.incrementViewOnScroll(post._id);
     },
 
     formatTimestamp(timestamp) {
@@ -133,67 +141,51 @@ export const usePostsStore = defineStore('posts', {
       return 'Just now';
     },
 
-    showUserProfile(username) {
-      window.location.href = `search2.html?username=${encodeURIComponent(username)}`;
-    },
+     parseMessage(message) {
+  if (!message) return '';
+  return message
+    .replace(/@(\w+)/g, '<span class="tagged-user" style="color: red;">@$1</span>')
+    .replace(/#(\w+)/g, '<span class="hashtag" style="color: yellow;">#$1</span>');
+},
 
-    handleScroll() {
-      if (
-        window.innerHeight + window.scrollY >=
-        document.body.offsetHeight - 500
-      ) {
-        this.loadMorePosts();
-      }
-      this.posts.forEach(post => this.incrementViewOnScroll(post._id));
-    },
+  handleClick(event) {
+    const target = event.target;
+    if (target.classList.contains('tagged-user')) {
+      const username = target.textContent.slice(1); // Remove '@'
+      this.$router.push({ name: 'search2', params: { username } });
+    } else if (target.classList.contains('hashtag')) {
+      const hashtag = target.textContent.slice(1); // Remove '#'
+      this.$router.push({ path: '/search', query: { hashtag } });
+    }
+  },
+  redirectToUserProfile(username) {
+  this.$router.push({ name: 'search2', params: { username } });
+},
 
-    incrementViewOnScroll(postId) {
-      const postElement = document.querySelector(`.post-card[data-id="${postId}"]`);
-      if (postElement && this.isElementInViewport(postElement)) {
-        const hasViewed = sessionStorage.getItem(`viewed_${postId}`);
-        if (!hasViewed) {
-          const post = this.posts.find(p => p._id === postId);
-          if (post) {
-            post.views = (post.views || 0) + 1;
-            sessionStorage.setItem(`viewed_${postId}`, 'true');
-            sessionStorage.setItem(`views_${postId}`, post.views);
-            this.updatePostInFeed({ _id: postId, views: post.views });
-          }
-        }
-      }
-    },
-
-    isElementInViewport(el) {
-      const rect = el.getBoundingClientRect();
-      return (
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-      );
-    },
+redirectToHashtagSearch(hashtag) {
+  this.$router.push({ path: '/search', query: { hashtag } });
+},
 
     openFullScreenPost(postId) {
       const post = this.posts.find(p => p._id === postId);
       if (post) {
         this.selectedPost = { ...post, showComments: true };
-        this.incrementViewOnScroll(postId);
       }
     },
 
     closeFullScreenPost() {
       this.selectedPost = null;
+      this.selectedCommentId = null;
     },
 
     async likePost(postId) {
       if (!this.isAuthenticated) {
-        this.showNotification('Please log in to like posts', true);
+        this.notify?.('Please log in to like posts', true);
         return;
       }
       const post = this.posts.find(p => p._id === postId);
       if (!post) return;
       const likedBy = post.likedBy || [];
-      const dislikedBy = post.dislikedBy || [];
       let likeCount = post.likes || 0;
       if (likedBy.includes(this.loggedInUsername)) {
         likeCount--;
@@ -201,19 +193,16 @@ export const usePostsStore = defineStore('posts', {
       } else {
         likeCount++;
         post.likedBy = [...likedBy, this.loggedInUsername];
-        if (dislikedBy.includes(this.loggedInUsername)) {
-          post.dislikes--;
-          post.dislikedBy = dislikedBy.filter(user => user !== this.loggedInUsername);
-        }
       }
       post.likes = likeCount;
       if (this.selectedPost?._id === postId) {
         this.selectedPost = { ...post, showComments: true };
       }
       try {
-        const response = await fetch('https://sports123.vercel.app/api/editPost', {
+        const response = await fetch('https://sports321.vercel.app/api/editPost', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             postId,
             username: this.loggedInUsername,
@@ -222,94 +211,31 @@ export const usePostsStore = defineStore('posts', {
         });
         if (!response.ok) throw new Error('Failed to like post');
         const result = await response.json();
-        this.showNotification('Post liked successfully!', false);
+        this.notify?.('Post liked successfully!', false);
         this.updatePostInFeed(result);
       } catch (error) {
-        this.showNotification(error.message, true);
-        post.likes--;
-      }
-    },
-
-    async dislikePost(postId) {
-      if (!this.isAuthenticated) {
-        this.showNotification('Please log in to dislike posts', true);
-        return;
-      }
-      const post = this.posts.find(p => p._id === postId);
-      if (!post) return;
-      const likedBy = post.likedBy || [];
-      const dislikedBy = post.dislikedBy || [];
-      let dislikeCount = post.dislikes || 0;
-      if (dislikedBy.includes(this.loggedInUsername)) {
-        dislikeCount--;
-        post.dislikedBy = dislikedBy.filter(user => user !== this.loggedInUsername);
-      } else {
-        dislikeCount++;
-        post.dislikedBy = [...dislikedBy, this.loggedInUsername];
-        if (likedBy.includes(this.loggedInUsername)) {
-          post.likes--;
-          post.likedBy = likedBy.filter(user => user !== this.loggedInUsername);
-        }
-      }
-      post.dislikes = dislikeCount;
-      if (this.selectedPost?._id === postId) {
-        this.selectedPost = { ...post, showComments: true };
-      }
-      try {
-        const response = await fetch('https://sports123.vercel.app/api/editPost', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            postId,
-            username: this.loggedInUsername,
-            action: 'dislike',
-          }),
-        });
-        if (!response.ok) throw new Error('Failed to dislike post');
-        const result = await response.json();
-        this.showNotification('Post disliked successfully!', false);
-        this.updatePostInFeed(result);
-      } catch (error) {
-        this.showNotification(error.message, true);
-        post.dislikes--;
-      }
-    },
-
-    updatePostInFeed(updatedPost) {
-      const index = this.posts.findIndex(p => p._id === updatedPost._id);
-      if (index !== -1) {
-        this.posts[index] = {
-          ...this.posts[index],
-          ...updatedPost,
-          comments: updatedPost.comments?.map(comment => ({
-            ...comment,
-            showReplies: this.posts[index].comments.find(
-              c => c.commentId === comment.commentId
-            )?.showReplies || false,
-            replies: Array.isArray(comment.replies) ? comment.replies : [],
-          })) || [],
-          likedBy: updatedPost.likedBy || this.posts[index].likedBy,
-          dislikedBy: updatedPost.dislikedBy || this.posts[index].dislikedBy,
-        };
-        if (this.selectedPost?._id === updatedPost._id) {
-          this.selectedPost = { ...this.posts[index], showComments: true };
-        }
+        this.notify?.('Error liking post: ' + error.message, true);
+        post.likes = likedBy.includes(this.loggedInUsername) ? likeCount + 1 : likeCount - 1;
+        post.likedBy = likedBy;
       }
     },
 
     async addComment(postId, commentText) {
       if (!this.isAuthenticated) {
-        this.showNotification('Please log in to add comments', true);
+        this.notify?.('Please log in to add comments', true);
         return;
       }
-      if (!commentText.trim()) return;
+      if (!commentText.trim()) {
+        this.notify?.('Comment cannot be empty', true);
+        return;
+      }
       const commentId = Date.now().toString();
       const newComment = {
         commentId,
         username: this.loggedInUsername,
         comment: commentText,
         timestamp: new Date().toISOString(),
-        profilePicture: localStorage.getItem('profilePic') || 'pfp2.jpg',
+        profilePicture: getLocalStorage('profilePic') || 'pfp2.jpg',
         hearts: 0,
         replies: [],
       };
@@ -320,9 +246,10 @@ export const usePostsStore = defineStore('posts', {
           this.selectedPost.comments = [...post.comments];
         }
         try {
-          const response = await fetch('https://sports123.vercel.app/api/editPost', {
+          const response = await fetch('https://sports321.vercel.app/api/editPost', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({
               postId,
               username: this.loggedInUsername,
@@ -334,59 +261,21 @@ export const usePostsStore = defineStore('posts', {
           if (!response.ok) throw new Error('Failed to add comment');
           const result = await response.json();
           this.updatePostInFeed(result);
+          this.notify?.('Comment added successfully!', false);
         } catch (error) {
           post.comments = post.comments.filter(c => c.commentId !== commentId);
-          this.showNotification(error.message, true);
+          this.notify?.('Error adding comment: ' + error.message, true);
         }
       }
     },
 
-    toggleReplies(postId, commentId, commentUsername) {
-      const post = this.posts.find(p => p._id === postId);
-      if (!post) return;
-      const comment = post.comments.find(c => c.commentId === commentId);
-      if (comment) {
-        comment.showReplies = !comment.showReplies;
-        if (this.selectedPost?._id === postId) {
-          this.selectedPost.comments.find(c => c.commentId === commentId).showReplies = comment.showReplies;
-        }
-        this.showReplyBox(postId, commentId, commentUsername);
-      }
-    },
-
-    showReplyBox(postId, commentId, commentUsername) {
-      const repliesContainer = document.getElementById(`replies-${commentId}`);
-      const existingReplyBox = document.getElementById(`reply-box-${commentId}`);
-      if (existingReplyBox) existingReplyBox.remove();
-      const replyBox = document.createElement('div');
-      replyBox.id = `reply-box-${commentId}`;
-      replyBox.className = 'reply-box';
-      replyBox.innerHTML = `
-        <input
-          type="text"
-          id="reply-input-${commentId}"
-          placeholder="Write a reply..."
-          class="reply-input"
-        />
-        <button onclick="document.getElementById('add-reply-${commentId}').click()">
-          Send
-        </button>
-        <button
-          id="add-reply-${commentId}"
-          style="display: none;"
-          onclick="window.vueInstance.addReply('${postId}', '${commentId}', document.getElementById('reply-input-${commentId}').value, '${this.loggedInUsername}')"
-        ></button>
-      `;
-      repliesContainer.appendChild(replyBox);
-    },
-
-    async addReply(postId, commentId, replyText, replyUsername) {
+    async addReply(postId, commentId, replyText) {
       if (!this.isAuthenticated) {
-        this.showNotification('Please log in to add replies', true);
+        this.notify?.('Please log in to add replies', true);
         return;
       }
       if (!replyText.trim()) {
-        console.error('Reply cannot be empty');
+        this.notify?.('Reply cannot be empty', true);
         return;
       }
       const replyId = Date.now().toString();
@@ -396,11 +285,12 @@ export const usePostsStore = defineStore('posts', {
       if (!comment) return;
       const newReply = {
         replyId,
-        username: replyUsername,
+        username: this.loggedInUsername,
         reply: replyText,
         timestamp: new Date().toISOString(),
-        profilePicture: localStorage.getItem('profilePic') || 'pfp2.jpg',
+        profilePicture: getLocalStorage('profilePic') || 'pfp2.jpg',
         hearts: 0,
+        likedBy: [],
       };
       comment.replies.push(newReply);
       comment.showReplies = true;
@@ -408,30 +298,47 @@ export const usePostsStore = defineStore('posts', {
         this.selectedPost.comments = [...post.comments];
       }
       try {
-        const response = await fetch('https://sports321.vercel.app/api/editPost', {
+        const response = await fetch('https://sports321.vercel.app/api/addReply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             postId,
             commentId,
-            username: replyUsername,
-            action: 'reply',
             reply: replyText,
+            username: this.loggedInUsername,
+            sessionId: this.sessionId,
+            profilePicture: getLocalStorage('profilePic') || '',
             replyId,
           }),
         });
         if (!response.ok) throw new Error('Failed to add reply');
         const updatedPost = await response.json();
         this.updatePostInFeed(updatedPost);
+        this.notify?.('Reply added successfully!', false);
       } catch (error) {
         comment.replies = comment.replies.filter(r => r.replyId !== replyId);
-        this.showNotification('Error adding reply: ' + error.message, true);
+        this.notify?.('Error adding reply: ' + error.message, true);
+      }
+    },
+
+    toggleReplies(postId, commentId) {
+      this.selectedCommentId = this.selectedCommentId === commentId ? null : commentId;
+      const post = this.posts.find(p => p._id === postId);
+      if (post) {
+        const comment = post.comments.find(c => c.commentId === commentId);
+        if (comment) {
+          comment.showReplies = this.selectedCommentId === commentId;
+          if (this.selectedPost?._id === postId) {
+            this.selectedPost.comments = [...post.comments];
+          }
+        }
       }
     },
 
     async likeComment(postId, commentId) {
       if (!this.isAuthenticated) {
-        this.showNotification('Please log in to like comments', true);
+        this.notify?.('Please log in to like comments', true);
         return;
       }
       const post = this.posts.find(p => p._id === postId);
@@ -455,6 +362,7 @@ export const usePostsStore = defineStore('posts', {
         const response = await fetch('https://sports321.vercel.app/api/editPost', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             postId,
             username: this.loggedInUsername,
@@ -465,20 +373,19 @@ export const usePostsStore = defineStore('posts', {
         if (!response.ok) throw new Error('Failed to update comment');
         const updatedPost = await response.json();
         this.updatePostInFeed(updatedPost);
+        this.notify?.('Comment liked successfully!', false);
       } catch (error) {
-        console.error('Error liking comment:', error);
+        this.notify?.('Error liking comment: ' + error.message, true);
         comment.hearts = isAlreadyLiked ? likeCount + 1 : likeCount - 1;
-        if (isAlreadyLiked) {
-          comment.likedBy.push(this.loggedInUsername);
-        } else {
-          comment.likedBy = comment.likedBy.filter(user => user !== this.loggedInUsername);
-        }
+        comment.likedBy = isAlreadyLiked
+          ? [...comment.likedBy, this.loggedInUsername]
+          : comment.likedBy.filter(user => user !== this.loggedInUsername);
       }
     },
 
     async likeReply(postId, commentId, replyId) {
       if (!this.isAuthenticated) {
-        this.showNotification('Please log in to like replies', true);
+        this.notify?.('Please log in to like replies', true);
         return;
       }
       const post = this.posts.find(p => p._id === postId);
@@ -504,6 +411,7 @@ export const usePostsStore = defineStore('posts', {
         const response = await fetch('https://sports321.vercel.app/api/editPost', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             postId,
             username: this.loggedInUsername,
@@ -515,24 +423,23 @@ export const usePostsStore = defineStore('posts', {
         if (!response.ok) throw new Error('Failed to update reply');
         const updatedPost = await response.json();
         this.updatePostInFeed(updatedPost);
+        this.notify?.('Reply liked successfully!', false);
       } catch (error) {
-        console.error('Error liking reply:', error);
+        this.notify?.('Error liking reply: ' + error.message, true);
         reply.hearts = isAlreadyLiked ? likeCount + 1 : likeCount - 1;
-        if (isAlreadyLiked) {
-          reply.likedBy.push(this.loggedInUsername);
-        } else {
-          reply.likedBy = reply.likedBy.filter(user => user !== this.loggedInUsername);
-        }
+        reply.likedBy = isAlreadyLiked
+          ? [...reply.likedBy, this.loggedInUsername]
+          : reply.likedBy.filter(user => user !== this.loggedInUsername);
       }
     },
 
     editPost(postId, postUsername) {
       if (!this.isAuthenticated) {
-        this.showNotification('Please log in to edit posts', true);
+        this.notify?.('Please log in to edit posts', true);
         return;
       }
       if (postUsername !== this.loggedInUsername) {
-        this.showNotification('You can only edit your own posts.', true);
+        this.notify?.('You can only edit your own posts.', true);
         return;
       }
       this.modalMessage = 'Are you sure you want to edit this post?';
@@ -542,9 +449,9 @@ export const usePostsStore = defineStore('posts', {
     },
 
     async confirmEdit(postId) {
-      const postText = prompt('Edit your opinion:');
+      const postText = prompt('Edit your opinion:'); // Note: Consider replacing with a modal input
       if (!postText) {
-        this.showNotification('Post content cannot be empty!', true);
+        this.notify?.('Post content cannot be empty!', true);
         return;
       }
       const updatedPost = {
@@ -554,25 +461,26 @@ export const usePostsStore = defineStore('posts', {
         timestamp: new Date().toISOString(),
       };
       try {
-        const response = await fetch('https://sports123.vercel.app/api/deletePost', {
+        const response = await fetch('https://sports321.vercel.app/api/deletePost', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(updatedPost),
         });
         if (!response.ok) throw new Error('Failed to update post');
-        this.showNotification('Post updated successfully!', false);
+        this.notify?.('Post updated successfully!', false);
         const channel = this.ably.channels.get('posts-channel');
         channel.publish('editOpinion', updatedPost);
         this.updatePostInFeed(updatedPost);
         this.showModal = false;
       } catch (error) {
-        this.showNotification('Error editing post: ' + error.message, true);
+        this.notify?.('Error editing post: ' + error.message, true);
       }
     },
 
     deletePost(postId) {
       if (!this.isAuthenticated) {
-        this.showNotification('Please log in to delete posts', true);
+        this.notify?.('Please log in to delete posts', true);
         return;
       }
       this.modalMessage = 'Are you sure you want to delete this post? This action cannot be undone.';
@@ -586,6 +494,7 @@ export const usePostsStore = defineStore('posts', {
         const response = await fetch('https://sports321.vercel.app/api/deletePost', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             postId,
             username: this.loggedInUsername,
@@ -593,7 +502,7 @@ export const usePostsStore = defineStore('posts', {
           }),
         });
         if (!response.ok) throw new Error('Failed to delete post');
-        this.showNotification('Post deleted successfully!', false);
+        this.notify?.('Post deleted successfully!', false);
         const channel = this.ably.channels.get('posts-channel');
         channel.publish('deleteOpinion', { id: postId });
         this.posts = this.posts.filter(p => p._id !== postId);
@@ -602,13 +511,13 @@ export const usePostsStore = defineStore('posts', {
           this.selectedPost = null;
         }
       } catch (error) {
-        this.showNotification('Failed to delete post', true);
+        this.notify?.('Failed to delete post: ' + error.message, true);
       }
     },
 
-    deleteComment(postId, commentId) {
+    async deleteComment(postId, commentId) {
       if (!this.isAuthenticated) {
-        this.showNotification('Please log in to delete comments', true);
+        this.notify?.('Please log in to delete comments', true);
         return;
       }
       this.modalMessage = 'Are you sure you want to delete this comment? This action cannot be undone.';
@@ -619,9 +528,10 @@ export const usePostsStore = defineStore('posts', {
 
     async confirmDeleteComment(postId, commentId) {
       try {
-        const response = await fetch('https://sports123.vercel.app/api/deletecomment', {
+        const response = await fetch('https://sports321.vercel.app/api/deletecomment', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             postId,
             commentId,
@@ -630,7 +540,7 @@ export const usePostsStore = defineStore('posts', {
           }),
         });
         if (!response.ok) throw new Error('Failed to delete comment');
-        this.showNotification('Comment deleted successfully!', false);
+        this.notify?.('Comment deleted successfully!', false);
         const post = this.posts.find(p => p._id === postId);
         if (post) {
           post.comments = post.comments.filter(c => c.commentId !== commentId);
@@ -640,7 +550,54 @@ export const usePostsStore = defineStore('posts', {
         }
         this.showModal = false;
       } catch (error) {
-        this.showNotification(`Error deleting comment: ${error.message}`, true);
+        this.notify?.('Error deleting comment: ' + error.message, true);
+      }
+    },
+
+    sharePost(postId) {
+      const postUrl = `${window.location.origin}/posts/${postId}`;
+      navigator.clipboard.writeText(postUrl).then(() => {
+        this.notify?.('Post URL copied to clipboard!', false);
+      }).catch(() => {
+        this.notify?.('Failed to copy URL.', true);
+      });
+    },
+
+    toggleBookmark(postId) {
+      if (this.selectedPost?._id === postId) {
+        this.selectedPost.isBookmarked = !this.selectedPost.isBookmarked;
+      }
+      this.posts = this.posts.map(post => 
+        post._id === postId ? { ...post, isBookmarked: !post.isBookmarked } : post
+      );
+      this.notify?.(`Post ${this.selectedPost.isBookmarked ? 'bookmarked' : 'unbookmarked'}!`, false);
+      // Note: Backend bookmark persistence requires an endpoint
+    },
+
+    quotePost(post) {
+      const router = useRouter();
+      router.push({ path: '/float', query: { quoteToPostId: post._id, quoteToUsername: post.username } });
+    },
+
+    updatePostInFeed(updatedPost) {
+      const index = this.posts.findIndex(p => p._id === updatedPost._id);
+      if (index !== -1) {
+        this.posts[index] = {
+          ...this.posts[index],
+          ...updatedPost,
+          comments: updatedPost.comments?.map(comment => ({
+            ...comment,
+            showReplies: this.posts[index].comments.find(
+              c => c.commentId === comment.commentId
+            )?.showReplies || false,
+            replies: Array.isArray(comment.replies) ? comment.replies : [],
+          })) || [],
+          likedBy: updatedPost.likedBy || this.posts[index].likedBy,
+          isBookmarked: this.posts[index].isBookmarked,
+        };
+        if (this.selectedPost?._id === updatedPost._id) {
+          this.selectedPost = { ...this.posts[index], showComments: true };
+        }
       }
     },
 
@@ -648,24 +605,18 @@ export const usePostsStore = defineStore('posts', {
       this.showModal = false;
     },
 
-    openFullScreen(imageSrc) {
-      console.log('info', 'Open full-screen image:', imageSrc);
-    },
-
-    showNotification(message, isError) {
-      console.log(isError ? 'error' : 'info', `${isError ? 'Error' : 'Success'}: ${message}`);
-    },
-
-    initialize() {
+    initialize(notifyFunction) {
+      if (notifyFunction) {
+        this.setNotify(notifyFunction);
+      }
       this.loadMorePosts();
-      window.addEventListener('scroll', this.handleScroll.bind(this));
 
-      const savedSessionId = localStorage.getItem('sessionId');
+      const savedSessionId = getLocalStorage('sessionId');
       if (savedSessionId) {
         this.sessionId = savedSessionId;
       } else {
         const newId = this.generateSessionId();
-        localStorage.setItem('sessionId', newId);
+        setLocalStorage('sessionId', newId);
         this.sessionId = newId;
       }
 
@@ -673,7 +624,7 @@ export const usePostsStore = defineStore('posts', {
       channel.subscribe('newOpinion', message => {
         const incomingPost = message.data;
         if (incomingPost?._id && incomingPost._id !== this.lastSentPostId) {
-          this.showNotification('New post added!', false);
+          this.notify?.('New post added!', false);
           this.addPostToFeed(incomingPost, true);
         }
       });
@@ -684,13 +635,12 @@ export const usePostsStore = defineStore('posts', {
 
       channel.subscribe('deleteOpinion', message => {
         this.posts = this.posts.filter(p => p._id !== message.data.id);
+        if (this.selectedPost?._id === message.data.id) {
+          this.selectedPost = null;
+        }
       });
 
       channel.subscribe('likePost', message => {
-        this.updatePostInFeed(message.data);
-      });
-
-      channel.subscribe('dislikePost', message => {
         this.updatePostInFeed(message.data);
       });
 
@@ -707,12 +657,10 @@ export const usePostsStore = defineStore('posts', {
           this.closeFullScreenPost();
         }
       });
-
-      window.vueInstance = { addReply: this.addReply.bind(this) };
     },
 
     cleanup() {
-      window.removeEventListener('scroll', this.handleScroll.bind(this));
+      // No scroll event listener to remove
     },
   },
 });
