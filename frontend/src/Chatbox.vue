@@ -641,7 +641,7 @@ export default {
 
     initGlobalChat() {
       // Connect to Socket.IO backend for global chat
-      this.socket = io('http://localhost:3000'); // TODO: Replace with your backend URL
+      this.socket = io('http://localhost:4000'); // Updated to new socketio server
       this.socket.on('connect', () => {
         console.log('[GlobalChat] Connected to Socket.IO server');
       });

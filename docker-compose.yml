@@ -43,5 +43,13 @@ services:
     volumes:
       - ./vidbackend:/app
 
+  socketio:
+    build: ./socketio
+    ports:
+      - "4000:4000"
+    working_dir: /app
+    volumes:
+      - ./socketio:/app
+
 volumes:
   postgres_data:
