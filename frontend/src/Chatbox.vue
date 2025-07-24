@@ -641,7 +641,7 @@ export default {
 
     initGlobalChat() {
       // Connect to Socket.IO backend for global chat
-      this.socket = io('http://localhost:4000'); // Updated to new socketio server
+      this.socket = io('https://socketio.mnz.dom.my.id/'); // If hosting your own Pulse server change this URL
       this.socket.on('connect', () => {
         console.log('[GlobalChat] Connected to Socket.IO server');
       });
