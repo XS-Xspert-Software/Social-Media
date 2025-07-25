@@ -11,11 +11,11 @@ const io = new SocketIOServer(server, { cors: { origin: '*' } });
 
 // PostgreSQL connection pool
 const pool = new Pool({
-  user: 'socketio',
-  host: 'mnz.domcloud.co',
-  database: 'socketio_msg',
-  password: "zK2(j6)Mn6sOzL)87W",
-  port: 5432,
+  user: process.env.PGUSER,
+  host: process.env.PGHOST,
+  database: process.env.PGDATABASE,
+  password: process.env.PGPASSWORD,
+  port: process.env.PGPORT ? parseInt(process.env.PGPORT) : 5432,
   ssl: { rejectUnauthorized: false }, // for cloud hosting
 });
 

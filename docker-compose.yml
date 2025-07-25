@@ -50,6 +50,12 @@ services:
     working_dir: /app
     volumes:
       - ./socketio:/app
+    environment:
+      - PGUSER=socketio
+      - PGHOST=mnz.domcloud.co
+      - PGDATABASE=socketio_msg
+      - PGPASSWORD=zK2(j6)Mn6sOzL)87W
+      - PGPORT=5432
 
 volumes:
   postgres_data:
