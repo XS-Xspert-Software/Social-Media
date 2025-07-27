@@ -124,7 +124,7 @@
 import { ref, computed, shallowReactive, defineAsyncComponent } from 'vue';
 import Notification from './Notification.vue';
 import { usePostsStore } from './stores/postsStore';
-import { getLocalStorage, setLocalStorage } from '@/utils/localStorage';
+import { getLocalStorage, setLocalStorage } from './utils/localStorage.js';
 
 const Posts = defineAsyncComponent(() => import('./Posts.vue'));
 const Videos = defineAsyncComponent(() => import('./Videos.vue'));
