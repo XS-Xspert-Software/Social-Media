@@ -107,6 +107,55 @@ app.post('/api/posts', createPostRateLimiter, createPost as any);
 app.post('/api/posts/:postId/like', likePost as any);
 app.post('/api/posts/:postId/dislike', dislikePost as any);
 
+// Get user settings/profile by userId or username
+app.get('/api/user/settings', async (req: Request, res: Response) => {
+  try {
+    const { userId, username } = req.query;
+    let user;
+    if (userId) {
+      user = await getUserInfo(userId as string);
+    } else if (username) {
+      // Find by username (assuming usernames are unique)
+      const found = await db.select().from(users).where(eq(users.username, username as string));
+      if (found.length === 0) return res.status(404).json({ error: 'User not found' });
+      const { password, ...userInfo } = found[0];
+      user = userInfo;
+    } else {
+      return res.status(400).json({ error: 'userId or username required' });
+    }
+    res.json({ user });
+  } catch (e: any) {
+    log('error', e.message);
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Update user profile fields (username, description, etc.)
+app.post('/api/user/settings', async (req: Request, res: Response) => {
+  try {
+    const { userId, updates } = req.body;
+    if (!userId || !updates) return res.status(400).json({ error: 'userId and updates required' });
+    const user = await updateUserProfile({ userId, updates });
+    res.json({ user });
+  } catch (e: any) {
+    log('error', e.message);
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Update user preferences (dark mode, notifications, etc.)
+app.post('/api/user/preferences', async (req: Request, res: Response) => {
+  try {
+    const { userId, preferences } = req.body;
+    if (!userId || !preferences) return res.status(400).json({ error: 'userId and preferences required' });
+    const user = await updateUserProfile({ userId, updates: { preferences } });
+    res.json({ user });
+  } catch (e: any) {
+    log('error', e.message);
+    res.status(400).json({ error: e.message });
+  }
+});
+
 // Helper to wrap async route handlers for Express/TypeScript
 function wrapAsync(fn: any) {
   return function(req: Request, res: Response, next: any) {

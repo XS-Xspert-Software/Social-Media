@@ -2,9 +2,9 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import Ably from 'ably';
 import { useRouter, useRoute } from 'vue-router';
-import { getLocalStorage, setLocalStorage } from '@/utils/localStorage';
+import { getLocalStorage, setLocalStorage } from '../utils/localStorage.js';
 
-export const usePostsStore = defineStore('posts', {
+export const usePostsStore = defineStore('./Posts.vue', {
   state: () => ({
     posts: [],
     currentPage: 1,

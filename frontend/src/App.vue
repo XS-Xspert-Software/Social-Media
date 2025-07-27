@@ -126,10 +126,10 @@ import Notification from './Notification.vue';
 import { usePostsStore } from './stores/postsStore';
 import { getLocalStorage, setLocalStorage } from '@/utils/localStorage';
 
-const Posts = defineAsyncComponent(() => import('./posts.vue'));
+const Posts = defineAsyncComponent(() => import('./Posts.vue'));
 const Videos = defineAsyncComponent(() => import('./Videos.vue'));
-const Chat = defineAsyncComponent(() => import('./chat.vue'));
-const Settings = defineAsyncComponent(() => import('./settings.vue'));
+const Chat = defineAsyncComponent(() => import('./Chat.vue'));
+const Settings = defineAsyncComponent(() => import('./Settings.vue'));
 const Search2 = defineAsyncComponent(() => import('./Search2.vue'));
 const Float = defineAsyncComponent(() => import('./Float.vue'));
 const PostPage = defineAsyncComponent(() => import('./PostPage.vue'));

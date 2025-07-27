@@ -10,7 +10,7 @@ const Chatbox = () => import('../Chatbox.vue')
 const Float = () => import('../Float.vue')
 const Notification = () => import('../Notification.vue')
 const PostPage = () => import('../PostPage.vue') // ✅ Added this line
-const GroupChatbox = () => import('../GroupChatbox.vue')
+const GroupChatbox = () => import('../GroupChat.vue') // Fix import path for group chat
 
 const routes = [
   { path: '/', name: 'Posts', component: Posts },
