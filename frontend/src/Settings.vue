@@ -57,6 +57,87 @@
           :disabled="loading"
         />
       </div>
+      <!-- Email -->
+      <div class="profile-field">
+        <label>Email</label>
+        <input
+          v-model="userProfile.email"
+          class="input"
+          @blur="updateUserProfileField('email', userProfile.email)"
+          :disabled="loading"
+          type="email"
+        />
+      </div>
+      <!-- Phone Number -->
+      <div class="profile-field">
+        <label>Phone Number</label>
+        <input
+          v-model="userProfile.phoneNumber"
+          class="input"
+          @blur="updateUserProfileField('phoneNumber', userProfile.phoneNumber)"
+          :disabled="loading"
+          type="tel"
+        />
+      </div>
+      <!-- Website -->
+      <div class="profile-field">
+        <label>Website</label>
+        <input
+          v-model="userProfile.website"
+          class="input"
+          @blur="updateUserProfileField('website', userProfile.website)"
+          :disabled="loading"
+          type="url"
+        />
+      </div>
+      <!-- Private Account Toggle -->
+      <div class="profile-field darkmode-toggle">
+        <label>Private Account</label>
+        <div
+          class="toggle-switch"
+          :aria-pressed="userProfile.isPrivate"
+          role="switch"
+          tabindex="0"
+          @click="toggleProfileField('isPrivate')"
+          @keydown.space.prevent="toggleProfileField('isPrivate')"
+          @keydown.enter.prevent="toggleProfileField('isPrivate')"
+          :aria-label="'Toggle Private Account'"
+        >
+          <div class="toggle-knob" :style="getKnobStyleProfile('isPrivate')"></div>
+        </div>
+        <span class="status-text">{{ userProfile.isPrivate ? 'On' : 'Off' }}</span>
+      </div>
+      <!-- Allow Messages From -->
+      <div class="profile-field">
+        <label>Allow Messages From</label>
+        <select
+          v-model="userProfile.allowMessagesFrom"
+          class="input"
+          @change="updateUserProfileField('allowMessagesFrom', userProfile.allowMessagesFrom)"
+          :disabled="loading"
+        >
+          <option value="public">Public</option>
+          <option value="friends">Friends</option>
+          <option value="private">Private</option>
+        </select>
+      </div>
+      <!-- Two-Factor Authentication Toggle -->
+      <div class="profile-field darkmode-toggle">
+        <label>Two-Factor Authentication</label>
+        <div
+          class="toggle-switch"
+          :aria-pressed="userProfile.twoFactorEnabled"
+          role="switch"
+          tabindex="0"
+          @click="toggleProfileField('twoFactorEnabled')"
+          @keydown.space.prevent="toggleProfileField('twoFactorEnabled')"
+          @keydown.enter.prevent="toggleProfileField('twoFactorEnabled')"
+          :aria-label="'Toggle Two-Factor Authentication'"
+        >
+          <div class="toggle-knob" :style="getKnobStyleProfile('twoFactorEnabled')"></div>
+        </div>
+        <span class="status-text">{{ userProfile.twoFactorEnabled ? 'On' : 'Off' }}</span>
+      </div>
       <!-- Dark Mode Toggle -->
       <div class="profile-field darkmode-toggle">
         <label>Dark Mode</label>
@@ -93,7 +174,13 @@ const userProfile = ref({
   username: '',
   profile_picture: defaultProfilePic,
   description: '',
-  location: ''
+  location: '',
+  email: '',
+  phoneNumber: '',
+  website: '',
+  isPrivate: false,
+  allowMessagesFrom: 'public',
+  twoFactorEnabled: false
 });
 const newProfilePicture = ref(null);
 const loading = ref(false);
@@ -122,7 +209,13 @@ const fetchUserProfile = async () => {
       username: user.username || username,
       profile_picture: user.profile_picture || defaultProfilePic,
       description: user.description || '',
-      location: user.location || ''
+      location: user.location || '',
+      email: user.email || '',
+      phoneNumber: user.phoneNumber || '',
+      website: user.website || '',
+      isPrivate: user.isPrivate || false,
+      allowMessagesFrom: user.allowMessagesFrom || 'public',
+      twoFactorEnabled: user.twoFactorEnabled || false
     };
     // Load dark mode preference
     if (user.preferences && typeof user.preferences.darkMode === 'boolean') {
@@ -146,6 +239,7 @@ const updateUserProfileField = async (field, newValue) => {
   if (!userProfile.value.username) return;
   loading.value = true;
   try {
+    // Use userId if available, else username
     const body = { username: userProfile.value.username, [field]: newValue };
     const response = await fetch('/api/user/settings', {
       method: 'POST',
@@ -223,6 +317,15 @@ const savePreferences = async () => {
     // Silently fail for now
   }
 };
+
+// Add toggles for boolean fields
+const toggleProfileField = async (key) => {
+  userProfile.value[key] = !userProfile.value[key];
+  await updateUserProfileField(key, userProfile.value[key]);
+};
+const getKnobStyleProfile = (key) => ({
+  left: userProfile.value[key] ? '26px' : '2px'
+});
 
 onMounted(() => {
   fetchUserProfile();
