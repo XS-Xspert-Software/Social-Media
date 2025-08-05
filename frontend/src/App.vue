@@ -1,7 +1,7 @@
 <template>
-  <div :class="['app-wrapper', { 'Chatbox-fullscreen': isChatboxRoute, 'no-header-padding': postsStore.selectedPost }]">
+  <div :class="['app-wrapper', { 'Chatbox-fullscreen': isChatboxRoute, 'no-header-padding': postsStore.selectedPost, 'GroupChatbox-fullscreen': isGroupChatboxRoute}]">
     <!-- Header -->
-    <header v-if="!isChatboxRoute && !postsStore.selectedPost">
+    <header v-if="!isChatboxRoute , !isGroupChatboxRoute && !postsStore.selectedPost">
       <h1 style="font-size: 23px; margin-left: 3%; display: flex; align-items: center; gap: 8px;">
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="width:24px; height:24px;">
           <path d="M32 2 L38 26 L62 32 L38 38 L32 62 L26 38 L2 32 L26 26 Z"/>
@@ -13,7 +13,7 @@
 
       <!-- Profile and Search -->
       <div class="user-section" style="gap: 12px; display: flex; align-items: center;">
-        <i class="fas fa-search" @click="navigateToSearch" style="font-size: 24px; cursor: pointer;" aria-label="Open search page"></i>
+         <i class="fas fa-search" @click="navigateToSearch" style="font-size: 24px; cursor: pointer;" aria-label="Open search page"></i>
         <div class="relative">
           <span class="username-display" @click.stop="toggleProfileMenu" style="cursor: pointer;">{{ userProfile.username }}</span>
           <Transition name="fade">
@@ -30,13 +30,16 @@
       <!-- Sidebar -->
       <div class="sidebar">
         <ul class="sidebar-tabs">
-          <li  v-for="tab in tabs"
-      :key="tab.name"
-      :class="{ active: currentTab === tab.name }"
-      @click="switchTab(tab.name)"
-      class="sidebar-tab-btn">
-
-      <span class="tab-label">{{ tab.label }}</span>
+ <li
+  v-for="tab in tabs"
+  :key="tab.name"
+  :class="{ active: currentTab === tab.name }"
+  @click="switchTab(tab.name)"
+  class="sidebar-tab-btn"
+  style="display: flex;gap: 30px;"
+>
+  <i :class="tab.icon" style="margin-right: 8px;"></i>
+  <span>{{ tab.label }}</span>
 
             <!-- 🔴 Notification badge -->
             <span
@@ -50,14 +53,14 @@
         </ul>
 
         <div class="sidebar-sort" v-if="currentTab === 'posts'">
-          <button class="sort-button" :class="{ active: selectedSort === 'most-liked' }" @click="emitSort('most-liked')">General</button>
-          <button class="sort-button" :class="{ active: selectedSort === 'most-comments' }" @click="emitSort('most-comments')">Trending</button>
-          <button class="sort-button" :class="{ active: selectedSort === 'newest' }" @click="emitSort('newest')">Newest</button>
-        </div>
+  <button class="sort-button" :class="{ active: selectedSort === 'most-liked' }" @click="emitSort('most-liked')" style="display: flex; gap: 30px;"><i class="fas fa-atom"></i> General</button>
+  <button class="sort-button" :class="{ active: selectedSort === 'most-comments' }" @click="emitSort('most-comments')" style="display: flex; gap: 30px;"><i class="fas fa-fire"></i> Trending</button>
+  <button class="sort-button" :class="{ active: selectedSort === 'newest' }" @click="emitSort('newest')" style="display: flex; gap: 30px;"><i class="fas fa-clock"></i> Newest</button>
+</div>
       </div>
 
       <!-- Main content -->
-      <div class="main-content" :class="{ 'no-right-sidebar': isChatRoute }">
+      <div class="main-content" :class="{ 'no-right-sidebar': isChatRoute}">
         <Suspense>
           <router-view v-slot="{ Component }">
             <keep-alive include="Posts,Videos,Chat,Notification,Settings,Search2,PostPage">
@@ -71,20 +74,20 @@
       <div class="right-sidebar" v-if="!isChatRoute"></div>
     </div>
     
-    <Float />
+<Float />
 
-     <Notification
-      v-if="notificationActive"
+    <!-- Always render Notification component but conditionally show it -->
+    <Notification
       :logged-in-username="userProfile.username"
+      :show-ui="notificationActive"
       @notify="handleNotify"
       @friend-request-accepted="handleFriendRequestAccepted"
       @update-unread-count="updateUnreadCount"
       ref="notificationRef"
     />
 
-    <!-- Mobile nav -->
    <!-- Mobile nav -->
-<nav v-if="!isChatboxRoute">
+<nav v-if="!isChatboxRoute , !isGroupChatboxRoute">
   <ul>
     <li
       v-for="tab in tabs"
@@ -96,22 +99,24 @@
     >
       <!-- Use profile pic for settings tab -->
       <template v-if="tab.name === 'settings'">
-        <img
-          :src="userProfile.profilePic"
-          alt="Profile"
-          class="profile-pic-icon"
-        />
-      </template>
+  <img
+    :src="userProfile.profilePic"
+    alt="Profile"
+    class="profile-pic-icon"
+    @error="event => event.target.src = 'https://latestnewsandaffairs.site/download.jpeg'"
+  />
+</template>
+
       <template v-else>
         <i :class="tab.icon"></i>
       </template>
 
-      <!-- Optional: badge for notifications -->
+      <!-- Badge for notifications -->
       <span 
         v-if="tab.name === 'notification' && unreadCount > 0" 
         class="badge"
       >
-        {{ unreadCount }}
+        {{ unreadCount > 99 ? '99+' : unreadCount }}
       </span>
     </li>
   </ul>
@@ -124,7 +129,7 @@
 import { ref, computed, shallowReactive, defineAsyncComponent } from 'vue';
 import Notification from './Notification.vue';
 import { usePostsStore } from './stores/postsStore';
-import { getLocalStorage, setLocalStorage } from './utils/localStorage.js';
+import { getLocalStorage, setLocalStorage } from '@/utils/localStorage';
 
 const Posts = defineAsyncComponent(() => import('./Posts.vue'));
 const Videos = defineAsyncComponent(() => import('./Videos.vue'));
@@ -136,7 +141,7 @@ const PostPage = defineAsyncComponent(() => import('./PostPage.vue'));
 
 import Chatbox from './Chatbox.vue';
 import Alert from './Alert.vue';
-
+import GroupChatbox from './GroupChatbox.vue';
 
 const jwtCache = new Map();
 
@@ -147,6 +152,7 @@ export default {
     Videos,
     Chat,
     Chatbox,
+    GroupChatbox,
     Settings,
     Notification,
     Search2,
@@ -213,6 +219,9 @@ export default {
     isChatboxRoute() {
       return this.$route.name === 'Chatbox';
     },
+    isGroupChatboxRoute(){
+      return this.$route.name ==='GroupChatbox';
+    },
 
     notificationActive() {
       return this.currentTab === 'notification';
@@ -221,7 +230,7 @@ export default {
 
   methods: {
     refreshNotifications() {
-      if (this.notificationActive && this.$refs.notificationRef?.fetchNotifications) {
+      if (this.$refs.notificationRef?.fetchNotifications) {
         this.$refs.notificationRef.fetchNotifications();
       }
     },
@@ -265,19 +274,22 @@ export default {
         posts: null,
         videos: 'Videos',
         chat: 'Chat',
-        notification: 'Notification',
-        settings:'Settings'
+        settings:'Settings',
+        notification:'Notification'
       };
+
+      // Special handling for notification tab
+      if (tab === 'notification') {
+        // Change URL to /notification but don't load a component
+        this.$router.push('/Notification').catch(() => {});
+        return;
+      }
 
       const routeName = componentMap[tab];
       if (routeName) {
         this.$router.push({ name: routeName }).catch(() => {});
       } else {
         this.$router.push('/').catch(() => {});
-      }
-
-      if (tab === 'notification') {
-        this.refreshNotifications();
       }
     },
 
@@ -367,6 +379,13 @@ export default {
         userId: getLocalStorage('userId') || null,
         profilePic: getLocalStorage('profilePic') || 'default-pic.png',
       });
+      
+      // Start listening to notifications when user profile is updated
+      if (this.isSignedIn) {
+        this.$nextTick(() => {
+          this.refreshNotifications();
+        });
+      }
     },
 
     updateUnreadCount(count) {
@@ -389,9 +408,16 @@ export default {
       immediate: true,
     },
 
-    currentTab(newTab) {
-      if (newTab === 'notification') {
-        this.refreshNotifications();
+    // Watch for user sign in/out to start/stop notification polling
+    'userProfile.username'(newUsername, oldUsername) {
+      if (newUsername && newUsername !== 'Guest' && newUsername !== oldUsername) {
+        // User signed in, start polling notifications
+        this.$nextTick(() => {
+          this.refreshNotifications();
+        });
+      } else if (newUsername === 'Guest') {
+        // User signed out, reset unread count
+        this.unreadCount = 0;
       }
     },
   },
@@ -449,6 +475,8 @@ export default {
   transition: background-color 0.2s;
 }
 </style>
+
+
 
 
 
