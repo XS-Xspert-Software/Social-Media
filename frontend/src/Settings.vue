@@ -1,199 +1,627 @@
 <template>
   <section class="settings-section">
-    <!-- Minimal, Instagram-style Settings UI -->
-    <div class="settings-card">
-      <h2 class="settings-title">Profile Settings</h2>
-      <!-- Profile Image Upload -->
-      <div class="profile-image-block">
-        <img
-          :src="userProfile.profile_picture"
-          alt="Profile Picture"
-          class="profile-img"
-          @error="e => e.target.src = defaultProfilePic"
-        />
-        <input
-          type="file"
-          ref="profileFileInput"
-          id="profileFileInput"
-          @change="handleProfilePictureChange"
-          accept="image/*"
-          style="display: none;"
-        />
-        <button class="btn btn-secondary" @click="triggerFileInput">Change</button>
-        <button
-          v-if="newProfilePicture"
-          class="btn btn-success"
-          @click="saveProfilePicture"
-        >Save</button>
-      </div>
-      <!-- Username -->
-      <div class="profile-field">
-        <label>Username</label>
-        <input
-          v-model="userProfile.username"
-          class="input"
-          @blur="updateUserProfileField('username', userProfile.username)"
-          :disabled="loading"
-        />
-      </div>
-      <!-- Description -->
-      <div class="profile-field">
-        <label>Description</label>
-        <textarea
-          v-model="userProfile.description"
-          class="input"
-          rows="2"
-          @blur="updateUserProfileField('description', userProfile.description)"
-          :disabled="loading"
-        ></textarea>
-      </div>
-      <!-- Location -->
-      <div class="profile-field">
-        <label>Location</label>
-        <input
-          v-model="userProfile.location"
-          class="input"
-          @blur="updateUserProfileField('location', userProfile.location)"
-          :disabled="loading"
-        />
-      </div>
-      <!-- Email -->
-      <div class="profile-field">
-        <label>Email</label>
-        <input
-          v-model="userProfile.email"
-          class="input"
-          @blur="updateUserProfileField('email', userProfile.email)"
-          :disabled="loading"
-          type="email"
-        />
-      </div>
-      <!-- Phone Number -->
-      <div class="profile-field">
-        <label>Phone Number</label>
-        <input
-          v-model="userProfile.phoneNumber"
-          class="input"
-          @blur="updateUserProfileField('phoneNumber', userProfile.phoneNumber)"
-          :disabled="loading"
-          type="tel"
-        />
-      </div>
-      <!-- Website -->
-      <div class="profile-field">
-        <label>Website</label>
-        <input
-          v-model="userProfile.website"
-          class="input"
-          @blur="updateUserProfileField('website', userProfile.website)"
-          :disabled="loading"
-          type="url"
-        />
-      </div>
-      <!-- Private Account Toggle -->
-      <div class="profile-field darkmode-toggle">
-        <label>Private Account</label>
-        <div
-          class="toggle-switch"
-          :aria-pressed="userProfile.isPrivate"
-          role="switch"
-          tabindex="0"
-          @click="toggleProfileField('isPrivate')"
-          @keydown.space.prevent="toggleProfileField('isPrivate')"
-          @keydown.enter.prevent="toggleProfileField('isPrivate')"
-          :aria-label="'Toggle Private Account'"
-        >
-          <div class="toggle-knob" :style="getKnobStyleProfile('isPrivate')"></div>
+    <!-- Feedback/Message Area -->
+    <div v-if="message" class="settings-message" :class="{ error: message.toLowerCase().includes('fail') }">
+      <i v-if="message.toLowerCase().includes('fail')" class="fas fa-exclamation-triangle"></i>
+      <i v-else class="fas fa-check-circle"></i>
+      {{ message }}
+    </div>
+    <!-- SSBAR -->
+    <div class="SSBAR">
+      <h2 class="SSBAR-title">Settings</h2>
+      <!-- User Settings Section -->
+      <div class="settings-group">
+        <h6 class="section-header">USER SETTINGS</h6>
+        <div style="display: flex;  align-items: flex-start;">
+          <ul class="nav" style="min-width: 180px;">
+            <!-- Profile -->
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                :class="{ active: activeSection === 'profile' }"
+                @click.prevent="toggleSection('profile')"
+                href="javascript:void(0)"
+                aria-current="profile"
+                tabindex="0"
+              >
+                <i class="fas fa-user"></i> Profile
+              </a>
+            </li>
+            <!-- General -->
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                :class="{ active: activeSection === 'general' }"
+                @click.prevent="toggleSection('general')"
+                href="javascript:void(0)"
+                aria-current="general"
+                tabindex="0"
+              >
+                <i class="fas fa-cog"></i> General
+              </a>
+            </li>
+            <!-- History -->
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                :class="{ active: activeSection === 'history' }"
+                @click.prevent="toggleSection('history')"
+                href="javascript:void(0)"
+                aria-current="history"
+                tabindex="0"
+              >
+                <i class="fas fa-history"></i> History
+              </a>
+            </li>
+            <!-- About -->
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                :class="{ active: activeSection === 'About' }"
+                @click.prevent="toggleSection('About')"
+                href="javascript:void(0)"
+                aria-current="About"
+                tabindex="0"
+              >
+                <i class="fas fa-info-circle"></i> About
+              </a>
+            </li>
+            <!-- Terms -->
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                :class="{ active: activeSection === 'Terms' }"
+                @click.prevent="toggleSection('Terms')"
+                href="javascript:void(0)"
+                aria-current="Terms"
+                tabindex="0"
+              >
+                <i class="fas fa-file-alt"></i> Terms and Conditions
+              </a>
+            </li>
+            <!-- Account -->
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                :class="{ active: activeSection === 'account' }"
+                @click.prevent="toggleSection('account')"
+                href="javascript:void(0)"
+                aria-current="account"
+                tabindex="0"
+              >
+                <i class="fas fa-shield-alt"></i> Account
+              </a>
+            </li>
+          </ul>
+          <div style="flex: 1;">
+            <div v-if="activeSection === 'profile'" class="section-details">
+              <div class="profile-item">
+                <strong>Username:</strong>
+                <span>{{ userProfile.username || 'Loading...' }}</span>
+                <i class="fas fa-edit edit-icon" @click="changeUsername" title="Edit Username" tabindex="0" aria-label="Edit Username"></i>
+              </div>
+              <hr class="divider">
+              <div class="profile-item">
+                <strong>Profile Picture:</strong>
+                <div class="picture-controls">
+                  <img
+                    :src="userProfile.profile_picture"
+                    alt="Profile Picture"
+                    class="profile-img"
+                    @error="e => e.target.src = 'https://latestnewsandaffairs.site/public/pfp.jpg'"
+                  />
+                  <i class="fas fa-edit edit-icon" @click="triggerFileInput" title="Change Profile Picture" tabindex="0" aria-label="Change Profile Picture"></i>
+                  <input
+                    type="file"
+                    ref="profileFileInput"
+                    id="profileFileInput"
+                    @change="handleProfilePictureChange"
+                    accept="image/*"
+                    style="display: none;"
+                  />
+                  <button
+                    v-if="newProfilePicture"
+                    class="btn btn-success"
+                    @click="saveProfilePicture"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+              <hr class="divider">
+              <div class="profile-item">
+                <strong>Description:</strong>
+                <span>{{ userProfile.description || 'No description available' }}</span>
+                <i class="fas fa-edit edit-icon" @click="editDescription" title="Edit Description" tabindex="0" aria-label="Edit Description"></i>
+              </div>
+              <hr class="divider">
+              <div class="profile-item">
+                <strong>created_at:</strong>
+                <span>{{ userProfile.created_at|| 'Created_at not available' }}</span>
+                <i class="fas fa-edit edit-icon" @click="editProfession" title="Edit Profession" tabindex="0" aria-label="Edit Profession"></i>
+              </div>
+              <hr class="divider">
+              <div class="profile-item">
+                <strong>Music:</strong>
+                <span>{{ userProfile.Music|| 'Music not available' }}</span>
+                <i class="fas fa-edit edit-icon" @click="editHobby" title="Edit Hobby" tabindex="0" aria-label="Edit Hobby"></i>
+              </div>
+            </div>
+            <div v-if="activeSection === 'general'" class="section-details">
+              <div
+                v-for="item in toggleSettings"
+                :key="item.key"
+                class="toggle-item"
+              >
+                <span>{{ item.label }}</span>
+                <div class="toggle-controls">
+                  <div
+                    class="toggle-switch"
+                    :aria-pressed="settings[item.key]"
+                    role="switch"
+                    tabindex="0"
+                    @click="toggleSetting(item.key)"
+                    @keydown.space.prevent="toggleSetting(item.key)"
+                    @keydown.enter.prevent="toggleSetting(item.key)"
+                    :style="getToggleStyle(item.key)"
+                    :aria-label="'Toggle ' + item.label"
+                  >
+                    <div class="toggle-knob" :style="getKnobStyle(item.key)"></div>
+                  </div>
+                  <span class="status-text">{{ getStatusText(item.key) }}</span>
+                </div>
+              </div>
+              <button class="btn btn-primary full-width" @click="saveSettings" :disabled="loading">
+                <span v-if="loading"><i class="fas fa-spinner fa-spin"></i> Saving...</span>
+                <span v-else>Save Settings</span>
+              </button>
+            </div>
+            <div v-if="activeSection === 'history'" class="section-details">
+              <button class="btn btn-primary full-width" @click="viewMyActivity">
+                View My Activity
+              </button>
+            </div>
+            <div v-if="activeSection === 'About'" class="section-details">
+              <button class="btn btn-primary full-width" @click="viewAboutUs">
+                View About Us
+              </button>
+            </div>
+            <div v-if="activeSection === 'Terms'" class="section-details">
+              <button class="btn btn-primary full-width" @click="viewTerms">
+                View Terms and Conditions
+              </button>
+            </div>
+            <div v-if="activeSection === 'account'" class="section-details">
+              <button class="btn btn-primary full-width" @click="openBlockedUsers">
+                Blocked Users
+              </button>
+              <button class="btn btn-danger full-width" @click="logOut">Log Out</button>
+            </div>
+          </div>
         </div>
-        <span class="status-text">{{ userProfile.isPrivate ? 'On' : 'Off' }}</span>
       </div>
-      <!-- Allow Messages From -->
-      <div class="profile-field">
-        <label>Allow Messages From</label>
-        <select
-          v-model="userProfile.allowMessagesFrom"
-          class="input"
-          @change="updateUserProfileField('allowMessagesFrom', userProfile.allowMessagesFrom)"
-          :disabled="loading"
-        >
-          <option value="public">Public</option>
-          <option value="friends">Friends</option>
-          <option value="private">Private</option>
-        </select>
+      <!-- Separator -->
+      <hr class="section-divider">
+      <!-- Payment Settings Section -->
+      <div class="settings-group">
+        <h6 class="section-header">PAYMENT SETTINGS</h6>
+        <ul class="nav">
+          <li class="nav-item">
+            <a class="nav-link disabled" href="#">Quests</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link disabled" href="#">Server Boost</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link disabled" href="#">Nitro Gifting</a>
+          </li>
+        </ul>
       </div>
-      <!-- Two-Factor Authentication Toggle -->
-      <div class="profile-field darkmode-toggle">
-        <label>Two-Factor Authentication</label>
-        <div
-          class="toggle-switch"
-          :aria-pressed="userProfile.twoFactorEnabled"
-          role="switch"
-          tabindex="0"
-          @click="toggleProfileField('twoFactorEnabled')"
-          @keydown.space.prevent="toggleProfileField('twoFactorEnabled')"
-          @keydown.enter.prevent="toggleProfileField('twoFactorEnabled')"
-          :aria-label="'Toggle Two-Factor Authentication'"
-        >
-          <div class="toggle-knob" :style="getKnobStyleProfile('twoFactorEnabled')"></div>
-        </div>
-        <span class="status-text">{{ userProfile.twoFactorEnabled ? 'On' : 'Off' }}</span>
-      </div>
-      <!-- Dark Mode Toggle -->
-      <div class="profile-field darkmode-toggle">
-        <label>Dark Mode</label>
-        <div
-          class="toggle-switch"
-          :aria-pressed="settings.darkMode"
-          role="switch"
-          tabindex="0"
-          @click="toggleSetting('darkMode')"
-          @keydown.space.prevent="toggleSetting('darkMode')"
-          @keydown.enter.prevent="toggleSetting('darkMode')"
-          :aria-label="'Toggle Dark Mode'"
-        >
-          <div class="toggle-knob" :style="getKnobStyle('darkMode')"></div>
-        </div>
-        <span class="status-text">{{ settings.darkMode ? 'On' : 'Off' }}</span>
-      </div>
-      <!-- Feedback Message -->
-      <div v-if="message" class="settings-message" :class="{ error: message.toLowerCase().includes('fail') }">
-        <span>{{ message }}</span>
+      <!-- Separator -->
+      <hr class="section-divider">
+      <!-- App Settings Section -->
+      <div class="settings-group">
+        <h6 class="section-header">APP SETTINGS</h6>
+        <ul class="nav">
+          <li class="nav-item">
+            <a class="nav-link disabled" href="#">Voice</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link disabled" href="#">Appearance</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link disabled" href="#">Accessibility</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link disabled" href="#">Language</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link disabled" href="#">Chat</a>
+          </li>
+        </ul>
       </div>
     </div>
   </section>
 </template>
 
+<style scoped>
+/* Base styles */
+.settings-section {
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  margin-top: 50PX;
+  position: relative;
+  z-index: 8; /* Ensure sidebar is above overlays */
+}
+.SSBAR {
+  width: 100%;
+  max-width: 600px;
+  background-color: #000;
+  overflow-y: auto;
+  padding: 15px;
+  border-radius: 8px;
+  position: relative;
+  z-index: 8; /* Ensure sidebar content is above overlays */
+}
+.SSBAR-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: #060607;
+  margin-bottom: 16px;
+}
+
+.section-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: #F2F3F5;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.settings-group {
+  margin-bottom: 16px;
+}
+
+.nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  margin-bottom: 0;
+  pointer-events: auto;
+  z-index: 1002;
+  position: relative;
+}
+
+.nav-link {
+  font-size: 14px;
+  font-weight: 500;
+  color: #FFFFFF;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+  pointer-events: auto;
+  z-index: 1003;
+  position: relative;
+}
+
+.nav-link:hover {
+  background-color: #F2F3F5;
+  color: #060607;
+}
+
+.nav-link.active {
+  background-color: #E3E5E8;
+  color: #060607;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(88,101,242,0.08);
+}
+
+/* Remove debug box-shadow */
+
+.nav-link.disabled {
+  color: #A3A6AA;
+  cursor: not-allowed;
+}
+
+.nav-link i {
+  margin-right: 8px;
+}
+
+.section-details {
+  padding: 8px 16px 8px 30px;
+  font-size: 13px;
+  color: #FFFFFF;
+}
+
+.section-details strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: #F2F3F5;
+}
+
+.section-details span {
+  font-size: 13px;
+  color: #F2F3F5;
+}
+
+/* Profile items */
+.profile-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.profile-item strong {
+  margin-right: 8px;
+}
+
+.profile-item .edit-icon {
+  margin-left: auto;
+}
+
+.picture-controls {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.profile-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 12px;
+}
+
+/* Toggle items */
+.toggle-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.toggle-controls {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-switch {
+  width: 50px;
+  height: 26px;
+  border-radius: 13px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.toggle-knob {
+  width: 22px;
+  height: 22px;
+  background-color: #FFFFFF;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  transition: left 0.3s ease;
+}
+
+.status-text {
+  font-size: 13px;
+  color: #FFFFFF;
+  margin-left: 12px;
+}
+
+/* Buttons */
+.btn {
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-primary {
+  background-color: #5865F2;
+  color: #FFFFFF;
+}
+
+.btn-primary:hover {
+  background-color: #4752C4;
+}
+
+.btn-success {
+  background-color: #00C851;
+  color: #FFFFFF;
+  margin-left: 12px;
+}
+
+.btn-success:hover {
+  background-color: #00A63F;
+}
+
+.btn-danger {
+  background-color: #ED4245;
+  color: #FFFFFF;
+  margin-top: 12px;
+}
+
+.btn-danger:hover {
+  background-color: #C73538;
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* Dividers */
+.divider {
+  border: none;
+  border-top: 1px solid #E3E5E8;
+  margin: 8px 0;
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid #E3E5E8;
+  margin: 16px 0;
+}
+
+/* Edit icons */
+.edit-icon {
+  cursor: pointer;
+  color: #4F5660;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.edit-icon:hover {
+  color: #5865F2;
+}
+
+/* Dark mode */
+.dark-mode {
+  background-color: #2F3136;
+}
+
+.dark-mode .SSBAR {
+  background-color: #36393F;
+}
+
+.dark-mode .SSBAR-title,
+.dark-mode .section-details strong {
+  color: #FFFFFF;
+}
+
+.dark-mode .section-header,
+.dark-mode .nav-link,
+.dark-mode .section-details,
+.dark-mode .section-details span,
+.dark-mode .status-text,
+.dark-mode .edit-icon {
+  color: #B9BBBE;
+}
+
+.dark-mode .nav-link.disabled {
+  color: #72767D;
+}
+
+.dark-mode .nav-link:hover {
+  background-color: #3A3C43;
+  color: #FFFFFF;
+}
+
+.dark-mode .nav-link.active {
+  background-color: #40444B;
+  color: #FFFFFF;
+}
+
+.dark-mode .edit-icon:hover {
+  color: #5865F2;
+}
+
+.dark-mode .divider,
+.dark-mode .section-divider {
+  border-top: 1px solid #202225;
+}
+
+/* New styles */
+.settings-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #23272a;
+  color: #43b581;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 16px;
+  border-radius: 6px;
+  margin-bottom: 18px;
+  gap: 8px;
+  border: 1px solid #43b581;
+  transition: background 0.2s, color 0.2s;
+}
+.settings-message.error {
+  color: #ed4245;
+  border-color: #ed4245;
+  background: #2f1a1a;
+}
+
+/* Focus style for toggles and edit icons for accessibility */
+.toggle-switch:focus, .edit-icon:focus {
+  outline: 2px solid #5865F2;
+  outline-offset: 2px;
+}
+
+/* Improve nav-link active/hover for clarity */
+.nav-link.active {
+  background-color: #E3E5E8;
+  color: #060607;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(88,101,242,0.08);
+}
+.nav-link:hover:not(.disabled) {
+  background-color: #F2F3F5;
+  color: #060607;
+  font-weight: 600;
+}
+
+/* Loading spinner for save button */
+.fa-spinner {
+  margin-right: 6px;
+}
+</style>
+
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
-// Default profile picture fallback
-const defaultProfilePic = 'https://latestnewsandaffairs.site/public/pfp.jpg';
-
-// Reactive state for user profile
+// Reactive state
+const activeSection = ref(null);
 const userProfile = ref({
-  username: '',
-  profile_picture: defaultProfilePic,
-  description: '',
-  location: '',
-  email: '',
-  phoneNumber: '',
-  website: '',
-  isPrivate: false,
-  allowMessagesFrom: 'public',
-  twoFactorEnabled: false
+  username: localStorage.getItem('username') || '',
+  profile_picture: 'https://latestnewsandaffairs.site/public/pfp.jpg',
+  description: 'No description available',
+  location: 'Location not available',
+  status: 'Status not available',
+  profession: 'Profession not available',
+  hobby: 'Musicnot available'
 });
 const newProfilePicture = ref(null);
+const settings = ref({
+  darkMode: false,
+  notifications: true,
+  privateAccount: false,
+  showOnlineStatus: true,
+  twoFactorAuth: false
+});
 const loading = ref(false);
 const message = ref('');
 
-// Settings for dark mode
-const settings = ref({ darkMode: false });
+// Computed properties
+const toggleSettings = computed(() => [
+  { key: 'darkMode', label: 'Dark Mode' },
+  { key: 'notifications', label: 'Notifications' },
+  { key: 'privateAccount', label: 'Private Account' },
+  { key: 'showOnlineStatus', label: 'Show Online Status' },
+  { key: 'twoFactorAuth', label: 'Two-Factor Authentication' }
+]);
 
-// File input ref
-const profileFileInput = ref(null);
+// Methods
+const toggleSection = (section) => {
+  activeSection.value = activeSection.value === section ? null : section;
+};
 
-// Fetch user profile from backend
-const fetchUserProfile = async () => {
+const fetchUserSettings = async () => {
   loading.value = true;
   try {
     const username = localStorage.getItem('username');
@@ -201,25 +629,27 @@ const fetchUserProfile = async () => {
       message.value = 'Username not found!';
       return;
     }
-    // Call backend endpoint for user profile
-    const response = await fetch(`/api/user/settings?username=${encodeURIComponent(username)}`);
-    if (!response.ok) throw new Error('Failed to fetch profile');
+
+    const response = await fetch(`https://sports321.vercel.app/api/posts?username=${username}`);
     const user = await response.json();
+
     userProfile.value = {
-      username: user.username || username,
-      profile_picture: user.profile_picture || defaultProfilePic,
-      description: user.description || '',
-      location: user.location || '',
-      email: user.email || '',
-      phoneNumber: user.phoneNumber || '',
-      website: user.website || '',
-      isPrivate: user.isPrivate || false,
-      allowMessagesFrom: user.allowMessagesFrom || 'public',
-      twoFactorEnabled: user.twoFactorEnabled || false
+      username: username,
+      created_at: user.created_at || 'Date not available',
+      Music: user.Music || 'Music not available',
+      description: user.description || 'No description available',
+      profile_picture: user.profile_picture || 'https://latestnewsandaffairs.site/public/pfp.jpg'
     };
-    // Load dark mode preference
-    if (user.preferences && typeof user.preferences.darkMode === 'boolean') {
-      settings.value.darkMode = user.preferences.darkMode;
+
+    // Load settings from backend preferences if available
+    if (user.preferences) {
+      Object.keys(settings.value).forEach(key => {
+        if (user.preferences.hasOwnProperty(key)) {
+          settings.value[key] = user.preferences[key];
+        }
+      });
+
+      // Sync dark mode UI
       if (settings.value.darkMode) {
         document.documentElement.classList.add('dark-mode');
       } else {
@@ -227,40 +657,74 @@ const fetchUserProfile = async () => {
       }
     }
   } catch (error) {
-    message.value = 'Error loading profile.';
-    console.error(error);
+    message.value = 'Error fetching user settings.';
+    console.error('Error fetching user settings:', error);
   } finally {
     loading.value = false;
   }
 };
 
-// Update a user profile field (username, description, location)
 const updateUserProfileField = async (field, newValue) => {
-  if (!userProfile.value.username) return;
   loading.value = true;
+  const username = localStorage.getItem('username');
+  if (!username) {
+    message.value = 'Username not found!';
+    loading.value = false;
+    return;
+  }
   try {
-    // Use userId if available, else username
-    const body = { username: userProfile.value.username, [field]: newValue };
-    const response = await fetch('/api/user/settings', {
+    const body = { username, [field]: newValue };
+    const response = await fetch('https://sports321.vercel.app/api/posts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    if (!response.ok) throw new Error('Update failed');
-    message.value = `${field.charAt(0).toUpperCase() + field.slice(1)} updated!`;
-    if (field === 'username') localStorage.setItem('username', newValue);
+
+    if (response.ok) {
+      userProfile.value[field] = newValue;
+      if (field === 'username') {
+        localStorage.setItem('username', newValue);
+      }
+      message.value = `Your ${field} has been updated!`;
+    } else {
+      throw new Error('Update failed');
+    }
   } catch (error) {
     message.value = `Failed to update ${field}`;
-    console.error(error);
+    console.error(`Error updating ${field}:`, error);
   } finally {
     loading.value = false;
   }
 };
 
-// Profile image upload logic
-const triggerFileInput = () => {
-  profileFileInput.value && profileFileInput.value.click();
+// Prompt edit functions
+const changeUsername = () => {
+  const newUsername = prompt('Enter your new username:', userProfile.value.username);
+  if (newUsername?.trim()) {
+    updateUserProfileField('username', newUsername.trim());
+  }
 };
+
+const editDescription = () => {
+  const newDescription = prompt('Tell us about yourself:', userProfile.value.description);
+  if (newDescription?.trim()) {
+    updateUserProfileField('description', newDescription.trim());
+  }
+};
+
+const editMusic = () => {
+  const newMusic = prompt('Enter your favorite music:', userProfile.value.Music);
+  if (newMusic?.trim()) {
+    updateUserProfileField('music', newMusic.trim());
+  }
+};
+
+
+const triggerFileInput = () => {
+  const fileInput = document.querySelector('#profileFileInput');
+  fileInput.click();
+};
+
 const handleProfilePictureChange = (event) => {
   const file = event.target.files[0];
   if (file) {
@@ -272,244 +736,143 @@ const handleProfilePictureChange = (event) => {
     reader.readAsDataURL(file);
   }
 };
+
 const saveProfilePicture = async () => {
   if (!newProfilePicture.value) return;
   loading.value = true;
   try {
-    const response = await fetch('/api/user/settings', {
+    const username = localStorage.getItem('username');
+    if (!username) {
+      message.value = 'Username not found!';
+      loading.value = false;
+      return;
+    }
+    // Use correct field name for backend compatibility
+    const response = await fetch('https://sports321.vercel.app/api/posts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: userProfile.value.username, profile_picture: newProfilePicture.value })
+      body: JSON.stringify({ username, profile_picture: newProfilePicture.value })
     });
-    if (!response.ok) throw new Error('Profile picture update failed');
-    message.value = 'Profile picture updated!';
-    localStorage.setItem('profilePic', newProfilePicture.value);
-    newProfilePicture.value = null;
+    if (response.ok) {
+      userProfile.value.profile_picture = newProfilePicture.value;
+      localStorage.setItem('profilePic', newProfilePicture.value);
+      newProfilePicture.value = null;
+      message.value = 'Profile picture updated!';
+    } else {
+      throw new Error('Profile picture update failed');
+    }
   } catch (error) {
     message.value = 'Failed to update profile picture';
-    console.error(error);
+    console.error('Error updating profile picture:', error);
   } finally {
     loading.value = false;
   }
 };
 
-// Dark mode toggle logic
 const toggleSetting = async (key) => {
   settings.value[key] = !settings.value[key];
   if (key === 'darkMode') {
-    document.documentElement.classList.toggle('dark-mode', settings.value.darkMode);
-    localStorage.setItem('darkMode', settings.value.darkMode);
-    // Save preference to backend
-    await savePreferences();
+    toggleDarkMode();
+  }
+  // Save immediately for instant feedback
+  await saveSettings();
+};
+
+const toggleDarkMode = () => {
+  document.documentElement.classList.toggle('dark-mode', settings.value.darkMode);
+  localStorage.setItem('darkMode', settings.value.darkMode);
+};
+
+const getStatusText = (key) => {
+  switch (key) {
+    case 'darkMode': return settings.value.darkMode ? 'On' : 'Off';
+    case 'notifications': return settings.value.notifications ? 'On' : 'Off';
+    case 'privateAccount': return settings.value.privateAccount ? 'On' : 'Off';
+    case 'showOnlineStatus': return settings.value.showOnlineStatus ? 'Visible' : 'Hidden';
+    case 'twoFactorAuth': return settings.value.twoFactorAuth ? 'Enabled' : 'Disabled';
+    default: return '';
   }
 };
-const getKnobStyle = (key) => ({
-  left: settings.value[key] ? '26px' : '2px'
+
+const getToggleStyle = (key) => ({
+  width: '50px',
+  height: '26px',
+  borderRadius: '13px',
+  background: settings.value[key] ? '#5865F2' : '#4F545C',
+  position: 'relative',
+  cursor: 'pointer',
+  transition: 'background 0.3s ease'
 });
-const savePreferences = async () => {
+
+const getKnobStyle = (key) => ({
+  height: '22px',
+  width: '22px',
+  background: '#FFFFFF',
+  borderRadius: '50%',
+  position: 'absolute',
+  top: '2px',
+  left: settings.value[key] ? '26px' : '2px',
+  transition: 'left 0.3s ease'
+});
+
+const saveSettings = async () => {
+  loading.value = true;
+  const username = localStorage.getItem('username');
+  if (!username) {
+    message.value = 'Username not found!';
+    loading.value = false;
+    return;
+  }
   try {
-    await fetch('/api/user/preferences', {
+    const response = await fetch('https://sports321.vercel.app/api/posts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: userProfile.value.username, preferences: settings.value })
+      body: JSON.stringify({ username, preferences: settings.value })
     });
+    if (response.ok) {
+      message.value = 'Settings saved successfully!';
+    } else {
+      throw new Error('Settings save failed');
+    }
   } catch (error) {
-    // Silently fail for now
+    message.value = 'Failed to save settings';
+    console.error('Error saving settings:', error);
+  } finally {
+    loading.value = false;
   }
 };
 
-// Add toggles for boolean fields
-const toggleProfileField = async (key) => {
-  userProfile.value[key] = !userProfile.value[key];
-  await updateUserProfileField(key, userProfile.value[key]);
+const openBlockedUsers = () => {
+  message.value = 'Blocked users feature coming soon!';
 };
-const getKnobStyleProfile = (key) => ({
-  left: userProfile.value[key] ? '26px' : '2px'
-});
 
+const viewMyActivity = () => {
+  message.value = 'Activity history feature coming soon!';
+};
+
+const viewAboutUs = () => {
+  message.value = 'About us page coming soon!';
+};
+
+const viewTerms = () => {
+  message.value = 'Terms and conditions page coming soon!';
+};
+
+const logOut = () => {
+  localStorage.clear();
+  window.location.reload();
+};
+
+// Lifecycle hook
 onMounted(() => {
-  fetchUserProfile();
-  // Restore dark mode from localStorage
+  fetchUserSettings();
   const savedDarkMode = localStorage.getItem('darkMode');
   if (savedDarkMode !== null) {
     settings.value.darkMode = savedDarkMode === 'true';
-    document.documentElement.classList.toggle('dark-mode', settings.value.darkMode);
+    if (settings.value.darkMode) {
+      document.documentElement.classList.add('dark-mode');
+    }
   }
 });
 </script>
 
-<style scoped>
-.settings-section {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  min-height: 100vh;
-  background: var(--settings-bg, #fff);
-  padding: 32px 0;
-}
-.settings-card {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
-  padding: 32px 24px;
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-.settings-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 12px;
-  color: #222;
-  text-align: center;
-}
-.profile-image-block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-.profile-img {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #eee;
-  margin-bottom: 4px;
-}
-.btn {
-  border: none;
-  border-radius: 4px;
-  padding: 6px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.btn-secondary {
-  background: #f2f2f2;
-  color: #333;
-  margin-right: 8px;
-}
-.btn-secondary:hover {
-  background: #e0e0e0;
-}
-.btn-success {
-  background: #43b581;
-  color: #fff;
-}
-.btn-success:hover {
-  background: #36996b;
-}
-.profile-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.profile-field label {
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 2px;
-}
-.input {
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 8px;
-  font-size: 15px;
-  background: #fafafa;
-  color: #222;
-  outline: none;
-  transition: border 0.2s;
-}
-.input:focus {
-  border: 1.5px solid #43b581;
-}
-.darkmode-toggle {
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
-}
-.toggle-switch {
-  width: 50px;
-  height: 26px;
-  border-radius: 13px;
-  background: #4F545C;
-  position: relative;
-  cursor: pointer;
-  transition: background 0.3s;
-  margin-right: 8px;
-  border: 1px solid #ddd;
-}
-.toggle-switch[aria-pressed="true"] {
-  background: #43b581;
-}
-.toggle-knob {
-  width: 22px;
-  height: 22px;
-  background: #fff;
-  border-radius: 50%;
-  position: absolute;
-  top: 2px;
-  transition: left 0.3s;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-}
-.status-text {
-  font-size: 13px;
-  color: #666;
-}
-.settings-message {
-  background: #f7f7f7;
-  color: #43b581;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 10px 16px;
-  border-radius: 6px;
-  margin-top: 10px;
-  border: 1px solid #43b581;
-  text-align: center;
-}
-.settings-message.error {
-  color: #ed4245;
-  border-color: #ed4245;
-  background: #fff0f0;
-}
-/* Dark mode styles */
-.dark-mode .settings-card {
-  background: #23272a;
-  color: #fff;
-}
-.dark-mode .settings-title {
-  color: #fff;
-}
-.dark-mode .profile-field label,
-.dark-mode .status-text {
-  color: #b9bbbe;
-}
-.dark-mode .input {
-  background: #2f3136;
-  color: #fff;
-  border: 1px solid #444;
-}
-.dark-mode .input:focus {
-  border: 1.5px solid #43b581;
-}
-.dark-mode .toggle-switch {
-  background: #444;
-  border: 1px solid #333;
-}
-.dark-mode .toggle-switch[aria-pressed="true"] {
-  background: #43b581;
-}
-.dark-mode .settings-message {
-  background: #23272a;
-  color: #43b581;
-  border: 1px solid #43b581;
-}
-.dark-mode .settings-message.error {
-  color: #ed4245;
-  border-color: #ed4245;
-  background: #2f1a1a;
-}
-</style>
