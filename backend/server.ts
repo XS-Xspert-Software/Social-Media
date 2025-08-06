@@ -260,6 +260,41 @@ app.post('/federation/inbox', (req: Request, res: Response) => {
   res.json({ status: 'ok' });
 });
 
+// Universal logging middleware: logs every request and response
+app.use((req, res, next) => {
+  // Log incoming request
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  if (Object.keys(req.query).length) {
+    console.log('Query:', req.query);
+  }
+  if (Object.keys(req.body || {}).length) {
+    console.log('Body:', req.body);
+  }
+
+  // Monkey-patch res.send to log outgoing response
+  const oldSend = res.send;
+  res.send = function (data) {
+    console.log(`[${new Date().toISOString()}] Response ${res.statusCode} for ${req.method} ${req.originalUrl}`);
+    try {
+      // Try to pretty print JSON
+      const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+      console.log('Response Body:', JSON.stringify(parsed, null, 2));
+    } catch {
+      // Fallback for non-JSON
+      console.log('Response Body:', data);
+    }
+    // @ts-ignore
+    return oldSend.apply(res, arguments);
+  };
+  next();
+});
+
+// Error logging middleware: logs all errors
+app.use((err, req, res, next) => {
+  console.error(`[${new Date().toISOString()}] ERROR:`, err.stack || err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
 export default app;
 
 app.listen(PORT, () => {
