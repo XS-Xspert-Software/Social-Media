@@ -1,56 +1,49 @@
 <template>
-  <body>
-  <div v-if="showUi" class="notification-section" style="margin-top: 50px;">
-    <h2>Notifications</h2>
-
-    <div v-if="notifications.length === 0" class="no-notifications">
-      You have no notifications.
-    </div>
-
-    <div v-else class="notification-list">
-      <div class="notification-header">
-        <span>You have {{ unreadCount }} unread {{ unreadCount === 1 ? 'notification' : 'notifications' }}</span>
-        <button v-if="unreadCount > 0" @click="markAllAsRead" class="mark-read-btn">Mark all as read</button>
+  <div class="notification-root">
+    <div v-if="showUi" class="notification-section">
+      <h2>Notifications</h2>
+      <div v-if="notifications.length === 0" class="no-notifications">
+        You have no notifications.
       </div>
-
-      <div
-        v-for="notification in notifications"
-        :key="notification.id"
-        class="notification-item"
-        :class="{ 
-          unread: !isNotificationRead(notification.id),
-          clickable: isNotificationClickable(notification)
-        }"
-        @click="handleNotificationClick(notification)"
-      >
-        
-        <div class="notification-content">
-          <div class="notification-message">{{ notification.message }}</div>
-          <div class="notification-time">{{ formatTime(notification.created_at) }}</div>
+      <div v-else class="notification-list">
+        <div class="notification-header">
+          <span>You have {{ unreadCount }} unread {{ unreadCount === 1 ? 'notification' : 'notifications' }}</span>
+          <button v-if="unreadCount > 0" @click="markAllAsRead" class="mark-read-btn">Mark all as read</button>
         </div>
-
-        <!-- Friend request actions -->
-        <div v-if="notification.type === 'friend_request'" class="notification-actions">
-          <button
-            @click.stop="acceptFriendRequest(notification)"
-            class="accept-btn"
-            :disabled="notification.processing"
-          >
-            {{ notification.processing ? 'Processing...' : 'Accept' }}
-          </button>
-          <button
-            @click.stop="declineFriendRequest(notification)"
-            class="decline-btn"
-            :disabled="notification.processing"
-          >
-            {{ notification.processing ? 'Processing...' : 'Decline' }}
-          </button>
+        <div
+          v-for="notification in notifications"
+          :key="notification.id"
+          class="notification-item"
+          :class="{ 
+            unread: !isNotificationRead(notification.id),
+            clickable: isNotificationClickable(notification)
+          }"
+          @click="handleNotificationClick(notification)"
+        >
+          <div class="notification-content">
+            <div class="notification-message">{{ notification.message }}</div>
+            <div class="notification-time">{{ formatTime(notification.created_at) }}</div>
+          </div>
+          <div v-if="notification.type === 'friend_request'" class="notification-actions">
+            <button
+              @click.stop="acceptFriendRequest(notification)"
+              class="accept-btn"
+              :disabled="notification.processing"
+            >
+              {{ notification.processing ? 'Processing...' : 'Accept' }}
+            </button>
+            <button
+              @click.stop="declineFriendRequest(notification)"
+              class="decline-btn"
+              :disabled="notification.processing"
+            >
+              {{ notification.processing ? 'Processing...' : 'Decline' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-
-  </body>
 </template>
 
 <script setup>
@@ -370,16 +363,56 @@ const getNotificationIcon = type => {
 </script>
 
 <style scoped>
-body {
+.notification-root {
+  width: 100vw;
+  min-height: 100vh;
   display: flex;
-  z-index: 10;
+  justify-content: center;
+  align-items: flex-start;
+  background: transparent;
+  box-sizing: border-box;
 }
-@media (min-width: 768px) {
- body{ position: fixed;
-  top: 5%;
-  left: 20%;
-  width: 60%;
- }
+.notification-section {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  margin-top: 50px;
+  background: #111;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+  padding: 18px 16px;
+  box-sizing: border-box;
+}
+@media (max-width: 600px) {
+  .notification-section {
+    max-width: 100vw;
+    border-radius: 0;
+    padding: 10px 2px;
+    margin-top: 10px;
+  }
+  .notification-header {
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .notification-message {
+    font-size: 13px;
+  }
+  .notification-time {
+    font-size: 11px;
+  }
+  .accept-btn, .decline-btn, .mark-read-btn {
+    font-size: 12px;
+    padding: 5px 8px;
+  }
+}
+@media (max-width: 400px) {
+  .notification-section {
+    padding: 4px 0;
+  }
+  .notification-header {
+    font-size: 12px;
+  }
 }
 
 h2 {

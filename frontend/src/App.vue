@@ -129,7 +129,7 @@
 import { ref, computed, shallowReactive, defineAsyncComponent } from 'vue';
 import Notification from './Notification.vue';
 import { usePostsStore } from './stores/postsStore';
-import { getLocalStorage, setLocalStorage } from '@/utils/localStorage';
+import { getLocalStorage, setLocalStorage } from './utils/localStorage';
 
 const Posts = defineAsyncComponent(() => import('./Posts.vue'));
 const Videos = defineAsyncComponent(() => import('./Videos.vue'));
@@ -141,7 +141,7 @@ const PostPage = defineAsyncComponent(() => import('./PostPage.vue'));
 
 import Chatbox from './Chatbox.vue';
 import Alert from './Alert.vue';
-import GroupChatbox from './GroupChatbox.vue';
+import GroupChatbox from './GroupChat.vue';
 
 const jwtCache = new Map();
 

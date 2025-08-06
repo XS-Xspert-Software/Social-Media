@@ -250,27 +250,67 @@
   background-color: #000;
   display: flex;
   justify-content: center;
-  margin-top: 50PX;
+  align-items: flex-start;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0 8px;
   position: relative;
-  z-index: 8; /* Ensure sidebar is above overlays */
+  z-index: 8;
 }
 .SSBAR {
   width: 100%;
   max-width: 600px;
+  min-width: 0;
   background-color: #000;
   overflow-y: auto;
   padding: 15px;
   border-radius: 8px;
   position: relative;
-  z-index: 8; /* Ensure sidebar content is above overlays */
+  z-index: 8;
+  box-sizing: border-box;
 }
-.SSBAR-title {
-  font-size: 10px;
-  font-weight: 600;
-  color: #060607;
-  margin-bottom: 16px;
+@media (max-width: 900px) {
+  .SSBAR {
+    max-width: 100vw;
+    padding: 10px;
+  }
 }
-
+@media (max-width: 600px) {
+  .settings-section {
+    padding: 0 2px;
+  }
+  .SSBAR {
+    max-width: 100vw;
+    border-radius: 0;
+    padding: 6px 2px;
+  }
+  .section-details {
+    padding: 8px 4px 8px 8px;
+    font-size: 12px;
+  }
+  .profile-img {
+    width: 44px;
+    height: 44px;
+    margin-right: 8px;
+  }
+  .profile-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .settings-message {
+    font-size: 12px;
+    padding: 7px 8px;
+  }
+}
+@media (max-width: 400px) {
+  .SSBAR {
+    padding: 2px 0;
+  }
+  .section-details {
+    font-size: 11px;
+  }
+}
 .section-header {
   font-size: 12px;
   font-weight: 600;
