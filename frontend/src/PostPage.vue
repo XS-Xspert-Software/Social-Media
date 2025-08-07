@@ -1,35 +1,51 @@
 <template>
-  <div class="full-screen-post-page" style="z-index: 8; position: fixed; width: 100vw; height: 100vh;overflow-y: auto;">
+  <div class="full-screen-post-page" style="position: fixed;  height: 100vh;overflow-y: auto;">
     <!-- Loading State -->
     <div v-if="!postsStore.selectedPost" style="color: #fff; text-align: center; padding: 20px;">
       <p>Loading post...</p>
     </div>
     <!-- Post Content -->
-    <div v-else class="full-screen-post-content" style="background: #000; width: 100%; height: 100%; padding: 16px; box-sizing: border-box;">
+    <div v-else class="full-screen-post-content" style="background: #000;  height: 100%; padding: 16px; box-sizing: border-box;">
       <!-- Modal Header -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <!-- Back Arrow Button -->
-        <button class="back-btn" @click="$router.go(-1)" aria-label="Back" style="color: #fff;border: none;background: none; font-size: 29px; cursor: pointer; display: flex; align-items: center;">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-          </svg>
-        </button>
-        <!-- Share Button -->
-        <button class="share-btn" @click="sharePost" aria-label="Share post" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; position: fixed; right: 25%;">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
-          </svg>
-        </button>
-        <!-- More Actions -->
-        <div class="more-actions" style="position: relative;">
-          <button class="more-btn" @click="toggleMoreMenu" aria-label="More options" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-              <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-            </svg>
-          </button>
-          <div v-if="showMoreMenu" class="more-menu" style="position: absolute; top: 30px; right: 0; background: #2a2a2a; border-radius: 8px; padding: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); min-width: 120px;">
-            <!-- Add menu options here if needed -->
-          </div>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+  <!-- Left: Back Button -->
+  <div style="display: flex; align-items: center;">
+    <button class="back-btn" @click="$router.go(-1)" aria-label="Back" style="color: #fff; border: none; background: none; font-size: 32px; cursor: pointer; display: flex; align-items: center;">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
+        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Right: Bookmark, Share, More Actions -->
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <!-- Bookmark Button -->
+    <button class="bookmark-btn" @click="bookmarkPost" aria-label="Bookmark post" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+      </svg>
+    </button>
+
+    <!-- Share Button -->
+    <button class="share-btn" @click="sharePost" aria-label="Share post" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+        <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+      </svg>
+    </button>
+
+    <!-- More Actions -->
+    <div class="more-actions" style="position: relative;">
+      <button class="more-btn" @click="toggleMoreMenu" aria-label="More options" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+          <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+        </svg>
+      </button>
+
+      <!-- Dropdown -->
+      <div v-if="showMoreMenu" class="more-menu" style="position: absolute; top: 30px; right: 0; background: #2a2a2a; border-radius: 8px; padding: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); min-width: 120px;">
+        <!-- Add menu options here -->
+      </div>
+    </div>
         </div>
       </div>
       <!-- Reply Preview -->
@@ -259,9 +275,4 @@ onMounted(async () => {
   }
 })
 </script>
-
-<style scoped>
-.full-screen-post-page {
-  font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-}
-</style>
+<style src="./Posts.css"></style>
