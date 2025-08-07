@@ -133,6 +133,7 @@ const currentWord = ref('')
 
 
 // User info
+const loggedInUserId= ref(localStorage.getItem('userId') || '')
 const loggedInUsername = ref(localStorage.getItem('username') || '')
 const profilePic = ref(localStorage.getItem('profilePic') || '')
 const sessionId = ref(localStorage.getItem('sessionId') || '')
@@ -421,36 +422,37 @@ async function postOpinion() {
 
 // Create Group
 async function createGroup() {
-  if (!newGroupName.value.trim()) return
-
   try {
-    const response = await fetch('https://sports321.vercel.app/api/Group', {
+    const response = await fetch(`https://yupitis.vercel.app/api/groups`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        'x-user-id': loggedInUserId.value, // Custom header
       },
       credentials: 'include',
       body: JSON.stringify({
         name: newGroupName.value.trim(),
         creator: loggedInUsername.value,
-        image: groupImageData.value
+        image: groupImageData.value,
       }),
-    })
+    });
 
-    if (!response.ok) throw new Error('Failed to create group')
+    if (!response.ok) throw new Error('Failed to create group');
 
-    const newGroup = await response.json()
-    showAlert('Group created successfully!', false)
+    const newGroup = await response.json();
+    showAlert('Group created successfully!', false);
 
-    // Reset
-    newGroupName.value = ''
-    groupImageData.value = null
-    groupImagePreview.value = null
-    if (groupImageInput.value) groupImageInput.value.value = ''
+    // Reset form values
+    newGroupName.value = '';
+    groupImageData.value = null;
+    groupImagePreview.value = null;
+    if (groupImageInput.value) {
+      groupImageInput.value.value = '';
+    }
   } catch (error) {
-    console.error('Error creating group:', error)
-    showAlert('Error creating group.', true)
+    console.error('Error creating group:', error);
+    showAlert('Error creating group.', true);
   }
 }
 
@@ -476,104 +478,70 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Floating Elements */
 .floating-circle {
   position: fixed;
-  bottom: 80px;
+  bottom: 20%;
   right: 30px;
   width: 48px;
   height: 48px;
   background: linear-gradient(135deg, #667eea, #764ba2);
-  color: #fff;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-  z-index: 1000;
+  z-index: 3;
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  font-size: 18px;
+  transition: transform 0.3s ease;
+  color: #fff;
 }
 .floating-panel {
   position: fixed;
   inset: 60px 0 0 0;
-  background: #000;
-  z-index: 9;
-  border-radius: 24px 24px 0 0;
-  box-shadow: 0 -10px 50px rgba(0, 0, 0, 0.3);
+  z-index: 3;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   backdrop-filter: blur(10px);
 }
+/* Panel Layout */
 .panel-fixed-header {
-  background: #000;
   padding: 20px 24px;
 }
-
 .panel-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 .panel-content {
   flex: 1;
   overflow-y: auto;
   padding: 0 24px 24px;
 }
-.post-input {
-  margin-bottom: 20px;
-}
-
-.textarea-wrapper {
-  position: relative;
-  margin-bottom: 16px;
-}
-
-.content-editable, .post-input input,.group-name-input, .post-input textarea {
+/* Input Elements */
+.content-editable, 
+.post-input input,
+.group-name-input, 
+.post-input textarea {
   width: 100%;
   min-height: 80px;
   padding: 12px 16px;
   border-radius: 15px;
-  background: #111;
   color: #fff;
-  font-size: 1rem;
   outline: none;
   white-space: pre-wrap;
-  border: 2px solid transparent;
+  border: 2px solid rgba(102, 126, 234, 0.5);
+  background: rgba(255, 255, 255, 0.08);
   transition: all 0.3s ease;
 }
-
-.content-editable:focus {
-  border-color: rgba(102, 126, 234, 0.5);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-}
-
 .content-editable:empty::before {
   content: attr(data-placeholder);
   color: #888;
-  position: absolute;
   pointer-events: none;
 }
-
+/* Tags */
 .tagged-user, .hashtag {
   color: #fff;
   padding: 2px 8px;
   border-radius: 12px;
-  font-weight: 600;
-  font-size: 14px;
 }
-.close-btn {
-  width: 50px;
-  height: 50px;
-  background: none;
-  font-size: 31px;
-  position: fixed;
-  right: 8%;
-  top: 0.5%;
-}
-
 .tagged-user {
   background: linear-gradient(135deg, #667eea, #764ba2);
 }
@@ -581,22 +549,19 @@ onMounted(() => {
 .hashtag {
   background: linear-gradient(135deg, #f093fb, #f5576c);
 }
-
+/* Suggestions */
 .suggestions-dropdown {
   position: absolute;
   top: 100%;
   left: 0;
   right: 0;
-  background: rgba(26, 26, 26, 0.95);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   max-height: 200px;
   overflow-y: auto;
-  z-index: 1000;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 4;
 }
-
 .suggestion-item {
   padding: 12px 16px;
   cursor: pointer;
@@ -606,51 +571,25 @@ onMounted(() => {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   transition: background-color 0.2s ease;
 }
-
-.suggestion-item:hover, .suggestion-item.active {
+.suggestion-item:hover, 
+.suggestion-item.active {
   background: rgba(102, 126, 234, 0.2);
 }
-
 .suggestion-item:last-child {
   border-bottom: none;
 }
-
-.suggestion-prefix {
-  color: #667eea;
-  font-weight: bold;
-}
-
-.suggestion-text {
-  color: #fff;
-}
-
-.no-suggestions {
-  padding: 12px 16px;
-  color: rgba(255, 255, 255, 0.5);
-  text-align: center;
-  font-style: italic;
-}
-
+/* Upload & Media */
 .file-upload-icon {
   position: absolute;
-  top: 20px;
+  top: 15%;
   right: 20px;
-  width: 40px;
-  height: 40px;
-  background: rgba(102, 126, 234, 0.2);
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   cursor: pointer;
   color: #667eea;
-  border: 1px solid rgba(102, 126, 234, 0.3);
+  border: none;
   transition: all 0.2s ease;
-}
-
-.file-upload-icon:hover {
-  background: rgba(102, 126, 234, 0.3);
-  transform: scale(1.05);
 }
 .image-preview {
   max-width: 300px;
@@ -658,24 +597,39 @@ onMounted(() => {
   height: auto;
   border-radius: 12px;
   margin-bottom: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
-.post-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+/* Buttons */
+button {
+  background: #f193fb55;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
+button:hover {
+  background: #111;
+  transform: scale(1.03);
+}
+.close-btn {
+  width: 60px;
+  height: 60px;
+  background: none;
+  position: fixed;
+  right: 8%;
+  top: 0.5%;
+}
+/* Utility Classes */
 .divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.905), transparent);
   margin: 32px 0;
 }
+.post-input,
 .create-group-section {
-  margin-top: 32px;
+  margin-bottom: 20px;
 }
 .create-group-section h3 {
-  font-size: 20px;
-  font-weight: 700;
-  color: transparent;
   background: linear-gradient(135deg, #f093fb, #f5576c);
   background-clip: text;
   -webkit-background-clip: text;
@@ -686,11 +640,6 @@ onMounted(() => {
   flex-direction: column;
   gap: 20px;
 }
-.group-image-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 .group-image-upload {
   background: rgba(240, 147, 251, 0.2);
   border: 2px dashed rgba(240, 147, 251, 0.4);
@@ -699,39 +648,22 @@ onMounted(() => {
   text-align: center;
   cursor: pointer;
   color: #f093fb;
-  font-weight: 600;
   transition: all 0.3s ease;
 }
-button {
-  background: #333;
-  color: #fff;
-  padding: 10px 18px;
-  border-radius: 999px;
-  font-size: 14px;
-}
-
-button:hover {
-  background: #111;
-  transform: scale(1.03);
-}
-
-.slide-up-enter-active, .slide-up-leave-active {
+/* Animations */
+.slide-up-enter-active, 
+.slide-up-leave-active {
   transition: transform 0.3s ease;
 }
-
-.slide-up-enter-from, .slide-up-leave-to {
+.slide-up-enter-from, 
+.slide-up-leave-to {
   transform: translateY(100%);
 }
 .typed-highlight {
   margin-top: 14px;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 21px;
   color: red;
 }
 .typed-highlight .trigger {
-  font-weight: bold;
   color: #007bff;
 }
-
 </style>
