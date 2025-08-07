@@ -1,166 +1,269 @@
 <template>
   <section class="chat-section">
-    <div class="chat-container" :class="{ 'side-by-side': isLargeScreen && selectedUser }">
+    <div class="chat-container">
       <div class="tabs">
-        <button :class="{ active: activeSection === 'users-section' }" @click="switchSection('users-section')" style="padding: 6px 21px; margin-left: 20px; background-color: #111; border-radius: 9999px; color: #fff; font-size: 14px; cursor: pointer; border-color: #fff;">
-          Chat
-        </button>
-        <button :class="{ active: activeSection === 'WorldChat' }" @click="switchSection('WorldChat')" style="padding: 6px 21px; margin-right: 20px; background-color: #111; border-radius: 99px; color: #fff; font-size: 14px; cursor: pointer; border-color: #fff;">
-          Global
-        </button>
-        <button :class="{ active: activeSection === 'GroupChat' }" @click="switchSection('GroupChat')" style="padding: 6px 21px; margin-right: 20px; background-color: #111; border-radius: 99px; color: #fff; font-size: 14px; cursor: pointer; border-color: #fff;">
-          Groups
-        </button>
-      </div>
+  <button 
+    :class="['tab-button', { active: activeSection === 'Live' }]" 
+    @click="switchSectionWithRoute('Live', '/chat/live')"
+  >
+    Live
+  </button>
+  <button 
+    :class="['tab-button', { active: activeSection === 'WorldChat' }]" 
+    @click="switchSectionWithRoute('WorldChat', '/chat/world')"
+  >
+    World
+  </button>
+  <button 
+    :class="['tab-button', { active: activeSection === 'GroupChat' }]" 
+    @click="switchSectionWithRoute('GroupChat', '/chat/groups')"
+  >
+    Groups
+  </button>
+</div>
 
-      <div class="sections">
-        <!-- Users List -->
-        <div v-if="activeSection === 'users-section'" class="section user-list-section">
-          <div id="loading" class="loading" v-if="userStore.loading"><div class="spinner"></div></div>
-          <div id="load-more-trigger"></div>
-          <div class="users-container">
-            <div v-for="user in userStore.users" :key="user.username" class="user-card" @click="handleUserClick(user)" style="display: flex; align-items: center; padding: 12px 16px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">
-              <div class="profile-picture" style="width: 30px; height: 30px; border-radius: 30%; margin-right: 20px;"><img :src="user.profile_picture || 'default-pfp.jpg'" :alt="user.username + ' profile'" style="width: 100%; height: 100%; object-fit: cover;" /></div>
-              <div class="username" style="font-size: 1.05rem; color: #fff;">
-                <strong>{{ user.username }}</strong>
-                <div v-if="user.lastMessage" style="font-size: 0.85rem; color: #ccc;">{{ user.lastMessage }}</div>
+      <!-- Live Chat (Ably) - Default section with inline logic -->
+      <div v-if="activeSection === 'Live'" class="section">
+        <div id="chat-container" style="min-height: 400px;">
+          <div id="messages" ref="messagesContainer">
+            <div v-for="message in visibleMessages" :key="message.id" class="message">
+              <div class="bubble">
+                <div class="text-row">
+                  <div class="username" :style="getUsernameStyle(message.username)">{{ message.username || 'Unknown' }}</div>
+                  <span class="message-text">{{ message.text || '[Empty Message]' }}</span>
+                </div>
               </div>
             </div>
           </div>
+          <div id="input-container">
+            <input v-model="inputMessage" id="input-message" type="text" placeholder="Type a message..." @keyup.enter="sendMessage" @input="handleInputChange" />
+            <button id="send-button" @click="sendMessage">Send</button>
+          </div>
+          <div id="warning-message">{{ userStore.warningMessage }}</div>
         </div>
+      </div>
 
-        <!-- World Chat (lazy load only when accessed) -->
-        <div v-if="worldChatLoaded && activeSection === 'WorldChat'" class="section">
-          <WorldChat />
-        </div>
+      <!-- World Chat (Users List) - Lazy loaded -->
+      <div v-if="worldChatLoaded && activeSection === 'WorldChat'" class="section">
+        <WorldChat />
+      </div>
 
-        <!-- Group Chat (lazy load only when accessed) -->
-        <div v-if="groupChatLoaded && activeSection === 'GroupChat'" class="section">
-          <GroupChat ref="groupChat" @group-click="handleGroupClick" />
-        </div>
-
-        <!-- Chatbox on large screens -->
-        <div v-if="isLargeScreen && selectedUser && activeSection === 'users-section'" class="chatbox-section" :class="{ 'active': isLargeScreen }">
-          <Chatbox
-            :key="selectedUser?.id"
-            :chatWith="selectedUser.username"
-            :chatWithId="selectedUser.id"
-            :profileImage="selectedUser.profile_picture || 'default-pfp.jpg'"
-            @go-back="handleGoBack"
-          />
-        </div>
+      <!-- Group Chat (lazy load only when accessed) -->
+      <div v-if="groupChatLoaded && activeSection === 'GroupChat'" class="section">
+        <GroupChat ref="groupChat" @group-click="handleGroupClick" />
       </div>
     </div>
   </section>
 </template>
 
 <script>
-import { defineAsyncComponent } from 'vue';
-import Chatbox from './Chatbox.vue';
+import { defineAsyncComponent, nextTick } from 'vue';
 import { useUserStore } from './stores/userStore';
 
+const loadAbly = () => import('ably');
+
 export default {
-  name: 'UsersSection',
+  name: 'ChatSection',
   components: {
-    Chatbox,
     WorldChat: defineAsyncComponent(() => import('./WorldChat.vue')),
     GroupChat: defineAsyncComponent(() => import('./GroupChat.vue')),
   },
   data() {
     return {
-      activeSection: 'users-section',
-      loggedInUsername: localStorage.getItem('username')?.trim() || null,
-      selectedUser: null,
-      isLargeScreen: window.innerWidth >= 768,
+      activeSection: 'Live',
       worldChatLoaded: false,
       groupChatLoaded: false,
+      
+      // Ably Live Chat data
+      inputMessage: '',
+      messages: [],
+      visibleMessages: [],
+      sentMessages: new Set(),
+      username: localStorage.getItem('username')?.trim() || 'Unknown',
+      userColors: new Map(),
+      ably: null,
+      channel: null,
+      messageStartIndex: 0,
+      messageEndIndex: 50,
+      messageHeight: 60,
+      containerHeight: 500,
+      isScrolling: false,
+      scrollTimeout: null,
     };
   },
   computed: {
     userStore() {
       return useUserStore();
     },
+    maxVisibleMessages() {
+      return Math.ceil(this.containerHeight / this.messageHeight) + 5;
+    },
+  },
+  watch: {
+    $route: {
+      handler(to) {
+        // Handle direct URL navigation
+        const sectionMap = {
+          '/chat/live': 'Live',
+          '/chat/world': 'WorldChat',
+          '/chat/groups': 'GroupChat'
+        };
+        
+        const section = sectionMap[to.path];
+        if (section && this.activeSection !== section) {
+          this.switchSection(section);
+        }
+      },
+      immediate: true
+    }
   },
   methods: {
+    // New method that combines section switching with routing
+    switchSectionWithRoute(section, route) {
+      this.switchSection(section);
+      
+      // Update URL without triggering navigation if different
+      if (this.$route.path !== route) {
+        this.$router.push(route);
+      }
+    },
+    
+    // Keep your existing switchSection method
     switchSection(section) {
       if (this.activeSection === section) return;
       this.activeSection = section;
-      this.selectedUser = null;
 
       if (section === 'WorldChat') {
         this.worldChatLoaded = true;
       }
+
       if (section === 'GroupChat') {
         this.groupChatLoaded = true;
         this.$nextTick(() => {
           this.$refs.groupChat?.fetchGroups?.();
         });
       }
-    },
-    handleUserClick(user) {
-      if (user.username === this.loggedInUsername) return;
-      const updates = {
-        chatWith: user.username,
-        chatWithId: user.id,
-        profileImage: user.profile_picture || 'default-pfp.jpg',
-      };
-      Object.entries(updates).forEach(([key, value]) => {
-        localStorage.setItem(key, value);
-      });
-
-      if (this.isLargeScreen && this.activeSection === 'users-section') {
-        this.selectedUser = user;
-      } else {
-        this.selectedUser = null;
-        this.$router.push({
-          name: 'GroupChatbox',
-          params: {
-            userId: user.id,
-            username: user.username,
-          },
-        });
-      }
-    },
-    handleGoBack() {
-      this.selectedUser = null;
-      if (!this.isLargeScreen) {
-        this.$router.push({ name: 'UsersSection' });
-      }
-    },
+  },
     
-    handleResize() {
-      const wasLargeScreen = this.isLargeScreen;
-      this.isLargeScreen = window.innerWidth >= 768;
+    handleGroupClick(group) {
+      // Handle group click if needed
+      console.log('Group clicked:', group);
+    },
 
-      if (wasLargeScreen && !this.isLargeScreen && this.selectedUser) {
-        const updates = {
-          chatWith: this.selectedUser.username,
-          chatWithId: this.selectedUser.id,
-          profileImage: this.selectedUser.profile_picture || 'default-pfp.jpg',
+    // Ably Live Chat methods
+    getColorForUsername(name) {
+      if (!this.userColors.has(name)) {
+        const colors = [
+          '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
+          '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
+          '#008080', '#e6beff', '#9a6324', '#800000',
+        ];
+        this.userColors.set(name, colors[Math.floor(Math.random() * colors.length)]);
+      }
+      return this.userColors.get(name);
+    },
+    getUsernameStyle(username) {
+      if (username === 'username99') {
+        return {
+          backgroundColor: '#000',
+          color: '#fff',
+          fontSize: '23px',
+          marginRight: '8px',
+          whiteSpace: 'nowrap',
+          padding: '4px 8px',
+          borderRadius: '4px',
         };
-        Object.entries(updates).forEach(([key, value]) => {
-          localStorage.setItem(key, value);
+      }
+      return {
+        fontWeight: 'bold',
+        color: this.getColorForUsername(username),
+      };
+    },
+    appendMessage(text, username, id) {
+      if (this.sentMessages.has(id)) return;
+      this.messages.push({ text, username, id });
+      this.sentMessages.add(id);
+      this.updateVisibleMessages();
+      nextTick(() => {
+        this.scrollToBottom();
+      });
+    },
+    updateVisibleMessages() {
+      const start = Math.max(0, this.messages.length - this.maxVisibleMessages);
+      this.visibleMessages = this.messages.slice(start);
+    },
+    handleScroll() {
+      if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
+      this.isScrolling = true;
+      this.scrollTimeout = setTimeout(() => {
+        this.isScrolling = false;
+      }, 150);
+    },
+    scrollToBottom() {
+      if (this.$refs.messagesContainer && !this.isScrolling) {
+        this.$refs.messagesContainer.scrollTop = this.$refs.messagesContainer.scrollHeight;
+      }
+    },
+    handleInputChange() {
+      this.userStore.warningMessage = '';
+    },
+    sendMessage() {
+      const message = this.inputMessage.trim();
+      if (!message) return;
+      if (!this.username || this.username === 'Unknown') {
+        this.userStore.warningMessage = 'Please sign up before sending a message.';
+        return;
+      }
+      const messageId = Date.now() + Math.random();
+      this.appendMessage(message, this.username, messageId);
+      if (this.channel) {
+        this.channel.publish('new-message', {
+          text: message,
+          id: messageId,
+          username: this.username,
         });
-        this.$router.push({
-          name: 'Chatbox',
-          params: {
-            userId: this.selectedUser.id,
-            username: this.selectedUser.username,
-          },
+      }
+      this.inputMessage = '';
+    },
+    async initializeAbly() {
+      try {
+        const Ably = await loadAbly();
+        this.ably = new Ably.Realtime('9frHeA.Si13Zw:KVzVyovw6hCu4RRuy6P11Tyl0h7MJIzv2Q_n4YgbNnE');
+        this.ably.connection.on('connected', () => {
+          console.log('Connected to Ably');
+          this.channel = this.ably.channels.get('chat-room');
+          this.channel.subscribe('new-message', (msg) => {
+            const { text, id, username } = msg.data;
+            if (!this.sentMessages.has(id)) {
+              this.appendMessage(text, username, id);
+            }
+          });
         });
-        this.selectedUser = null;
-      } else if (this.isLargeScreen && this.$route.name === 'Chatbox') {
-        this.$router.push({ name: 'UsersSection' });
-        this.selectedUser = null;
+        this.ably.connection.on('failed', () => {
+          console.error('Failed to connect to Ably');
+          this.userStore.warningMessage = 'Failed to connect to chat service.';
+        });
+      } catch (error) {
+        console.error('Failed to load Ably:', error);
+        this.userStore.warningMessage = 'Failed to initialize chat service.';
       }
     },
   },
   mounted() {
-    this.userStore.fetchUsers();
-    window.addEventListener('resize', this.handleResize);
+    this.initializeAbly();
+    this.$refs.messagesContainer?.addEventListener('scroll', this.handleScroll);
   },
   beforeUnmount() {
-    window.removeEventListener('resize', this.handleResize);
+    if (this.channel) {
+      this.channel.unsubscribe('new-message');
+    }
+    if (this.ably) {
+      this.ably.close();
+    }
+    if (this.scrollTimeout) {
+      clearTimeout(this.scrollTimeout);
+    }
+    this.$refs.messagesContainer?.removeEventListener('scroll', this.handleScroll);
   },
 };
 </script>
