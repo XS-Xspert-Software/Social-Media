@@ -132,7 +132,7 @@ watch(isOtherUserOnline, (newStatus) => {
 
 // Methods
 const goBack = () => {
-  router.push('/chat')
+  router.push('/chat/world')
 }
 
 const sendTypingIndicator = () => {
@@ -692,3 +692,10 @@ defineExpose({
 })
 </script>
 <style src="./Chatbox.css"></style>
+<style scoped>
+.msg-bubble{background-color:var(--bg-secondary);color:var(--text-secondary);padding:0.55rem 0.85rem;border-radius:1.5rem;line-height:1.5;word-break:break-word;box-shadow:0 2px 2px rgba(0,0,0,0.2);max-width:100%}
+.user-msg{align-self:flex-end}
+.other-msg{align-self:flex-start}
+.msg-bubble.user-msg-seen,.user-msg-seen{align-self:flex-end;background-color:var(--accent-light-blue);color:var(--bg-primary);border-radius:12px 12px 0 12px}
+.message-content{line-height:1.4;word-wrap:break-word}
+.timestamp{font-size:0.75rem;color:var(--text-muted);margin-top:4px}</style>
