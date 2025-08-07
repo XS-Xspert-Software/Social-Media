@@ -2,15 +2,16 @@
   <div :class="['app-wrapper', { 'Chatbox-fullscreen': isChatboxRoute, 'no-header-padding': postsStore.selectedPost, 'GroupChatbox-fullscreen': isGroupChatboxRoute}]">
     <!-- Header -->
     <header v-if="!isChatboxRoute , !isGroupChatboxRoute && !postsStore.selectedPost">
-      <h1 style="font-size: 23px; margin-left: 3%; display: flex; align-items: center; gap: 8px;">
-        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="width:24px; height:24px;">
-          <path d="M32 2 L38 26 L62 32 L38 38 L32 62 L26 38 L2 32 L26 26 Z"/>
-          <path d="M32 12 L36 28 L52 32 L36 36 L32 52 L28 36 L12 32 L28 28 Z"/>
-          <line x1="32" y1="2" x2="32" y2="62"/>
-          <line x1="2" y1="32" x2="62" y2="32"/>
-        </svg> 𝓢𝔂𝓷𝓬
-      </h1>
-
+     <h1 class="fancy-title">
+  <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <path d="M32 2 L38 26 L62 32 L38 38 L32 62 L26 38 L2 32 L26 26 Z"/>
+    <path d="M32 12 L36 28 L52 32 L36 36 L32 52 L28 36 L12 32 L28 28 Z"/>
+    <line x1="32" y1="2" x2="32" y2="62"/>
+    <line x1="2" y1="32" x2="62" y2="32"/>
+  </svg>
+  <span class="sync-text">Sync</span>
+  </h1>
+  
       <!-- Profile and Search -->
       <div class="user-section" style="gap: 12px; display: flex; align-items: center;">
          <i class="fas fa-search" @click="navigateToSearch" style="font-size: 24px; cursor: pointer;" aria-label="Open search page"></i>
@@ -71,7 +72,9 @@
         </Suspense>
       </div>
 
-      <div class="right-sidebar" v-if="!isChatRoute"></div>
+      <div class="right-sidebar" v-if="!isChatRoute">
+        <RightSidebar />
+      </div>
     </div>
     
 <Float />
@@ -129,7 +132,8 @@
 import { ref, computed, shallowReactive, defineAsyncComponent } from 'vue';
 import Notification from './Notification.vue';
 import { usePostsStore } from './stores/postsStore';
-import { getLocalStorage, setLocalStorage } from './utils/localStorage';
+import RightSidebar from './RightSidebar.vue'; // Import the new right sidebar component
+import { getLocalStorage, setLocalStorage } from '@/utils/localStorage';
 
 const Posts = defineAsyncComponent(() => import('./Posts.vue'));
 const Videos = defineAsyncComponent(() => import('./Videos.vue'));
@@ -141,7 +145,7 @@ const PostPage = defineAsyncComponent(() => import('./PostPage.vue'));
 
 import Chatbox from './Chatbox.vue';
 import Alert from './Alert.vue';
-import GroupChatbox from './GroupChat.vue';
+import GroupChatbox from './GroupChatbox.vue';
 
 const jwtCache = new Map();
 
@@ -156,6 +160,7 @@ export default {
     Settings,
     Notification,
     Search2,
+    RightSidebar,
     Float,
     Alert,
     PostPage
@@ -474,7 +479,46 @@ export default {
   border-radius: 4px;
   transition: background-color 0.2s;
 }
+.fancy-title {
+  font-size: 24px;
+  margin-left: 3%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.fancy-title svg {
+  width: 26px;
+  height: 26px;
+  stroke: #00bcd4;
+}
+.sync-text {
+  background: linear-gradient(90deg, #ff00c8, #00e0ff, #a3ff00);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 4s linear infinite;
+}
+@keyframes gradientShift {
+  0% { background-position: 0% center; }
+  100% { background-position: 100% center; }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 </style>
+
+
 
 
 
