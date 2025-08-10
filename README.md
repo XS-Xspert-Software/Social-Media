@@ -2,13 +2,13 @@
 
 This is the repo hosting the open-source behind **Sync**, the everything social media.  
 **Note:** This repository may differ from actual Sync code.  
-For something more decentralized, see [RSSX](https://github.com/thegoodduck/rssx) (Maintained by one of the coders behind Pulse and Sync).
+For something more decentralized, see [RSSX](https://github.com/thegoodduck/rssx) (Maintained by one of the coders behind Halo and Sync).
 
 ---
 
-## 🚀 How to Host Your Own Pulse Server
+## 🚀 How to Host Your Own Halo Server
 
-Anyone can run their own Pulse server and join the decentralized Sync network!  
+Anyone can run their own Halo server and join the decentralized Sync network!  
 Here’s how to get started:
 
 ---
@@ -42,7 +42,7 @@ Set your database credentials, JWT secret, and (optionally) federation variables
 
 ### 3. Run with Docker (Recommended)
 
-Pulse is designed for easy Docker deployment:
+Halo is designed for easy Docker deployment:
 
 ```bash
 docker compose up --build
@@ -69,7 +69,7 @@ This will start:
 Your server will automatically expose federation endpoints:
 
 - `/federation/discover` — Shows your API and federation endpoint locations
-- `/federation/posts?remote=<remote_url>` — Proxy posts from a remote Pulse server
+- `/federation/posts?remote=<remote_url>` — Proxy posts from a remote Halo server
 - `/federation/user-info?remote=<remote_url>&userId=<id>` — Proxy user info
 - `/federation/videos?remote=<remote_url>` — Proxy videos
 - `/federation/inbox` — Accept federation requests (future: push, follow, etc.)
@@ -94,7 +94,7 @@ curl http://localhost:3000/federation/discover
 ### 7. Join the Federation
 
 - Share your `/federation/discover` endpoint with others.
-- Add other Pulse servers to your `/federation/servers` list for discovery.
+- Add other Halo servers to your `/federation/servers` list for discovery.
 - Your users can now interact with remote servers and content!
 
 ---
@@ -113,5 +113,5 @@ See a live example at:
 
 ---
 
-**Pulse is the engine. Sync is the platform.**  
+**Halo is the engine. Sync is the platform.**  
 You can run your own, federate, and help build the decentralized social web!
