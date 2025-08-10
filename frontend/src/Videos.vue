@@ -82,32 +82,79 @@ export default {
 
 <style scoped>
 .upload-container {
-  max-width: 400px;
-  margin: auto;
-  padding: 1em;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  max-width: 580px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 22px 26px 28px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: linear-gradient(145deg, #11171d, #141e26 60%, #17232c);
+  box-shadow: 0 4px 18px -6px rgba(0, 0, 0, 0.55);
+  color: #e6edf3;
+  font-size: 14px;
+  line-height: 1.35;
+  box-sizing: border-box;
 }
-
+.upload-container h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+}
+form > div {
+  margin-bottom: 14px;
+}
 label {
   display: block;
-  margin-top: 1em;
+  font-weight: 600;
+  margin: 0 0 6px;
+  font-size: 13px;
+  letter-spacing: 0.3px;
 }
-
 input[type="file"],
 input[type="text"] {
   width: 100%;
-  margin-top: 0.5em;
+  display: block;
+  box-sizing: border-box;
+  font-size: 13px;
+  padding: 10px 12px;
+  background: #0f151b;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-radius: 8px;
 }
-
+input[type="text"]::placeholder {
+  color: #6d7a85;
+}
+input[type="file"] {
+  padding: 6px 10px;
+}
 button {
-  margin-top: 1em;
-  padding: 0.5em 1em;
+  margin-top: 4px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, #1d8cf8, #8751ff);
+  border: none;
+  border-radius: 24px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 3px 10px -4px rgba(0, 0, 0, 0.6);
+  transition: 0.3s;
 }
-
+button:hover {
+  filter: brightness(1.12);
+}
 .status {
-  margin-top: 1em;
-  font-weight: bold;
+  margin-top: 16px;
+  font-weight: 600;
+  font-size: 13px;
+}
+@media (max-width: 700px) {
+  .upload-container {
+    max-width: 100%;
+    border-radius: 0;
+  }
 }
 </style>
 

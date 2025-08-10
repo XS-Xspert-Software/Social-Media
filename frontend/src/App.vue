@@ -34,12 +34,10 @@
  <li
   v-for="tab in tabs"
   :key="tab.name"
-  :class="{ active: currentTab === tab.name }"
+  :class="[{ active: currentTab === tab.name }, 'sidebar-tab-btn']"
   @click="switchTab(tab.name)"
-  class="sidebar-tab-btn"
-  style="display: flex;gap: 30px;"
 >
-  <i :class="tab.icon" style="margin-right: 8px;"></i>
+  <i :class="tab.icon"></i>
   <span>{{ tab.label }}</span>
 
             <!-- 🔴 Notification badge -->
@@ -54,9 +52,9 @@
         </ul>
 
         <div class="sidebar-sort" v-if="currentTab === 'posts'">
-  <button class="sort-button" :class="{ active: selectedSort === 'most-liked' }" @click="emitSort('most-liked')" style="display: flex; gap: 30px;"><i class="fas fa-atom"></i> General</button>
-  <button class="sort-button" :class="{ active: selectedSort === 'most-comments' }" @click="emitSort('most-comments')" style="display: flex; gap: 30px;"><i class="fas fa-fire"></i> Trending</button>
-  <button class="sort-button" :class="{ active: selectedSort === 'newest' }" @click="emitSort('newest')" style="display: flex; gap: 30px;"><i class="fas fa-clock"></i> Newest</button>
+  <button class="sort-button" :class="{ active: selectedSort === 'most-liked' }" @click="emitSort('most-liked')"><i class="fas fa-atom"></i><span>General</span></button>
+  <button class="sort-button" :class="{ active: selectedSort === 'most-comments' }" @click="emitSort('most-comments')"><i class="fas fa-fire"></i><span>Trending</span></button>
+  <button class="sort-button" :class="{ active: selectedSort === 'newest' }" @click="emitSort('newest')"><i class="fas fa-clock"></i><span>Newest</span></button>
 </div>
       </div>
 
@@ -133,7 +131,7 @@ import { ref, computed, shallowReactive, defineAsyncComponent } from 'vue';
 import Notification from './Notification.vue';
 import { usePostsStore } from './stores/postsStore';
 import RightSidebar from './RightSidebar.vue'; // Import the new right sidebar component
-import { getLocalStorage, setLocalStorage } from '@/utils/localStorage';
+import { getLocalStorage, setLocalStorage } from './utils/localStorage';
 
 const Posts = defineAsyncComponent(() => import('./Posts.vue'));
 const Videos = defineAsyncComponent(() => import('./Videos.vue'));
@@ -496,6 +494,7 @@ export default {
 .sync-text {
   background: linear-gradient(90deg, #ff00c8, #00e0ff, #a3ff00);
   background-size: 200% auto;
+  background-clip: text; /* added standard property */
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: gradientShift 4s linear infinite;
