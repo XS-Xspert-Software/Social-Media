@@ -103,10 +103,10 @@
           ({{ postsStore.selectedPost.comments?.length || 0 }})
         </button>
         <button class="tweet-btn" @click="tweetPost(postsStore.selectedPost._id, postsStore.selectedPost.username)" style="background: none; border: none; color: #fff; display: flex; align-items: center; gap: 5px; font-size: 14px;">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path d="M22.46 6c-.77.35-1.6.58-2.46.69a4.3 4.3 0 0 0 1.88-2.38c-.82.49-1.73.83-2.69 1.02A4.26 4.26 0 0 0 15.88 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11 1-3.55-.18-6.71-1.89-8.82-4.48-.37.63-.58 1.37-.58 2.15 0 1.49.76 2.81 1.91 3.58-.7-.02-1.36-.22-1.94-.54v.05c0 2.08 1.48 3.82 3.44 4.21-.36.1-.74.15-1.13.15-.28 0-.55-.03-.81-.08.55 1.73 2.15 2.99 4.04 3.03-1.48 1.16-3.34 1.85-5.36 1.85-.35 0-.69-.02-1.03-.06 1.91 1.23 4.18 1.94 6.62 1.94 7.94 0 12.29-6.58 12.29-12.29 0-.19 0-.37-.01-.56.84-.61 1.57-1.37 2.15struelations-2.24z"/>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" class="ping-icon">
+            <path d="M12 2l3.09 7.26L22 9.27l-5.5 4.78L18.18 22 12 18.3 5.82 22 7.5 14.05 2 9.27l6.91-1.01L12 2z"/>
           </svg>
-          Tweet
+          Ping
         </button>
         <button v-if="postsStore.selectedPost.username === postsStore.loggedInUsername || postsStore.selectedPost.sessionId === postsStore.sessionId" @click="postsStore.editPost(postsStore.selectedPost._id, postsStore.selectedPost.username)" style="background: none; border: none; color: #fff; font-size: 14px;">Edit</button>
         <button v-if="postsStore.selectedPost.username === postsStore.loggedInUsername || postsStore.selectedPost.sessionId === postsStore.sessionId" @click="postsStore.deletePost(postsStore.selectedPost._id)" style="background: none; border: none; color: #ff6b6b; font-size: 14px;">Delete</button>
@@ -276,3 +276,6 @@ onMounted(async () => {
 })
 </script>
 <style src="./Posts.css"></style>
+<style>
+.ping-icon{color:#00b4d8;fill:currentColor;}
+</style>

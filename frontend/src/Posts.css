@@ -84,6 +84,9 @@
 .quote-btn{color:#17bf63}
 .comment-btn{color:#1da1f2;max-height:40px;margin:0;padding:0}
 .tweet-btn{font-size:12px;color:#1da1f2}
+/* rename semantic class (keep old for backward compat) */
+.ping-btn{font-size:12px;color:#1da1f2}
+.ping-icon{color:#00b4d8;fill:currentColor;margin-right:4px;}
 
 /* Utilities */
 .clickable{cursor:pointer}
