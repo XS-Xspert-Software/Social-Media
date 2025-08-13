@@ -1,13 +1,13 @@
-// Minimal Socket.IO server for global chat (serverless style)
+// WebSocket server for global chat (replacing Socket.IO)
 import { createServer } from 'http';
-import { Server as SocketIOServer } from 'socket.io';
+import { WebSocketServer } from 'ws';
 import pkg from 'pg';
 
 const { Pool } = pkg;
 
 const PORT = process.env.PORT || 4000;
 const server = createServer();
-const io = new SocketIOServer(server, { cors: { origin: '*' } });
+const wss = new WebSocketServer({ server });
 
 // PostgreSQL connection pool
 const pool = new Pool({
@@ -51,35 +51,62 @@ async function deleteOldMessages() {
 // Clean up messages older than 24 hours every minute
 setInterval(deleteOldMessages, 60 * 1000);
 
-io.on('connection', async (socket) => {
-  console.log('[Socket.IO] New client connected:', socket.id);
+function safeSend(ws, data) {
+  if (ws.readyState === ws.OPEN) {
+    ws.send(JSON.stringify(data));
+  }
+}
+
+function broadcast(data) {
+  const payload = JSON.stringify(data);
+  wss.clients.forEach((client) => {
+    if (client.readyState === client.OPEN) {
+      client.send(payload);
+    }
+  });
+}
+
+wss.on('connection', async (ws, req) => {
+  const clientId = Math.random().toString(36).slice(2);
+  console.log('[WS] New client connected:', clientId, 'from', req.socket.remoteAddress);
+
   // Send recent messages from DB
   try {
     const recentMessages = await fetchRecentMessages();
-    // Parse content JSON for each message
-    socket.emit('global-messages', recentMessages.map(row => JSON.parse(row.content)));
+    safeSend(ws, { type: 'global-messages', data: recentMessages.map((row) => JSON.parse(row.content)) });
   } catch (err) {
     console.error('Error fetching messages:', err);
-    socket.emit('global-messages', []);
+    safeSend(ws, { type: 'global-messages', data: [] });
   }
-  socket.on('global-message', async (msg) => {
-    console.log('[Socket.IO] Received global-message:', msg);
-    // Ensure timestamp is set and valid
-    if (!msg.timestamp) {
-      msg.timestamp = new Date().toISOString(); // fallback to server time
-    }
+
+  ws.on('message', async (raw) => {
     try {
-      await insertMessage(msg);
-      io.emit('global-message', msg);
-    } catch (err) {
-      console.error('Error inserting message:', err);
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : JSON.parse(raw.toString('utf8'));
+      const { type, data } = parsed || {};
+
+      if (type === 'global-message' && data) {
+        const msg = { ...data };
+        if (!msg.timestamp) {
+          msg.timestamp = new Date().toISOString();
+        }
+        console.log('[WS] Received global-message:', msg);
+        try {
+          await insertMessage(msg);
+          broadcast({ type: 'global-message', data: msg });
+        } catch (err) {
+          console.error('Error inserting message:', err);
+        }
+      }
+    } catch (e) {
+      console.warn('[WS] Failed to parse incoming message:', e);
     }
   });
-  socket.on('disconnect', () => {
-    console.log('[Socket.IO] Client disconnected:', socket.id);
+
+  ws.on('close', () => {
+    console.log('[WS] Client disconnected:', clientId);
   });
 });
 
 server.listen(PORT, () => {
-  console.log(`[Socket.IO] Server running on port ${PORT}`);
+  console.log(`[WS] Server running on port ${PORT}`);
 });
