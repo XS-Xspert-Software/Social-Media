@@ -43,5 +43,21 @@ services:
     volumes:
       - ./vidbackend:/app
 
+  websocket:
+    build: ./socketio
+    environment:
+      - PGUSER=postgres
+      - PGPASSWORD=sync
+      - PGHOST=db
+      - PGDATABASE=social_db
+      - PGPORT=5432
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+    working_dir: /app
+    volumes:
+      - ./socketio:/app
+
 volumes:
   postgres_data:

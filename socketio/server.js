@@ -1,13 +1,24 @@
+// Legacy support for Socket.IO (now replaced with WebSocket) coded by Viktor Konkov
+// Original code by Viktor Konkov
 // WebSocket server for global chat (replacing Socket.IO)
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import pkg from 'pg';
+import { Server as SocketIOServer } from 'socket.io'; // Add Socket.IO import
 
 const { Pool } = pkg;
 
 const PORT = process.env.PORT || 4000;
 const server = createServer();
 const wss = new WebSocketServer({ server });
+
+// Legacy Socket.IO fallback support
+const io = new SocketIOServer(server, {
+  cors: {
+    origin: '*', // Allow all origins for legacy clients
+  },
+  path: '/socket.io', // Default path
+});
 
 // PostgreSQL connection pool
 const pool = new Pool({
@@ -104,6 +115,42 @@ wss.on('connection', async (ws, req) => {
 
   ws.on('close', () => {
     console.log('[WS] Client disconnected:', clientId);
+  });
+});
+
+// Legacy Socket.IO global chat support
+io.on('connection', async (socket) => {
+  const clientId = Math.random().toString(36).slice(2);
+  console.log('[Socket.IO] New client connected:', clientId);
+
+  // Send recent messages from DB
+  try {
+    const recentMessages = await fetchRecentMessages();
+    socket.emit('global-messages', recentMessages.map((row) => JSON.parse(row.content)));
+  } catch (err) {
+    console.error('[Socket.IO] Error fetching messages:', err);
+    socket.emit('global-messages', []);
+  }
+
+  socket.on('global-message', async (data) => {
+    const msg = { ...data };
+    if (!msg.timestamp) {
+      msg.timestamp = new Date().toISOString();
+    }
+    console.log('[Socket.IO] Received global-message:', msg);
+    try {
+      await insertMessage(msg);
+      // Broadcast to all Socket.IO clients
+      io.emit('global-message', msg);
+      // Also broadcast to WebSocket clients for consistency
+      broadcast({ type: 'global-message', data: msg });
+    } catch (err) {
+      console.error('[Socket.IO] Error inserting message:', err);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('[Socket.IO] Client disconnected:', clientId);
   });
 });
 

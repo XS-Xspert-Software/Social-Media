@@ -260,6 +260,19 @@ app.post('/federation/inbox', (req: Request, res: Response) => {
   res.json({ status: 'ok' });
 });
 
+// Admin verification endpoint
+app.post('/api/admin/verify', (req: Request, res: Response) => {
+  try {
+    const provided = (req.body?.code || '').toString();
+    const expected = (process.env.ADMIN_CODE || 'cat').toString();
+    if (!provided) return res.status(400).json({ error: 'Code required' });
+    if (provided === expected) return res.json({ ok: true });
+    return res.status(401).json({ error: 'Invalid code' });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Universal logging middleware: logs every request and response
 app.use((req, res, next) => {
   // Log incoming request
