@@ -2,10 +2,13 @@
   <div>
     <div id="loading" v-show="postsStore.loading" class="loading"><div class="spinner"></div></div>
     <div class="Sort">
-      <button class="sort-button" :class="{ active: postsStore.sortOption === 'most-liked' }" @click="postsStore.sortPosts('most-liked')">General</button>
-      <button class="sort-button" :class="{ active: postsStore.sortOption === 'most-comments' }" @click="postsStore.sortPosts('most-comments')">Trending</button>
-      <button class="sort-button" :class="{ active: postsStore.sortOption === 'newest' }" @click="postsStore.sortPosts('newest')">Newest</button>
-    </div>
+  <button class="sort-button" :class="{ active: postsStore.sortOption === 'general' }" @click="postsStore.sortPosts('general')">General</button>
+  <button class="sort-button" :class="{ active: postsStore.sortOption === 'trending' }" @click="postsStore.sortPosts('trending')">Trending</button>
+  <button class="sort-button" :class="{ active: postsStore.sortOption === 'story_rant' }" @click="postsStore.sortPosts('story_rant')">Stories</button>
+  <button class="sort-button" :class="{ active: postsStore.sortOption === 'sports' }" @click="postsStore.sortPosts('sports')">Sports</button>
+  <button class="sort-button" :class="{ active: postsStore.sortOption === 'entertainment' }" @click="postsStore.sortPosts('entertainment')">Entertainment</button>
+  <button class="sort-button" :class="{ active: postsStore.sortOption === 'news' }" @click="postsStore.sortPosts('news')">News</button>
+</div>
 
     <div class="content-wrapper">
         <div id="posts" class="posts-feed">
@@ -64,34 +67,92 @@
     </div>
     
     <!-- Actions -->
-    <div class="actions">
-      <button class="action-btn like-btn" :class="{ liked: post.likedBy?.includes(postsStore.loggedInUsername) }" @click="postsStore.likePost(post._id)">
-        <svg viewBox="0 0 24 24">
-          <path d="M1 21h4V9H1v12zM23 10c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32a1 1 0 0 0-.29-.7L14 2 7.59 8.41A1.98 1.98 0 0 0 7 9.83V19a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2l1-7v-.01L23 10z"/>
-        </svg>
-        {{ post.likes || 0 }}
-      </button>
-      
-      <button class="action-btn quote-btn" @click="postsStore.quotePost(post)">
-        <svg viewBox="0 0 24 24">
-          <path d="M5 17h3v-9h2V7h-5v1h2v9zm9 0h3v-9h2V7h-5v1h2v9z"/>
-        </svg>
-        Quote
-      </button>
-      
-      <button class="comment-btn" @click="$router.push(`/post/${post._id}`)" style="color: #1da1f2; max-height: 40px; margin: 0%; border: none; padding: 0%;">
-          <svg class="round comments" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="display: inline-flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-            <path d="M12 3C6.48 3 2 6.92 2 11.5c0 2.14 1.06 4.1 2.83 5.6L4 21l3.65-1.95c1.29.45 2.7.7 4.35.7 5.52 0 10-3.92 10-8.5S17.52 3 12 3z"/>
+     <div class="actions">
+    <div style="display: flex; gap: 18px; align-items: center; color: #fff; font-size: 12px;">
+
+  <!-- Likes -->
+  <div style="display: flex; align-items: center; gap: 5px;" :class="{ liked: post.likedBy?.includes(postsStore.loggedInUsername) }" @click="postsStore.likePost(post._id)">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="1.5">
+      <path
+        d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 
+           2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09 
+           C13.09 3.81 14.76 3 16.5 3 
+           19.58 3 22 5.42 22 8.5 
+           c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+      />
+    </svg>
+    {{ post.likes || '0' }} likes
+  </div>
+
+  <!-- Views -->
+  <div style="display: flex; align-items: center; gap: 5px;">
+     <svg
+    viewBox="0 0 24 24"
+    width="18"
+    height="18"
+    class="views-icon"
+  >
+    <path
+      d="M3 12h4l3-9 4 18 3-9h4"
+      stroke="#fff"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      fill="none"
+    />
+    <circle
+      cx="12"
+      cy="12"
+      r="2"
+      stroke="#fff"
+      stroke-width="1.5"
+      opacity="0.6"
+      fill="none"
+    />
+  </svg>
+    {{ post.views_count || '0' }} views
+  </div>
+
+  <!-- Comments -->
+  <div @click="$router.push(`/post/${post._id}`)" style="display: flex; align-items: center; gap: 5px;">
+    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="1.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
-          ({{ post.comments?.length || 0 }})
-        </button>
-      
-      <button class="action-btn tweet-btn" @click="tweetPost(post._id, post.username)">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" class="ping-icon">
-          <path d="M12 2l3.09 7.26L22 9.27l-5.5 4.78L18.18 22 12 18.3 5.82 22 7.5 14.05 2 9.27l6.91-1.01L12 2z"/>
-        </svg>
-        Ping
-      </button>
+    {{ post.commentCount || '0' }} comments
+  </div>
+
+  <button
+  class="action-btn tweet-btn" style="margin-bottom: 10px;"
+  :class="{ replied: post.repliedBy?.includes(postsStore.loggedInUsername) }"
+   @click="tweetPost(post._id, post.username)"
+>
+  <svg
+    viewBox="0 0 24 24"
+    width="20"
+    height="20"
+    class="reply-icon"
+  >
+    <path
+      d="M9 17l-5-5 5-5"
+      stroke="#fff"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      fill="none"
+    />
+    <path
+      d="M20 18v-2a4 4 0 0 0-4-4H4"
+      stroke="#fff"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      fill="none"
+    />
+  </svg>
+  {{ post.replies || 0 }}
+</button>
+
+</div>
       
       <button v-if="post.username === postsStore.loggedInUsername || post.sessionId === postsStore.sessionId" class="action-btn" @click="postsStore.editPost(post._id, post.username)">
         Edit
@@ -125,7 +186,7 @@ import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router';
 import { inject, watch } from 'vue';
 
 const postsStore = usePostsStore();
-const { posts } = postsStore; 
+const { posts } = postsStore; // ✅ include posts to avoid undefined error
 
 const router = useRouter();
 const route = useRoute();
@@ -136,6 +197,19 @@ const notify = inject('notify'); // Inject the notify function from App.vue
 if (notify) {
   postsStore.initialize(notify);
 }
+
+const formatViewCount = (count) => {
+  if (count >= 1000000) return (count / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (count >= 1000) return (count / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return count.toString();
+};
+
+// Watch for changes in selectedSort and trigger sorting
+watch(selectedSort, (newSort) => {
+  if (newSort) {
+    postsStore.sortPosts(newSort);
+  }
+}, { immediate: true });
 
 // Navigate to Upload.vue for tweeting/replying
 function tweetPost(postId, username) {
@@ -154,4 +228,5 @@ defineExpose({
 </script>
 
 <style src="./Posts.css"></style>
+
 
