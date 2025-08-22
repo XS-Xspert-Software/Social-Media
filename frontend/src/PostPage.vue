@@ -1,174 +1,180 @@
 <template>
-  <div class="full-screen-post-page" style="position: fixed;  height: 100vh;overflow-y: auto;">
-    <!-- Loading State -->
+  <div class="full-screen-post-page" style="position: fixed; height: 100vh; overflow-y: auto;">
     <div v-if="!postsStore.selectedPost" style="color: #fff; text-align: center; padding: 20px;">
       <p>Loading post...</p>
     </div>
-    <!-- Post Content -->
-    <div v-else class="full-screen-post-content" style="background: #000;  height: 100%; padding: 16px; box-sizing: border-box;">
-      <!-- Modal Header -->
+    
+    <div v-else class="full-screen-post-content" style="background: #000; height: 100%; padding: 16px; box-sizing: border-box;">
+      <!-- Header Navigation -->
       <div style="display: flex; justify-content: space-between; align-items: center;">
-  <!-- Left: Back Button -->
-  <div style="display: flex; align-items: center;">
-    <button class="back-btn" @click="$router.go(-1)" aria-label="Back" style="color: #fff; border: none; background: none; font-size: 32px; cursor: pointer; display: flex; align-items: center;">
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
-        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-      </svg>
-    </button>
-  </div>
-
-  <!-- Right: Bookmark, Share, More Actions -->
-  <div style="display: flex; align-items: center; gap: 8px;">
-    <!-- Bookmark Button -->
-    <button class="bookmark-btn" @click="bookmarkPost" aria-label="Bookmark post" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-        <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
-      </svg>
-    </button>
-
-    <!-- Share Button -->
-    <button class="share-btn" @click="sharePost" aria-label="Share post" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-        <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
-      </svg>
-    </button>
-
-    <!-- More Actions -->
-    <div class="more-actions" style="position: relative;">
-      <button class="more-btn" @click="toggleMoreMenu" aria-label="More options" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-          <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-        </svg>
-      </button>
-
-      <!-- Dropdown -->
-      <div v-if="showMoreMenu" class="more-menu" style="position: absolute; top: 30px; right: 0; background: #2a2a2a; border-radius: 8px; padding: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); min-width: 120px;">
-        <!-- Add menu options here -->
-      </div>
-    </div>
+        <div style="display: flex; align-items: center;">
+          <button class="back-btn" @click="$router.go(-1)" aria-label="Back" style="color: #fff; border: none; background: none; font-size: 32px; cursor: pointer; display: flex; align-items: center;">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+          </button>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button class="bookmark-btn" @click="bookmarkPost" aria-label="Bookmark post" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+          </button>
+          
+          <button class="share-btn" @click="sharePost" aria-label="Share post" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+          </button>
+          
+          <div class="more-actions" style="position: relative;">
+            <button class="more-btn" @click="toggleMoreMenu" aria-label="More options" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+            </button>
+            <div v-if="showMoreMenu" class="more-menu" style="position: absolute; top: 30px; right: 0; background: #2a2a2a; border-radius: 8px; padding: 10px; background-color: #222; min-width: 120px;">
+              <button v-if="postsStore.selectedPost.username === postsStore.loggedInUsername" @click="postsStore.editPost(postsStore.selectedPost._id, postsStore.selectedPost.username)" style="background: none; border: none; color: #ff6b6b; font-size: 14px; cursor: pointer;">Edit</button>
+              <button v-if="postsStore.selectedPost.username === postsStore.loggedInUsername" @click="postsStore.deletePost(postsStore.selectedPost._id)" style="background: none; border: none; color: #ff6b6b; font-size: 14px; cursor: pointer;">Delete</button>
+            </div>
+          </div>
         </div>
       </div>
+      
       <!-- Reply Preview -->
       <div v-if="postsStore.selectedPost.replyTo" class="reply-preview" style="border-left: 3px solid #00b4d8; padding: 10px; margin-bottom: 15px; background: #2a2a2a; border-radius: 8px;">
-        <div class="reply-header" style="display: flex; align-items: center; gap: 10px;">
-          <img :src="postsStore.selectedPost.replyTo.profilePicture || 'https://latestnewsandaffairs.site/public/pfp.jpg'" alt="User Profile Picture" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" />
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <img :src="postsStore.selectedPost.replyTo.profilePicture || 'https://latestnewsandaffairs.site/public/pfp.jpg'" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" />
           <div>
             <strong style="color: #00b4d8;">{{ postsStore.selectedPost.replyTo.username }}</strong>
             <small style="color: #999; display: block;">{{ postsStore.formatTimestamp(postsStore.selectedPost.replyTo.timestamp) }}</small>
           </div>
         </div>
         <p style="font-size: 13px; color: #ccc; margin: 8px 0;" v-html="postsStore.parseMessage(postsStore.selectedPost.replyTo.message)"></p>
-        <img v-if="postsStore.selectedPost.replyTo.photo" :src="postsStore.selectedPost.replyTo.photo" alt="Replied Post Image" style="width: 100%; max-width: 150px; border-radius: 6px; margin-top: 8px;" />
+        <img v-if="postsStore.selectedPost.replyTo.photo" :src="postsStore.selectedPost.replyTo.photo" style="width: 100%; max-width: 150px; border-radius: 6px; margin-top: 8px;" />
       </div>
-      <!-- Quote Preview -->
-      <div v-if="postsStore.selectedPost.quoteTo" class="quote-preview" style="border-left: 3px solid #ff6b6b; padding: 10px; margin-bottom: 15px; background: #2a2a2a; border-radius: 8px;">
-        <div class="quote-header" style="display: flex; align-items: center; gap: 10px;">
-          <img :src="postsStore.selectedPost.quoteTo.profilePicture || 'https://latestnewsandaffairs.site/public/pfp.jpg'" alt="User Profile Picture" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" />
-          <div>
-            <strong style="color: #ff6b6b;">{{ postsStore.selectedPost.quoteTo.username }}</strong>
-            <small style="color: #999; display: block;">{{ postsStore.formatTimestamp(postsStore.selectedPost.quoteTo.timestamp) }}</small>
-          </div>
-        </div>
-        <p style="font-size: 13px; color: #ccc; margin: 8px 0;" v-html="postsStore.parseMessage(postsStore.selectedPost.quoteTo.message)"></p>
-        <img v-if="postsStore.selectedPost.quoteTo.photo" :src="postsStore.selectedPost.quoteTo.photo" alt="Quoted Post Image" style="width: 100%; max-width: 150px; border-radius: 6px; margin-top: 8px;" />
+      
+      <!-- Post Header -->
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+        <img :src="postsStore.selectedPost.profilePicture || 'pfp2.jpg'" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer;" @click="$router.push(`/profile/${postsStore.selectedPost.username}`)" />
+        <strong style="color: #fff; font-size: 16px;">{{ postsStore.selectedPost.username }}</strong>
       </div>
+      
       <!-- Post Content -->
-      <div class="post-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-        <div class="profile-picture" @click="redirectToUserProfile(postsStore.selectedPost.username)">
-          <img :src="postsStore.selectedPost.profilePicture || 'pfp2.jpg'" :alt="`${postsStore.selectedPost.username}'s profile picture`" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" />
-        </div>
-        <div class="username"><strong style="color: #fff; font-size: 16px;">{{ postsStore.selectedPost.username }}</strong></div>
-      </div>
-      <p class="post-message" style="font-size: 14px; color: #fff; margin: 10px 0; line-height: 1.5;" v-html="postsStore.parseMessage(postsStore.selectedPost.message)"></p>
-      <img v-if="postsStore.selectedPost.photo" :src="postsStore.selectedPost.photo" alt="Post Image" loading="lazy" style="width: 100%; max-height: 50vh; border-radius: 12px; margin-bottom: 15px; object-fit: cover;" />
-      <div class="post-timestamp" style="color: #999; font-size: 12px; margin-bottom: 15px;"><small>{{ postsStore.formatTimestamp(postsStore.selectedPost.timestamp) }}</small></div>
+      <p style="font-size: 14px; color: #fff; margin: 10px 0; line-height: 1.5;" v-html="postsStore.parseMessage(postsStore.selectedPost.message)"></p>
+      <img v-if="postsStore.selectedPost.photo" :src="postsStore.selectedPost.photo" style="width: 100%; max-height: 50vh; border-radius: 12px; margin-bottom: 15px; object-fit: cover;" loading="lazy" />
+      <div style="color: #999; font-size: 12px; margin-bottom: 15px;">{{ postsStore.formatTimestamp(postsStore.selectedPost.timestamp) }}</div>
+      
       <!-- Post Actions -->
-      <div class="actions" style="display: flex; gap: 15px; margin-bottom: 15px;">
-        <button class="like-btn" :class="{ liked: postsStore.selectedPost.likedBy?.includes(postsStore.loggedInUsername) }" @click="postsStore.likePost(postsStore.selectedPost._id)" style="background: none; border: none; color: #fff; display: flex; align-items: center; gap: 5px; font-size: 14px;">
-          <svg class="thumbs-up-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path d="M1 21h4V9H1v12zM23 10c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32a1 1 0 0 0-.29-.7L14 2 7.59 8.41A1.98 1.98 0 0 0 7 9.83V19a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2l1-7v-.01L23 10z"/>
-          </svg>
+      <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: center;">
+        <button :class="{ liked: postsStore.selectedPost.likedBy?.includes(postsStore.loggedInUsername) }" @click="postsStore.likePost(postsStore.selectedPost._id)" style="background: none; border: none; color: #fff; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+          <svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="#fff" stroke-width="1.2"/></svg>
           {{ postsStore.selectedPost.likes || 0 }}
         </button>
-        <button class="quote-btn" @click="postsStore.quotePost(postsStore.selectedPost)" style="background: none; border: none; color: #fff; display: flex; align-items: center; gap: 5px; font-size: 14px;">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path d="M5 17h3v-9h2V7h-5v1h2v9zm9 0h3v-9h2V7h-5v1h2v9z"/>
+
+        <button style="background: none; border: none; color: #fff; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="1.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
-          Quote
+          {{ postsStore.selectedPost.commentCount || 0 }}
         </button>
-        <button class="comment-btn" style="background: none; border: none; color: #1da1f2; display: flex; align-items: center; gap: 5px; font-size: 14px;">
-          <svg class="round comments" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path d="M12 3C6.48 3 2 6.92 2 11.5c0 2.14 1.06 4.1 2.83 5.6L4 21l3.65-1.95c1.29.45 2.7.7 4.35.7 5.52 0 10-3.92 10-8.5S17.52 3 12 3z"/>
-          </svg>
-          ({{ postsStore.selectedPost.comments?.length || 0 }})
+        
+        <button style="background: none; border: none; color: #fff; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+          <svg viewBox="0 0 24 24" width="12" height="12"><path d="M3 12h4l3-9 4 18 3-9h4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="12" r="2" stroke="#fff" stroke-width="1.5" opacity="0.6" fill="none"/></svg>
+          {{ (postsStore.selectedPost?.views_count || 0) >= 1000 ? Math.floor((postsStore.selectedPost?.views_count || 0) / 1000) + 'K' : (postsStore.selectedPost?.views_count || 0) }} views
         </button>
-        <button class="tweet-btn" @click="tweetPost(postsStore.selectedPost._id, postsStore.selectedPost.username)" style="background: none; border: none; color: #fff; display: flex; align-items: center; gap: 5px; font-size: 14px;">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true" class="ping-icon">
-            <path d="M12 2l3.09 7.26L22 9.27l-5.5 4.78L18.18 22 12 18.3 5.82 22 7.5 14.05 2 9.27l6.91-1.01L12 2z"/>
-          </svg>
-          Ping
+        
+        <button @click="postsStore.quotePost(postsStore.selectedPost)" style="background: none; border: none; color: #fff; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M9 17l-5-5 5-5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M20 18v-2a4 4 0 0 0-4-4H4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
         </button>
-        <button v-if="postsStore.selectedPost.username === postsStore.loggedInUsername || postsStore.selectedPost.sessionId === postsStore.sessionId" @click="postsStore.editPost(postsStore.selectedPost._id, postsStore.selectedPost.username)" style="background: none; border: none; color: #fff; font-size: 14px;">Edit</button>
-        <button v-if="postsStore.selectedPost.username === postsStore.loggedInUsername || postsStore.selectedPost.sessionId === postsStore.sessionId" @click="postsStore.deletePost(postsStore.selectedPost._id)" style="background: none; border: none; color: #ff6b6b; font-size: 14px;">Delete</button>
       </div>
+      
       <!-- Comments Section -->
-      <div class="comments-section" style="padding: 0; width: 100%; box-sizing: border-box;">
-        <div class="comment-input-container" style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-          <input :id="`commentInput-${postsStore.selectedPost._id}`" type="text" placeholder="Add a comment..." class="comment-input" style="width: 100%; padding: 8px 12px; border-radius: 20px; border: 1px solid #444; background: #000; color: #fff; font-size: 14px; outline: none;" @keyup.enter="postsStore.addComment(postsStore.selectedPost._id, $event.target.value)" />
-          <button @click="postsStore.addComment(postsStore.selectedPost._id, document.getElementById(`commentInput-${postsStore.selectedPost._id}`).value)" style="background: #007bff; color: #fff; padding: 6px 12px; border: none; border-radius: 20px; cursor: pointer; font-size: 14px;">Post</button>
+      <div class="comments-section">
+        <!-- Comment Input -->
+        <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+          <input v-model="postsStore.commentInputs[postsStore.selectedPost._id]" type="text" placeholder="Add a comment..." @keyup.enter="postsStore.addComment(postsStore.selectedPost._id)" style="width: 100%; padding: 8px 12px; border-radius: 20px; border: 1px solid #444; background: #000; color: #fff; font-size: 14px; outline: none;" />
+          <button @click="postsStore.addComment(postsStore.selectedPost._id)" :disabled="!postsStore.commentInputs[postsStore.selectedPost._id]?.trim()" style="background: #007bff; color: #fff; padding: 6px 12px; border: none; border-radius: 20px; cursor: pointer; font-size: 14px;" :style="{ opacity: !postsStore.commentInputs[postsStore.selectedPost._id]?.trim() ? 0.5 : 1 }">Post</button>
         </div>
-        <div class="comments-list" style="max-height: 50vh; overflow-y: auto;">
-          <div v-for="comment in postsStore.selectedPost.comments" :key="comment.commentId" class="comment" :id="`comment-${comment.commentId}`" style="background: #000; border-radius: 8px; margin-bottom: 8px; padding: 11px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);">
+        
+        <!-- Comments List -->
+        <div style="max-height: 50vh; overflow-y: auto;">
+          <div v-for="comment in (postsStore.selectedPost.comments || [])" :key="comment.commentId" style="background: #000; border-radius: 8px; margin-bottom: 8px; padding: 11px;">
             <div style="display: flex; align-items: flex-start; gap: 10px;">
-              <div style="width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
-                <img :src="comment.profilePicture || 'https://latestnewsandaffairs.site/public/pfp3.jpg'" :alt="`${comment.username || 'Unknown'}'s profile`" style="width: 100%; height: 100%; object-fit: cover;" />
-              </div>
+              <img :src="comment.profilePicture || 'https://latestnewsandaffairs.site/public/pfp3.jpg'" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" />
+              
               <div style="flex: 1;">
+                <!-- Comment Header -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                   <span style="font-size: 13px; color: #fff; font-weight: 600;">{{ comment.username || "Unknown" }}</span>
-                  <span style="font-size: 11px; color: #999;">{{ postsStore.getTimeAgo(new Date(comment.timestamp)) }}</span>
+                  <span style="font-size: 11px; color: #999;">{{ postsStore.getTimeAgo(new Date(comment.createdAt || comment.timestamp)) }}</span>
                 </div>
-                <p style="font-size: 12px; color: #ddd; margin: 0 0 8px 0; line-height: 1.4;">{{ comment.comment || "No comment" }}</p>
+                
+                <!-- Comment Text -->
+                <p style="font-size: 12px; color: #ddd; margin: 0 0 8px 0; line-height: 1.4;">{{ comment.commentText || comment.comment || "No comment" }}</p>
+                
+                <!-- Comment Actions -->
                 <div style="display: flex; gap: 12px; align-items: center;">
-                  <button class="like-comment-btn" :class="{ liked: comment.likedBy?.includes(postsStore.loggedInUsername) }" @click="postsStore.likeComment(postsStore.selectedPost._id, comment.commentId)" style="background: none; border: none; color: #fff; display: flex; align-items: center; gap: 4px; font-size: 12px;">
-                    ❤ <span class="like-count">{{ comment.hearts || 0 }}</span>
+                  <button :class="{ liked: (comment.likedBy || []).includes(postsStore.loggedInUsername) }" @click="postsStore.likeComment(postsStore.selectedPost._id, comment.commentId)" style="background: none; border: none; display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; padding: 2px 4px; border-radius: 4px;" :style="{ backgroundColor: (comment.likedBy || []).includes(postsStore.loggedInUsername) ? '#ff4444' : 'transparent', color: (comment.likedBy || []).includes(postsStore.loggedInUsername) ? '#fff' : '#ccc' }">
+                    ❤ <span>{{ comment.hearts || 0 }}</span>
                   </button>
-                  <button class="reply-btn" @click="postsStore.toggleReplies(postsStore.selectedPost._id, comment.commentId)" style="background: none; border: none; color: #1da1f2; display: flex; align-items: center; gap: 4px; font-size: 12px;">
-                    <svg class="round comments" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                      <path d="M12 3C6.48 3 2 6.92 2 11.5c0 2.14 1.06 4.1 2.83 5.6L4 21l3.65-1.95c1.29.45 2.7.7 4.35.7 5.52 0 10-3.92 10-8.5S17.52 3 12 3z"/>
-                    </svg>
-                    <span v-if="comment.replies?.length > 0">({{ comment.replies.length }})</span>
+                  
+                  <button @click="postsStore.toggleReplies(postsStore.selectedPost._id, comment.commentId)" style="background: none; border: none; color: #1da1f2; display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 3C6.48 3 2 6.92 2 11.5c0 2.14 1.06 4.1 2.83 5.6L4 21l3.65-1.95c1.29.45 2.7.7 4.35.7 5.52 0 10-3.92 10-8.5S17.52 3 12 3z"/></svg>
+                    Reply <span v-if="comment.replies?.length">({{ comment.replies.length }})</span>
                   </button>
-                  <button v-if="comment.username === postsStore.loggedInUsername || comment.sessionId === postsStore.sessionId" class="delete-comment-btn" @click="postsStore.deleteComment(postsStore.selectedPost._id, comment.commentId)" style="background: none; border: none; color: #ff6b6b; font-size: 12px;">🗑 Delete</button>
+                  
+                  <button v-if="comment.username === postsStore.loggedInUsername" @click="postsStore.deleteComment(postsStore.selectedPost._id, comment.commentId)" style="background: none; border: none; color: #ff4d4d; font-size: 12px; cursor: pointer;">Delete</button>
                 </div>
+                
+                <transition name="slide-down">
+                  <!-- Reply Section -->
+                  <div v-if="postsStore.replyToggles[comment.commentId]" class="reply-layer" style="margin-top: 10px; padding: 12px; background: #000; border-radius: 8px; border-left: 3px solid #1da1f2; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);">
+                    <!-- Reply Input -->
+                    <div style="margin-bottom: 10px; display: flex; gap: 8px;">
+                      <input v-model="postsStore.replyInputs[comment.commentId]" type="text" placeholder="Reply to this comment..." @keyup.enter="postsStore.addReply(postsStore.selectedPost._id, comment.commentId)" style="flex: 1; padding: 6px 10px; border-radius: 16px; border: 1px solid #333; background: #000; color: #fff; font-size: 13px;" />
+                      <button @click="postsStore.addReply(postsStore.selectedPost._id, comment.commentId)" :disabled="!postsStore.replyInputs[comment.commentId]?.trim()" style="background: #1da1f2; color: #fff; padding: 5px 12px; border: none; border-radius: 16px; cursor: pointer; font-size: 13px;" :style="{ opacity: !postsStore.replyInputs[comment.commentId]?.trim() ? 0.5 : 1 }">Reply</button>
+                    </div>
+                    
+                    <!-- Replies List -->
+                    <div style="margin-left: 20px; margin-top: 10px;">
+                      <div v-for="reply in (comment.replies || [])" :key="reply.commentId" style="background: #000; border-radius: 6px; padding: 8px; margin-bottom: 6px; position: relative;">
+                        <div style="display: flex; align-items: flex-start; gap: 8px;">
+                          <img :src="reply.profilePicture || 'https://latestnewsandaffairs.site/public/pfp4.jpg'" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" />
+                          
+                          <!-- Content container with right padding for the heart -->
+                          <div style="flex: 1; padding-right: 40px;">
+                            <!-- Username and timestamp -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                              <span style="font-size: 12px; color: #fff; font-weight: 500;">{{ reply.username || "Unknown" }}</span>
+                              <span style="font-size: 10px; color: #aaa; ">{{ postsStore.getTimeAgo(new Date(reply.createdAt || reply.timestamp)) }}</span>
+                            </div>
+                            
+                            <p style="font-size: 11px; color: #ccc; margin: 0 0 6px 0; line-height: 1.4;">
+                              {{ reply.commentText || reply.reply || "No reply" }}
+                            </p>
+                          </div>
+                        </div>
+
+                        <!-- Heart button floating right middle -->
+                        <div style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%);">
+                          <button :class="{ liked: (reply.likedBy || []).includes(postsStore.loggedInUsername) }" @click="postsStore.likeReply(postsStore.selectedPost._id, comment.commentId, reply.commentId)" style="background: none; border: none; display: flex; align-items: center; gap: 2px; font-size: 11px; cursor: pointer; padding: 2px; border-radius: 2px;" :style="{ backgroundColor: (reply.likedBy || []).includes(postsStore.loggedInUsername) ? '#ff4444' : 'transparent', color: (reply.likedBy || []).includes(postsStore.loggedInUsername) ? '#fff' : '#ccc' }">
+                            ❤ <span>{{ reply.hearts || 0 }}</span>
+                          </button>
+                          
+                          <button v-if="reply.username === postsStore.loggedInUsername" @click="postsStore.deleteReply(postsStore.selectedPost._id, comment.commentId, reply.commentId)" style="background: none; border: none; color: #ff4d4d; font-size: 11px; cursor: pointer;">Delete</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </transition>
               </div>
             </div>
-            <!-- Reply Layer -->
-            <transition name="slide-down">
-              <div v-if="postsStore.selectedCommentId === comment.commentId" class="reply-layer" style="margin-top: 10px; padding: 12px; background: #000; border-radius: 8px; border-left: 3px solid #1da1f2; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);">
-                <div v-for="reply in comment.replies" :key="reply.replyId" :id="`reply-${reply.replyId}`" class="reply" style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; padding: 8px; background: #000; border-radius: 6px;">
-                  <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex-shrink: 0;">
-                    <img :src="reply.profilePicture || 'https://latestnewsandaffairs.site/public/pfp3.jpg'" :alt="`${reply.username || 'Unknown'}'s profile`" style="width: 100%; height: 100%; object-fit: cover;" />
-                  </div>
-                  <div style="flex: 1;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
-                      <span style="font-size: 12px; color: #fff; font-weight: 600;">{{ reply.username || 'Unknown' }}</span>
-                      <span style="font-size: 10px; color: #999;">{{ postsStore.getTimeAgo(new Date(reply.timestamp)) }}</span>
-                    </div>
-                    <p style="font-size: 11px; color: #ddd; margin: 0; line-height: 1.3;">{{ reply.reply || 'No reply' }}</p>
-                    <button class="like-reply-btn" :class="{ liked: reply.likedBy?.includes(postsStore.loggedInUsername) }" @click="postsStore.likeReply(postsStore.selectedPost._id, comment.commentId, reply.replyId)" style="background: none; border: none; color: #fff; font-size: 11px; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
-                      ❤ <span class="like-count">{{ reply.hearts || 0 }}</span>
-                    </button>
-                  </div>
-                </div>
-                <div v-if="!comment.replies || comment.replies.length === 0" class="no-replies" style="color: #999; font-size: 11px; padding: 8px; text-align: center;">No replies yet</div>
-                <div class="reply-input-container" style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
-                  <input :id="`replyInput-${comment.commentId}`" type="text" placeholder="Add a reply…" style="width: 100%; padding: 8px 12px; border-radius: 20px; border: 1px solid #444; background: #000; color: #fff; font-size: 14px; outline: none;" @keyup.enter="postsStore.addReply(postsStore.selectedPost._id, comment.commentId, $event.target.value)" />
-                  <button @click="postsStore.addReply(postsStore.selectedPost._id, comment.commentId, document.getElementById(`replyInput-${comment.commentId}`).value)" style="background: #007bff; color: #fff; padding: 6px 12px; border: none; border-radius: 20px; cursor: pointer; font-size: 14px;">Reply</button>
-                </div>
-              </div>
-            </transition>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for Delete Confirmations -->
+    <div v-if="postsStore.showModal" class="modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: flex; justify-content: center; align-items: center; z-index: 1000;">
+      <div class="modal-content" style="background: #1a1a1a; border-radius: 12px; padding: 24px; max-width: 400px; width: 90%; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);">
+        <p style="color: #fff; font-size: 16px; margin: 0 0 20px 0; text-align: center;">{{ postsStore.modalMessage }}</p>
+        <div class="modal-actions" style="display: flex; gap: 12px; justify-content: center;">
+          <button class="modal-cancel" @click="postsStore.closeModal" style="background: #333; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;">Cancel</button>
+          <button class="modal-confirm" @click="postsStore.modalAction" style="background: #ff4444; color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px;">Yes, {{ postsStore.modalActionText }}</button>
         </div>
       </div>
     </div>
@@ -176,106 +182,133 @@
 </template>
 
 <script setup>
-import { usePostsStore } from './stores/postsStore';
-import { useRouter, useRoute } from 'vue-router';
-import { ref, inject, onMounted } from 'vue';
+import { ref, onMounted, inject } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { usePostsStore } from './stores/postsStore'
 
-const postsStore = usePostsStore();
-const router = useRouter();
-const route = useRoute();
-const notify = inject('notify'); // Inject notify function from App.vue
-const showMoreMenu = ref(false);
+const route = useRoute()
+const router = useRouter()
+const postsStore = usePostsStore()
 
-// Initialize the store with the injected notify function
-if (notify) {
-  postsStore.initialize(notify);
+const showMoreMenu = ref(false)
+const notify = inject('notify', () => {})
+
+const formatViewCount = (count) => {
+  if (count >= 1_000_000) return (count / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M'
+  if (count >= 1_000) return (count / 1_000).toFixed(1).replace(/\.0$/, '') + 'K'
+  return count.toString()
 }
 
-// Navigate to Upload.vue for tweeting/replying
-function tweetPost(postId, username) {
-  router.push({ path: '/float', query: { replyToPostId: postId, replyToUsername: username } });
-}
-
-// Route to user profile
-function redirectToUserProfile(username) {
-  router.push({ name: 'UserProfile', params: { username } });
-}
-
-// Toggle more menu
-function toggleMoreMenu() {
-  showMoreMenu.value = !showMoreMenu.value;
-}
-
-// Share post URL
-async function sharePost() {
-  const postId = postsStore.selectedPost?._id;
-  const message = postsStore.selectedPost?.message || 'Check out this post!';
-  
-  if (!postId) {
-    notify?.('Error: No post selected to share');
-    return;
-  }
-
-  const shareUrl = `${window.location.origin}/post/${postId}`;
-
-  // ✅ Use Web Share API if available (mobile/native integration)
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: 'Shared Post',
-        text: message,
-        url: shareUrl,
-      });
-      notify?.('Shared successfully!');
-    } catch (err) {
-      console.error('Share failed:', err);
-      notify?.('Sharing canceled or failed.');
-    }
-  } else {
-    // 🔁 Fallback: copy to clipboard
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      notify?.('Post URL copied to clipboard!');
-    } catch (err) {
-      console.error('Clipboard error:', err);
-      notify?.('Failed to copy URL. Please try manually.');
-    }
+const getUserId = () => {
+  try {
+    return sessionStorage.getItem('userId') || null
+  } catch {
+    return null
   }
 }
 
-
-onMounted(async () => {
-  const postId = route.params.id
-
-  if (!postId) {
-    notify?.('Error: No post ID provided')
-    return router.push('/')
-  }
+const trackPostView = async (postId) => {
+  const userId = getUserId()
+  if (!userId || !postId) return
 
   try {
-    const response = await fetch(`https://199-ten.vercel.app/api/UserListChat?id=${postId}`)
+    const response = await fetch('https://venus-ecru.vercel.app/api/views', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ postId, userId })
+    })
 
-    if (!response.ok) {
-      notify?.(`Failed to fetch post (status ${response.status})`)
-      return router.push('/')
+    if (response.ok) {
+      const data = await response.json()
+      if (data.viewCount !== undefined && postsStore.selectedPost) {
+        postsStore.selectedPost.views_count = data.viewCount
+      }
     }
+  } catch {
+    // Silently handle tracking errors
+  }
+}
 
-    const data = await response.json()
+const toggleMoreMenu = () => {
+  showMoreMenu.value = !showMoreMenu.value
+}
 
-    if (data.post) {
-      postsStore.selectedPost = data.post
+const sharePost = async () => {
+  const post = postsStore.selectedPost
+  if (!post?._id) {
+    notify('Error: No post selected to share')
+    return
+  }
+
+  const shareUrl = `${window.location.origin}/post/${post._id}`
+  const message = post.message || 'Check out this post!'
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: 'Shared Post', text: message, url: shareUrl })
+      notify('Shared successfully!')
+    } catch {
+      notify('Sharing canceled or failed.')
+    }
+  } else {
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      notify('Post URL copied to clipboard!')
+    } catch {
+      notify('Failed to copy URL. Please try manually.')
+    }
+  }
+}
+
+const bookmarkPost = () => {
+  if (postsStore.selectedPost) {
+    postsStore.toggleBookmark(postsStore.selectedPost._id)
+  }
+}
+
+onMounted(async () => {
+  console.log('FullScreenPost component mounted')
+  console.log('Current route:', route)
+  console.log('Route params:', route.params)
+  console.log('Route path:', route.path)
+  
+  // Initialize the posts store first
+  postsStore.initialize(notify)
+  
+  // Extract post ID from route - check multiple possible parameter names
+  const postId = route.params.id || route.params.postId || route.query.id || route.query.postId
+  console.log('Extracted post ID:', postId)
+  
+  if (!postId) {
+    console.error('No post ID found in route')
+    console.log('Available route params:', Object.keys(route.params))
+    console.log('Available route query:', Object.keys(route.query))
+    notify('Error: No post ID found in URL', true)
+    return
+  }
+  
+  try {
+    console.log('Calling openFullScreenPost with ID:', postId)
+    await postsStore.openFullScreenPost(postId)
+    
+    if (postsStore.selectedPost) {
+      console.log('Post loaded successfully:', postsStore.selectedPost._id)
+      console.log('Comments count:', postsStore.selectedPost.comments?.length || 0)
+      
+      // Track post view after successful load
+      await trackPostView(postId)
     } else {
-      notify?.('Post not found')
-      router.push('/')
+      console.error('selectedPost is still null after API call')
+      notify('Failed to load post details', true)
     }
   } catch (error) {
-    console.error('❌ Fetch error:', error)
-    notify?.('An error occurred while fetching the post')
-    router.push('/')
+    console.error('Error loading full screen post:', error)
+    notify('Error loading post: ' + error.message, true)
   }
 })
 </script>
+
 <style src="./Posts.css"></style>
-<style>
-.ping-icon{color:#00b4d8;fill:currentColor;}
+<style scoped>
+.heart-icon{fill:#222;transition:fill .3s ease,stroke .3s ease}.like-btn.liked .heart-icon{fill:#ff4d4d;stroke:#ff4d4d}.views-icon{transition:stroke .3s ease,transform .2s ease,opacity .2s ease}.reply-icon{transition:stroke .3s ease,transform .2s ease}.thumbs-down-icon,.round.comments{vertical-align:middle;margin-right:6px;transform:scaleX(-1)}
 </style>
