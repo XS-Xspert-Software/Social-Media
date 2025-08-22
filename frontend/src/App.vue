@@ -2,15 +2,14 @@
   <div :class="['app-wrapper', { 'Chatbox-fullscreen': isChatboxRoute, 'no-header-padding': postsStore.selectedPost, 'GroupChatbox-fullscreen': isGroupChatboxRoute}]">
     <!-- Header -->
     <header v-if="!isChatboxRoute , !isGroupChatboxRoute && !postsStore.selectedPost">
-     <h1 class="fancy-title">
-  <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-    <path d="M32 2 L38 26 L62 32 L38 38 L32 62 L26 38 L2 32 L26 26 Z"/>
-    <path d="M32 12 L36 28 L52 32 L36 36 L32 52 L28 36 L12 32 L28 28 Z"/>
-    <line x1="32" y1="2" x2="32" y2="62"/>
-    <line x1="2" y1="32" x2="62" y2="32"/>
-  </svg>
-  <span class="sync-text">Sync</span>
-  </h1>
+       <h1 style="font-size: 23px; margin-left: 3%; display: flex; align-items: center; gap: 8px;">
+        <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="width:24px; height:24px;">
+          <path d="M32 2 L38 26 L62 32 L38 38 L32 62 L26 38 L2 32 L26 26 Z"/>
+          <path d="M32 12 L36 28 L52 32 L36 36 L32 52 L28 36 L12 32 L28 28 Z"/>
+          <line x1="32" y1="2" x2="32" y2="62"/>
+          <line x1="2" y1="32" x2="62" y2="32"/>
+        </svg> Sync
+      </h1>
   
       <!-- Profile and Search -->
       <div class="user-section" style="gap: 12px; display: flex; align-items: center;">
@@ -19,7 +18,7 @@
           <span class="username-display" @click.stop="toggleProfileMenu" style="cursor: pointer;">{{ userProfile.username }}</span>
           <Transition name="fade">
             <div v-if="showProfileMenu" class="profile-menu" @click.outside="showProfileMenu = false" tabindex="0">
-              <button @click="authAction">{{ isSignedIn ? 'Logout' : 'Login' }}</button>
+              <button style="background-color: #e7e7e7;" @click="authAction">{{ isSignedIn ? 'Logout' : 'Login' }}</button>
             </div>
           </Transition>
         </div>
@@ -34,10 +33,12 @@
  <li
   v-for="tab in tabs"
   :key="tab.name"
-  :class="[{ active: currentTab === tab.name }, 'sidebar-tab-btn']"
+  :class="{ active: currentTab === tab.name }"
   @click="switchTab(tab.name)"
+  class="sidebar-tab-btn"
+  style="display: flex;gap: 30px;"
 >
-  <i :class="tab.icon"></i>
+  <i :class="tab.icon" style="margin-right: 8px;"></i>
   <span>{{ tab.label }}</span>
 
             <!-- 🔴 Notification badge -->
@@ -48,13 +49,23 @@
               {{ unreadCount > 9 ? '9+' : unreadCount }}
             </span>
              
+            <span
+      v-if="tab.name === 'chat' && unreadMessagesCount > 0"
+      class="notification-badge"
+      style="background-color: #10b981; color: white;"
+    >
+      {{ unreadMessagesCount > 99 ? '99+' : unreadMessagesCount }}
+    </span>
           </li>
         </ul>
 
-        <div class="sidebar-sort" v-if="currentTab === 'posts'">
-  <button class="sort-button" :class="{ active: selectedSort === 'most-liked' }" @click="emitSort('most-liked')"><i class="fas fa-atom"></i><span>General</span></button>
-  <button class="sort-button" :class="{ active: selectedSort === 'most-comments' }" @click="emitSort('most-comments')"><i class="fas fa-fire"></i><span>Trending</span></button>
-  <button class="sort-button" :class="{ active: selectedSort === 'newest' }" @click="emitSort('newest')"><i class="fas fa-clock"></i><span>Newest</span></button>
+       <div class="sidebar-sort" v-if="currentTab === 'posts'">
+  <button class="sort-button" :class="{ active: selectedSort === 'general' }" @click="emitSort('general')" style="display: flex; gap: 30px;"><i class="fas fa-atom"></i> General</button>
+  <button class="sort-button" :class="{ active: selectedSort === 'trending' }" @click="emitSort('trending')" style="display: flex; gap: 30px;"><i class="fas fa-fire"></i> Trending</button>
+  <button class="sort-button" :class="{ active: selectedSort === 'story_rant' }" @click="emitSort('story_rant')" style="display: flex; gap: 30px;"><i class="fas fa-comment-dots"></i> Stories</button>
+  <button class="sort-button" :class="{ active: selectedSort === 'sports' }" @click="emitSort('sports')" style="display: flex; gap: 30px;"><i class="fas fa-futbol"></i> Sports</button>
+  <button class="sort-button" :class="{ active: selectedSort === 'entertainment' }" @click="emitSort('entertainment')" style="display: flex; gap: 30px;"><i class="fas fa-film"></i> Entertainment</button>
+  <button class="sort-button" :class="{ active: selectedSort === 'news' }" @click="emitSort('news')" style="display: flex; gap: 30px;"><i class="fas fa-newspaper"></i> News</button>
 </div>
       </div>
 
@@ -119,6 +130,13 @@
       >
         {{ unreadCount > 99 ? '99+' : unreadCount }}
       </span>
+      <span 
+        v-if="tab.name === 'chat' && unreadMessagesCount > 0" 
+        class="badge"
+        style="background-color: #10b981;"
+      >
+        {{ unreadMessagesCount > 99 ? '99+' : unreadMessagesCount }}
+      </span>
     </li>
   </ul>
 </nav>
@@ -130,8 +148,9 @@
 import { ref, computed, shallowReactive, defineAsyncComponent } from 'vue';
 import Notification from './Notification.vue';
 import { usePostsStore } from './stores/postsStore';
-import RightSidebar from './RightSidebar.vue'; // Import the new right sidebar component
-import { getLocalStorage, setLocalStorage } from './utils/localStorage';
+import RightSidebar from './RightSidebar.vue';
+import { getLocalStorage, setLocalStorage } from '@/utils/localStorage';
+import { getTotalUnreadCount } from './recents.js';
 
 const Posts = defineAsyncComponent(() => import('./Posts.vue'));
 const Videos = defineAsyncComponent(() => import('./Videos.vue'));
@@ -143,7 +162,6 @@ const PostPage = defineAsyncComponent(() => import('./PostPage.vue'));
 
 import Chatbox from './Chatbox.vue';
 import Alert from './Alert.vue';
-import GroupChatbox from './GroupChatbox.vue';
 
 const jwtCache = new Map();
 
@@ -154,7 +172,6 @@ export default {
     Videos,
     Chat,
     Chatbox,
-    GroupChatbox,
     Settings,
     Notification,
     Search2,
@@ -168,10 +185,11 @@ export default {
     return {
       currentTab: 'posts',
       searchQuery: '',
-      selectedSort: 'most-liked',
+      selectedSort: 'general',
       showProfileMenu: false,
-      tabRoutes: ['posts', 'videos', 'chat', 'notification','settings'],
-      unreadCount: 0, // unread count for notification badge
+      tabRoutes: ['posts', 'videos', 'chat', 'notification', 'settings'],
+      unreadCount: 0,
+      unreadMessagesCount: 0,
 
       userProfile: shallowReactive({
         username: getLocalStorage('username') || 'Guest',
@@ -222,8 +240,9 @@ export default {
     isChatboxRoute() {
       return this.$route.name === 'Chatbox';
     },
-    isGroupChatboxRoute(){
-      return this.$route.name ==='GroupChatbox';
+
+    isGroupChatboxRoute() {
+      return this.$route.name === 'GroupChatbox';
     },
 
     notificationActive() {
@@ -232,6 +251,20 @@ export default {
   },
 
   methods: {
+    async fetchUnreadMessagesCount() {
+      if (!this.isSignedIn || !this.userProfile.userId) {
+        this.unreadMessagesCount = 0;
+        return;
+      }
+
+      try {
+        this.unreadMessagesCount = await getTotalUnreadCount(this.userProfile.userId);
+      } catch (error) {
+        console.error('Error fetching unread messages:', error);
+        this.unreadMessagesCount = 0;
+      }
+    },
+
     refreshNotifications() {
       if (this.$refs.notificationRef?.fetchNotifications) {
         this.$refs.notificationRef.fetchNotifications();
@@ -248,6 +281,7 @@ export default {
 
     emitSort(type) {
       this.selectedSort = type;
+      this.postsStore.sortPosts(type);
     },
 
     navigateToSearch() {
@@ -271,19 +305,23 @@ export default {
     switchTab(tab) {
       this.showProfileMenu = false;
       if (this.currentTab === tab) return;
+      
+      // Clear unread messages count when entering chat
+      if (tab === 'chat') {
+        this.unreadMessagesCount = 0;
+      }
+      
       this.currentTab = tab;
 
       const componentMap = {
         posts: null,
         videos: 'Videos',
         chat: 'Chat',
-        settings:'Settings',
-        notification:'Notification'
+        settings: 'Settings',
+        notification: 'Notification'
       };
 
-      // Special handling for notification tab
       if (tab === 'notification') {
-        // Change URL to /notification but don't load a component
         this.$router.push('/Notification').catch(() => {});
         return;
       }
@@ -383,10 +421,10 @@ export default {
         profilePic: getLocalStorage('profilePic') || 'default-pic.png',
       });
       
-      // Start listening to notifications when user profile is updated
       if (this.isSignedIn) {
         this.$nextTick(() => {
           this.refreshNotifications();
+          this.fetchUnreadMessagesCount();
         });
       }
     },
@@ -411,16 +449,15 @@ export default {
       immediate: true,
     },
 
-    // Watch for user sign in/out to start/stop notification polling
     'userProfile.username'(newUsername, oldUsername) {
       if (newUsername && newUsername !== 'Guest' && newUsername !== oldUsername) {
-        // User signed in, start polling notifications
         this.$nextTick(() => {
           this.refreshNotifications();
+          this.fetchUnreadMessagesCount();
         });
       } else if (newUsername === 'Guest') {
-        // User signed out, reset unread count
         this.unreadCount = 0;
+        this.unreadMessagesCount = 0;
       }
     },
   },
@@ -461,6 +498,7 @@ export default {
   },
 };
 </script>
+
 <style scoped>
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.2s ease;
@@ -473,7 +511,6 @@ export default {
   cursor: pointer;
   margin-right: 16px;
   padding: 4px 8px;
-  margin-top: 30%;
   border-radius: 4px;
   transition: background-color 0.2s;
 }
@@ -486,37 +523,42 @@ export default {
   animation: fadeIn 0.6s ease-out;
 }
 
-.fancy-title svg {
-  width: 26px;
-  height: 26px;
-  stroke: #00bcd4;
-}
-.sync-text {
-  background: linear-gradient(90deg, #ff00c8, #00e0ff, #a3ff00);
-  background-size: 200% auto;
-  background-clip: text; /* added standard property */
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: gradientShift 4s linear infinite;
-}
-@keyframes gradientShift {
-  0% { background-position: 0% center; }
-  100% { background-position: 100% center; }
+/* 🟢 Mobile navigation bottom bar badge */
+.badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 999px;
+  min-width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.25);
+  border: 1px solid #111;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* 🟩 Chat-specific badge color */
+.badge[style*="background-color: #10b981"] {
+  background-color: #10b981 !important;
+}
+
+/* 🔲 Position the badge relative to icon wrapper */
+.bottom-nav-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 </style>
-
 
 
 
