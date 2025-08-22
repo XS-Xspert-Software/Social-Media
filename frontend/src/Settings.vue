@@ -1,918 +1,719 @@
 <template>
-  <section class="settings-section">
-    <!-- Feedback/Message Area -->
-    <div v-if="message" class="settings-message" :class="{ error: message.toLowerCase().includes('fail') }">
-      <i v-if="message.toLowerCase().includes('fail')" class="fas fa-exclamation-triangle"></i>
-      <i v-else class="fas fa-check-circle"></i>
-      {{ message }}
-    </div>
-    <!-- SSBAR -->
-    <div class="SSBAR">
-      <h2 class="SSBAR-title">Settings</h2>
-      <!-- User Settings Section -->
-      <div class="settings-group">
-        <h6 class="section-header">USER SETTINGS</h6>
-        <div style="display: flex;  align-items: flex-start;">
-          <ul class="nav" style="min-width: 180px;">
-            <!-- Profile -->
-            <li class="nav-item">
-              <a
-                class="nav-link"
-                :class="{ active: activeSection === 'profile' }"
-                @click.prevent="toggleSection('profile')"
-                href="javascript:void(0)"
-                aria-current="profile"
-                tabindex="0"
-              >
-                <i class="fas fa-user"></i> Profile
-              </a>
-            </li>
-            <!-- General -->
-            <li class="nav-item">
-              <a
-                class="nav-link"
-                :class="{ active: activeSection === 'general' }"
-                @click.prevent="toggleSection('general')"
-                href="javascript:void(0)"
-                aria-current="general"
-                tabindex="0"
-              >
-                <i class="fas fa-cog"></i> General
-              </a>
-            </li>
-            <!-- History -->
-            <li class="nav-item">
-              <a
-                class="nav-link"
-                :class="{ active: activeSection === 'history' }"
-                @click.prevent="toggleSection('history')"
-                href="javascript:void(0)"
-                aria-current="history"
-                tabindex="0"
-              >
-                <i class="fas fa-history"></i> History
-              </a>
-            </li>
-            <!-- About -->
-            <li class="nav-item">
-              <a
-                class="nav-link"
-                :class="{ active: activeSection === 'About' }"
-                @click.prevent="toggleSection('About')"
-                href="javascript:void(0)"
-                aria-current="About"
-                tabindex="0"
-              >
-                <i class="fas fa-info-circle"></i> About
-              </a>
-            </li>
-            <!-- Terms -->
-            <li class="nav-item">
-              <a
-                class="nav-link"
-                :class="{ active: activeSection === 'Terms' }"
-                @click.prevent="toggleSection('Terms')"
-                href="javascript:void(0)"
-                aria-current="Terms"
-                tabindex="0"
-              >
-                <i class="fas fa-file-alt"></i> Terms and Conditions
-              </a>
-            </li>
-            <!-- Account -->
-            <li class="nav-item">
-              <a
-                class="nav-link"
-                :class="{ active: activeSection === 'account' }"
-                @click.prevent="toggleSection('account')"
-                href="javascript:void(0)"
-                aria-current="account"
-                tabindex="0"
-              >
-                <i class="fas fa-shield-alt"></i> Account
-              </a>
-            </li>
-          </ul>
-          <div style="flex: 1;">
-            <div v-if="activeSection === 'profile'" class="section-details">
-              <div class="profile-item">
-                <strong>Username:</strong>
-                <span>{{ userProfile.username || 'Loading...' }}</span>
-                <i class="fas fa-edit edit-icon" @click="changeUsername" title="Edit Username" tabindex="0" aria-label="Edit Username"></i>
-              </div>
-              <hr class="divider">
-              <div class="profile-item">
-                <strong>Profile Picture:</strong>
-                <div class="picture-controls">
-                  <img
-                    :src="userProfile.profile_picture"
-                    alt="Profile Picture"
-                    class="profile-img"
-                    @error="e => e.target.src = 'https://latestnewsandaffairs.site/public/pfp.jpg'"
-                  />
-                  <i class="fas fa-edit edit-icon" @click="triggerFileInput" title="Change Profile Picture" tabindex="0" aria-label="Change Profile Picture"></i>
-                  <input
-                    type="file"
-                    ref="profileFileInput"
-                    id="profileFileInput"
-                    @change="handleProfilePictureChange"
-                    accept="image/*"
-                    style="display: none;"
-                  />
-                  <button
-                    v-if="newProfilePicture"
-                    class="btn btn-success"
-                    @click="saveProfilePicture"
-                  >
-                    Save
-                  </button>
-                </div>
-              </div>
-              <hr class="divider">
-              <div class="profile-item">
-                <strong>Description:</strong>
-                <span>{{ userProfile.description || 'No description available' }}</span>
-                <i class="fas fa-edit edit-icon" @click="editDescription" title="Edit Description" tabindex="0" aria-label="Edit Description"></i>
-              </div>
-              <hr class="divider">
-              <div class="profile-item">
-                <strong>created_at:</strong>
-                <span>{{ userProfile.created_at|| 'Created_at not available' }}</span>
-                <i class="fas fa-edit edit-icon" @click="editProfession" title="Edit Profession" tabindex="0" aria-label="Edit Profession"></i>
-              </div>
-              <hr class="divider">
-              <div class="profile-item">
-                <strong>Music:</strong>
-                <span>{{ userProfile.Music|| 'Music not available' }}</span>
-                <i class="fas fa-edit edit-icon" @click="editHobby" title="Edit Hobby" tabindex="0" aria-label="Edit Hobby"></i>
-              </div>
-            </div>
-            <div v-if="activeSection === 'general'" class="section-details">
-              <div
-                v-for="item in toggleSettings"
-                :key="item.key"
-                class="toggle-item"
-              >
-                <span>{{ item.label }}</span>
-                <div class="toggle-controls">
-                  <div
-                    class="toggle-switch"
-                    :aria-pressed="settings[item.key]"
-                    role="switch"
-                    tabindex="0"
-                    @click="toggleSetting(item.key)"
-                    @keydown.space.prevent="toggleSetting(item.key)"
-                    @keydown.enter.prevent="toggleSetting(item.key)"
-                    :style="getToggleStyle(item.key)"
-                    :aria-label="'Toggle ' + item.label"
-                  >
-                    <div class="toggle-knob" :style="getKnobStyle(item.key)"></div>
-                  </div>
-                  <span class="status-text">{{ getStatusText(item.key) }}</span>
-                </div>
-              </div>
-              <button class="btn btn-primary full-width" @click="saveSettings" :disabled="loading">
-                <span v-if="loading"><i class="fas fa-spinner fa-spin"></i> Saving...</span>
-                <span v-else>Save Settings</span>
-              </button>
-            </div>
-            <div v-if="activeSection === 'history'" class="section-details">
-              <button class="btn btn-primary full-width" @click="viewMyActivity">
-                View My Activity
-              </button>
-            </div>
-            <div v-if="activeSection === 'About'" class="section-details">
-              <button class="btn btn-primary full-width" @click="viewAboutUs">
-                View About Us
-              </button>
-            </div>
-            <div v-if="activeSection === 'Terms'" class="section-details">
-              <button class="btn btn-primary full-width" @click="viewTerms">
-                View Terms and Conditions
-              </button>
-            </div>
-            <div v-if="activeSection === 'account'" class="section-details">
-              <button class="btn btn-primary full-width" @click="openBlockedUsers">
-                Blocked Users
-              </button>
-              <button class="btn btn-danger full-width" @click="logOut">Log Out</button>
-            </div>
+  <div class="profile-page" style="margin-top: 50px;">
+    <!-- profile top bar - simplified -->
+    <div class="profile-top-bar">
+      <div class="top-content">
+        <div class="top-left">
+          <button class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+          </button>
+        </div>
+        <div class="top-right">
+          <button class="icon-btn" @click="toggleDropdown">
+            <i class="fas fa-ellipsis-h"></i>
+          </button>
+          <div v-show="showDropdown" class="dropdown-menu">
+            <button @click="showSettings = !showSettings" class="dropdown-item">
+              <i class="fas fa-cog"></i>
+              Settings
+            </button>
+            <button @click="viewMyActivity" class="dropdown-item">
+              <i class="fas fa-chart-line"></i>
+              Activity
+            </button>
+            <button @click="openBlockedUsers" class="dropdown-item">
+              <i class="fas fa-user-slash"></i>
+              Blocked Users
+            </button>
+            <div class="dropdown-divider"></div>
+            <button @click="logOut" class="dropdown-item danger">
+              <i class="fas fa-sign-out-alt"></i>
+              Log Out
+            </button>
           </div>
         </div>
       </div>
-      <!-- Separator -->
-      <hr class="section-divider">
-      <!-- Payment Settings Section -->
-      <div class="settings-group">
-        <h6 class="section-header">PAYMENT SETTINGS</h6>
-        <ul class="nav">
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Quests</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Server Boost</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Nitro Gifting</a>
-          </li>
-        </ul>
+    </div>
+
+    <!-- Profile Content -->
+    <main class="main-content">
+      <!-- Profile Section -->
+      <div class="profile-section">
+        <!-- Profile header - improved layout -->
+        <div class="profile-header">
+          <div class="header-top">
+            <div class="avatar-section">
+              <div class="avatar-container" @click="triggerFileInput">
+                <img
+                  :src="userProfile.profile_picture"
+                  alt="Profile Picture"
+                  class="profile-avatar"
+                  @error="e => e.target.src = 'https://latestnewsandaffairs.site/public/pfp.jpg'"
+                />
+                <div class="avatar-overlay">
+                  <i class="fas fa-camera"></i>
+                </div>
+                <div v-if="hasBlueMarkAccess" class="verified-badge">
+                  <i class="fas fa-check"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="profile-stats">
+              <div class="stat-item">
+                <span class="stat-number">{{ userStats.posts }}</span>
+                <span class="stat-label">Posts</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">{{ userStats.followers }}</span>
+                <span class="stat-label">Followers</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">{{ userStats.following }}</span>
+                <span class="stat-label">Following</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Username and info below avatar -->
+          <div class="profile-info" style="margin-left: 20px;">
+  <div class="profile-name">
+    <h2>{{ userProfile.display_name || userProfile.username }}</h2>
+    <button class="edit-btn" @click="editDisplayName">
+      <i class="fas fa-edit"></i>
+    </button>
+  </div>       
+            <div class="profile-bio">
+              <p v-if="userProfile.description">{{ userProfile.description }}</p>
+              <p v-else class="bio-placeholder" @click="editDescription">Add a bio...</p>
+              <button v-if="userProfile.description" class="edit-btn" @click="editDescription">
+                <i class="fas fa-edit"></i>
+              </button>
+            </div>
+
+            <div v-if="userProfile.Music" class="profile-music">
+              <i class="fas fa-music"></i>
+              <span>{{ userProfile.Music }}</span>
+              <button class="edit-btn" @click="editMusic">
+                <i class="fas fa-edit"></i>
+              </button>
+            </div>
+
+            <div class="profile-joined">
+              <i class="fas fa-calendar-alt"></i>
+              <span>Joined {{ formatDate(userProfile.created_at) }}</span>
+            </div>
+          </div>
+        </div>
+
       </div>
-      <!-- Separator -->
-      <hr class="section-divider">
-      <!-- App Settings Section -->
-      <div class="settings-group">
-        <h6 class="section-header">APP SETTINGS</h6>
-        <ul class="nav">
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Voice</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Appearance</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Accessibility</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Language</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link disabled" href="#">Chat</a>
-          </li>
-        </ul>
+
+      <!-- Content Tabs -->
+      <div class="content-tabs">
+        <button 
+          v-for="tab in contentTabs" 
+          :key="tab.key"
+          class="tab-btn"
+          :class="{ active: activeTab === tab.key }"
+          @click="activeTab = tab.key"
+        >
+          <i :class="tab.icon"></i>
+          <span>{{ tab.label }}</span>
+        </button>
+      </div>
+
+      <!-- Content Area -->
+      <div class="content-area">
+        <!-- Posts Grid -->
+        <div v-if="activeTab === 'posts'" class="posts-grid">
+          <div v-for="n in 9" :key="n" class="post-item">
+            <div class="post-placeholder">
+              <i class="fas fa-image"></i>
+              <span>No posts yet</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tagged Posts -->
+        <div v-if="activeTab === 'tagged'" class="posts-grid">
+          <div class="empty-state">
+            <i class="fas fa-user-tag"></i>
+            <h3>No tagged posts</h3>
+            <p>When people tag you in posts, they'll appear here.</p>
+          </div>
+        </div>
+
+        <!-- Saved Posts -->
+        <div v-if="activeTab === 'saved'" class="posts-grid">
+          <div class="empty-state">
+            <i class="fas fa-bookmark"></i>
+            <h3>No saved posts</h3>
+            <p>Posts you save will appear here.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Settings Overlay -->
+    <div v-if="showSettings" class="settings-overlay" @click.self="showSettings = false">
+      <div class="settings-modal">
+        <div class="modal-header">
+          <h3>Settings</h3>
+          <button @click="showSettings = false" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-content">
+          <div class="settings-list">
+            <div
+              v-for="item in toggleSettings"
+              :key="item.key"
+              class="setting-item"
+            >
+              <div class="setting-info">
+                <div class="setting-icon">
+                  <i :class="item.icon"></i>
+                </div>
+                <div class="setting-details">
+                  <h4>{{ item.label }}</h4>
+                  <p>{{ item.description }}</p>
+                </div>
+              </div>
+              <div class="setting-control">
+                <div
+                  class="toggle-switch"
+                  :class="{ active: settings[item.key] }"
+                  @click="toggleSetting(item.key)"
+                >
+                  <div class="toggle-slider"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn-primary full-width" @click="saveSettings" :disabled="loading">
+              <span v-if="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                Saving...
+              </span>
+              <span v-else">
+                <i class="fas fa-save"></i>
+                Save Settings
+              </span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
-  </section>
+
+    <!-- Success/Error Messages -->
+    <div v-if="message" class="toast" :class="{ error: message.toLowerCase().includes('fail') }">
+      <div class="toast-content">
+        <i :class="message.toLowerCase().includes('fail') ? 'fas fa-exclamation-circle' : 'fas fa-check-circle'"></i>
+        <span>{{ message }}</span>
+      </div>
+    </div>
+
+    <!-- Hidden File Input -->
+    <input
+      type="file"
+      ref="profileFileInput"
+      @change="handleProfilePictureChange"
+      accept="image/*"
+      style="display: none;"
+    />
+  </div>
 </template>
 
 <style scoped>
-/* Base styles */
-.settings-section {
-  background-color: #000;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  min-height: 100vh;
-  margin: 0;
-  padding: 0 8px;
-  position: relative;
-  z-index: 8;
-}
-.SSBAR {
-  width: 100%;
-  max-width: 600px;
-  min-width: 0;
-  background-color: #000;
-  overflow-y: auto;
-  padding: 15px;
-  border-radius: 8px;
-  position: relative;
-  z-index: 8;
-  box-sizing: border-box;
-}
-@media (max-width: 900px) {
-  .SSBAR {
-    max-width: 100vw;
-    padding: 10px;
-  }
-}
-@media (max-width: 600px) {
-  .settings-section {
-    padding: 0 2px;
-  }
-  .SSBAR {
-    max-width: 100vw;
-    border-radius: 0;
-    padding: 6px 2px;
-  }
-  .section-details {
-    padding: 8px 4px 8px 8px;
-    font-size: 12px;
-  }
-  .profile-img {
-    width: 44px;
-    height: 44px;
-    margin-right: 8px;
-  }
-  .profile-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-  }
-  .settings-message {
-    font-size: 12px;
-    padding: 7px 8px;
-  }
-}
-@media (max-width: 400px) {
-  .SSBAR {
-    padding: 2px 0;
-  }
-  .section-details {
-    font-size: 11px;
-  }
-}
-.section-header {
-  font-size: 12px;
-  font-weight: 600;
-  color: #F2F3F5;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
-}
+:root{--primary:#405de6;--text:#262626;--text-light:#8e8e8e;--bg:#fafafa;--white:#fff;--border:#dbdbdb;--shadow:0 2px 8px rgba(0,0,0,0.1)}
+.profile-page{margin-top:50px;margin-left:20px;background:var(--bg);font-family:system-ui;min-height:100vh}
+button{border:none;cursor:pointer;transition:0.2s}
+.back-btn,.icon-btn,.close-btn,.edit-btn,.settings-btn{background:none;color:var(--text);padding:8px;border-radius:6px}
+.back-btn:hover,.icon-btn:hover,.close-btn:hover,.edit-btn:hover,.settings-btn:hover{background:var(--bg)}
+.profile-top-bar{background:var(--white);box-shadow:var(--shadow)}
+.top-content{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;max-width:600px;margin:0 auto}
 
-.settings-group {
-  margin-bottom: 16px;
-}
-
-.nav {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.nav-item {
-  margin-bottom: 0;
-  pointer-events: auto;
-  z-index: 1002;
-  position: relative;
-}
-
-.nav-link {
-  font-size: 14px;
-  font-weight: 500;
-  color: #FFFFFF;
-  padding: 8px 16px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-  cursor: pointer;
-  text-decoration: none;
-  display: block;
-  pointer-events: auto;
-  z-index: 1003;
-  position: relative;
-}
-
-.nav-link:hover {
-  background-color: #F2F3F5;
-  color: #060607;
-}
-
-.nav-link.active {
-  background-color: #E3E5E8;
-  color: #060607;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(88,101,242,0.08);
-}
-
-/* Remove debug box-shadow */
-
-.nav-link.disabled {
-  color: #A3A6AA;
-  cursor: not-allowed;
-}
-
-.nav-link i {
-  margin-right: 8px;
-}
-
-.section-details {
-  padding: 8px 16px 8px 30px;
-  font-size: 13px;
-  color: #FFFFFF;
-}
-
-.section-details strong {
-  font-size: 13px;
-  font-weight: 600;
-  color: #F2F3F5;
-}
-
-.section-details span {
-  font-size: 13px;
-  color: #F2F3F5;
-}
-
-/* Profile items */
-.profile-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.profile-item strong {
-  margin-right: 8px;
-}
-
-.profile-item .edit-icon {
-  margin-left: auto;
-}
-
-.picture-controls {
-  display: flex;
-  align-items: center;
-  margin-top: 8px;
-}
-
-.profile-img {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-right: 12px;
-}
-
-/* Toggle items */
-.toggle-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.toggle-controls {
-  display: flex;
-  align-items: center;
-}
-
-.toggle-switch {
-  width: 50px;
-  height: 26px;
-  border-radius: 13px;
-  position: relative;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.toggle-knob {
-  width: 22px;
-  height: 22px;
-  background-color: #FFFFFF;
-  border-radius: 50%;
-  position: absolute;
-  top: 2px;
-  transition: left 0.3s ease;
-}
-
-.status-text {
-  font-size: 13px;
-  color: #FFFFFF;
-  margin-left: 12px;
-}
-
-/* Buttons */
-.btn {
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  display: inline-block;
-}
-
-.btn-primary {
-  background-color: #5865F2;
-  color: #FFFFFF;
-}
-
-.btn-primary:hover {
-  background-color: #4752C4;
-}
-
-.btn-success {
-  background-color: #00C851;
-  color: #FFFFFF;
-  margin-left: 12px;
-}
-
-.btn-success:hover {
-  background-color: #00A63F;
-}
-
-.btn-danger {
-  background-color: #ED4245;
-  color: #FFFFFF;
-  margin-top: 12px;
-}
-
-.btn-danger:hover {
-  background-color: #C73538;
-}
-
-.full-width {
-  width: 100%;
-}
-
-/* Dividers */
-.divider {
-  border: none;
-  border-top: 1px solid #E3E5E8;
-  margin: 8px 0;
-}
-
-.section-divider {
-  border: none;
-  border-top: 1px solid #E3E5E8;
-  margin: 16px 0;
-}
-
-/* Edit icons */
-.edit-icon {
-  cursor: pointer;
-  color: #4F5660;
-  font-size: 13px;
-  transition: all 0.2s ease;
-}
-
-.edit-icon:hover {
-  color: #5865F2;
-}
-
-/* Dark mode */
-.dark-mode {
-  background-color: #2F3136;
-}
-
-.dark-mode .SSBAR {
-  background-color: #36393F;
-}
-
-.dark-mode .SSBAR-title,
-.dark-mode .section-details strong {
-  color: #FFFFFF;
-}
-
-.dark-mode .section-header,
-.dark-mode .nav-link,
-.dark-mode .section-details,
-.dark-mode .section-details span,
-.dark-mode .status-text,
-.dark-mode .edit-icon {
-  color: #B9BBBE;
-}
-
-.dark-mode .nav-link.disabled {
-  color: #72767D;
-}
-
-.dark-mode .nav-link:hover {
-  background-color: #3A3C43;
-  color: #FFFFFF;
-}
-
-.dark-mode .nav-link.active {
-  background-color: #40444B;
-  color: #FFFFFF;
-}
-
-.dark-mode .edit-icon:hover {
-  color: #5865F2;
-}
-
-.dark-mode .divider,
-.dark-mode .section-divider {
-  border-top: 1px solid #202225;
-}
-
-/* New styles */
-.settings-message {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #23272a;
-  color: #43b581;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 10px 16px;
-  border-radius: 6px;
-  margin-bottom: 18px;
-  gap: 8px;
-  border: 1px solid #43b581;
-  transition: background 0.2s, color 0.2s;
-}
-.settings-message.error {
-  color: #ed4245;
-  border-color: #ed4245;
-  background: #2f1a1a;
-}
-
-/* Focus style for toggles and edit icons for accessibility */
-.toggle-switch:focus, .edit-icon:focus {
-  outline: 2px solid #5865F2;
-  outline-offset: 2px;
-}
-
-/* Improve nav-link active/hover for clarity */
-.nav-link.active {
-  background-color: #E3E5E8;
-  color: #060607;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(88,101,242,0.08);
-}
-.nav-link:hover:not(.disabled) {
-  background-color: #F2F3F5;
-  color: #060607;
-  font-weight: 600;
-}
-
-/* Loading spinner for save button */
-.fa-spinner {
-  margin-right: 6px;
-}
+.main-content{width:100%;margin:0 auto}
+.header-top{display:flex;align-items:flex-start;gap:20px;margin-bottom:16px}
+.avatar-container{width:120px;height:120px;position:relative;cursor:pointer;flex-shrink:0}
+.profile-avatar{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.avatar-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.5);border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;color:var(--white)}
+.avatar-container:hover .avatar-overlay{opacity:1}
+.verified-badge{position:absolute;bottom:8px;right:8px;background:var(--primary);color:var(--white);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:3px solid var(--white)}
+.profile-stats{display:flex;gap:24px;flex:1}
+.stat-item{text-align:center;cursor:pointer}
+.stat-number{font-size:1.5rem;font-weight:700;display:block}
+.stat-label{color:var(--text-light);font-size:0.9rem}
+.header-actions{display:flex;flex-direction:column;align-items:center;gap:8px}
+.settings-btn{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text)}
+.settings-btn:hover{background:var(--border)}
+.profile-info{width:100%}
+.profile-name{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.profile-name h2{font-size:1.5rem;margin:0}
+.username-handle{color:var(--text-light);font-size:1rem}
+.bio-placeholder{color:var(--text-light);cursor:pointer}
+.profile-bio,.profile-music,.profile-joined{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.profile-music,.profile-joined{color:var(--text-light);font-size:0.9rem}
+.profile-actions{display:flex;gap:12px;margin:20px 0}
+.btn-secondary{background:var(--bg);border:1px solid var(--border);padding:8px 16px;border-radius:8px;font-weight:500;display:flex;align-items:center;gap:6px}
+.btn-secondary:hover{background:var(--border)}
+.content-tabs{background:var(--white);border-radius:12px;padding:1%;margin-bottom:3%;box-shadow:var(--shadow);display:flex}
+.tab-btn{flex:1;padding:4%;background:none;color:var(--text-light);border-radius:8px;display:flex;align-items:center;justify-content:center;gap:8px}
+.tab-btn.active{background:var(--primary);color:var(--white)}
+.posts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4%}
+.post-item{aspect-ratio:1}
+.post-placeholder{height:100%;background:var(--bg);border:2px dashed var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-light)}
+.empty-state{text-align:center;padding:40px;color:var(--text-light)}
+.empty-state h3{margin:16px 0 8px;color:var(--text)}
+.dropdown-menu{position:absolute;top:100%;right:0;background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);min-width:200px;z-index:1000;margin-top:0.5rem}
+.dropdown-item{display:flex;align-items:center;gap:0.75rem;width:100%;padding:0.875rem 1rem;background:none;border:none;text-align:left;cursor:pointer;font-size:0.875rem;color:var(--text)}
+.dropdown-item:hover{background:var(--bg)}
+.dropdown-item.danger{color:#fd1d1d}
+.dropdown-divider{height:1px;background:var(--border);margin:0.5rem 0}
+.settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
+.settings-modal{background:var(--white);border-radius:8px;max-width:500px;width:90%;max-height:80vh;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,0.2)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:1.5rem;border-bottom:1px solid var(--border)}
+.modal-header h3{font-size:1.25rem;font-weight:600;color:var(--text)}
+.modal-content{padding:24px;max-height:60vh;overflow-y:auto}
+.settings-list{display:flex;flex-direction:column;gap:1rem;margin-bottom:2rem}
+.setting-item{display:flex;justify-content:space-between;align-items:center;padding:1rem;background:var(--bg);border-radius:8px}
+.setting-info{display:flex;align-items:center;gap:1rem;flex:1}
+.setting-icon{width:40px;height:40px;background:var(--white);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--primary)}
+.setting-details h4{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:0.25rem}
+.setting-details p{font-size:0.875rem;color:var(--text-light)}
+.toggle-switch{width:50px;height:28px;background:var(--border);border-radius:14px;cursor:pointer;position:relative;transition:0.3s}
+.toggle-switch.active{background:var(--primary)}
+.toggle-slider{width:24px;height:24px;background:var(--white);border-radius:50%;position:absolute;top:2px;left:2px;transition:0.3s;box-shadow:var(--shadow)}
+.toggle-switch.active .toggle-slider{transform:translateX(22px)}
+.btn-primary{background:var(--primary);color:var(--white);padding:12px 24px;border-radius:8px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary:hover{background:#3748d6}
+.btn-primary:disabled{opacity:0.6;cursor:not-allowed}
+.full-width{width:100%}
+.toast{position:fixed;top:80px;right:20px;background:var(--primary);color:var(--white);padding:16px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:1001;animation:slideIn 0.3s}
+.toast.error{background:#fd1d1d}
+.toast-content{display:flex;align-items:center;gap:8px}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 </style>
 
-<script setup>
-import { ref, computed, onMounted } from 'vue';
+<script>
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 
-// Reactive state
-const activeSection = ref(null);
-const userProfile = ref({
-  username: localStorage.getItem('username') || '',
-  profile_picture: 'https://latestnewsandaffairs.site/public/pfp.jpg',
-  description: 'No description available',
-  location: 'Location not available',
-  status: 'Status not available',
-  profession: 'Profession not available',
-  hobby: 'Musicnot available'
-});
-const newProfilePicture = ref(null);
-const settings = ref({
-  darkMode: false,
-  notifications: true,
-  privateAccount: false,
-  showOnlineStatus: true,
-  twoFactorAuth: false
-});
-const loading = ref(false);
-const message = ref('');
+export default {
+  name: 'ProfilePage',
+  setup() {
+    // Reactive state
+    const showDropdown = ref(false);
+    const showSettings = ref(false);
+    const activeTab = ref('posts');
+    const loading = ref(false);
+    const message = ref('');
+    const newProfilePicture = ref(null);
 
-// Computed properties
-const toggleSettings = computed(() => [
-  { key: 'darkMode', label: 'Dark Mode' },
-  { key: 'notifications', label: 'Notifications' },
-  { key: 'privateAccount', label: 'Private Account' },
-  { key: 'showOnlineStatus', label: 'Show Online Status' },
-  { key: 'twoFactorAuth', label: 'Two-Factor Authentication' }
-]);
+    // User profile data
+    const userProfile = ref({
+      username: localStorage.getItem('username') || '',
+      display_name: '',
+      profile_picture: 'https://latestnewsandaffairs.site/public/pfp.jpg',
+      description: 'No description available',
+      created_at: 'Date not available',
+      Music: 'Music not available'
+    });
 
-// Methods
-const toggleSection = (section) => {
-  activeSection.value = activeSection.value === section ? null : section;
-};
+    // User stats (can be fetched from API later)
+    const userStats = ref({
+      posts: 0,
+      followers: 0,
+      following: 0
+    });
 
-const fetchUserSettings = async () => {
-  loading.value = true;
-  try {
-    const username = localStorage.getItem('username');
-    if (!username) {
-      message.value = 'Username not found!';
-      return;
-    }
+    // Settings
+    const settings = ref({
+      notifications: true,
+      privacy: false,
+      darkMode: false,
+      autoPlay: true
+    });
 
-    const response = await fetch(`https://sports321.vercel.app/api/posts?username=${username}`);
-    const user = await response.json();
+    const hasBlueMarkAccess = ref(false);
 
-    userProfile.value = {
-      username: username,
-      created_at: user.created_at || 'Date not available',
-      Music: user.Music || 'Music not available',
-      description: user.description || 'No description available',
-      profile_picture: user.profile_picture || 'https://latestnewsandaffairs.site/public/pfp.jpg'
+    // Content tabs configuration
+    const contentTabs = ref([
+      { key: 'posts', label: 'Posts', icon: 'fas fa-th' },
+      { key: 'tagged', label: 'Tagged', icon: 'fas fa-user-tag' },
+      { key: 'saved', label: 'Saved', icon: 'fas fa-bookmark' }
+    ]);
+
+    // Computed properties
+    const toggleSettings = computed(() => [
+      {
+        key: 'notifications',
+        label: 'Push Notifications',
+        description: 'Get notified about new messages and activity',
+        icon: 'fas fa-bell'
+      },
+      {
+        key: 'privacy',
+        label: 'Private Account',
+        description: 'Only followers can see your posts',
+        icon: 'fas fa-lock'
+      },
+      {
+        key: 'darkMode',
+        label: 'Dark Mode',
+        description: 'Use dark theme across the app',
+        icon: 'fas fa-moon'
+      },
+      {
+        key: 'autoPlay',
+        label: 'Auto-play Videos',
+        description: 'Videos play automatically in feed',
+        icon: 'fas fa-play-circle'
+      }
+    ]);
+
+    // Check for saved files to determine blue mark access
+    const checkBlueMarkAccess = () => {
+      const keys = Object.keys(localStorage);
+      const hasUserFiles = keys.some(key => 
+        key.includes('userFile') || 
+        key.includes('savedDocument') || 
+        key.includes('userContent') ||
+        key.includes('profile') ||
+        key.includes('settings')
+      ) || keys.length > 5;
+      hasBlueMarkAccess.value = hasUserFiles;
     };
 
-    // Load settings from backend preferences if available
-    if (user.preferences) {
-      Object.keys(settings.value).forEach(key => {
-        if (user.preferences.hasOwnProperty(key)) {
-          settings.value[key] = user.preferences[key];
+    // Methods
+    const toggleDropdown = () => {
+      showDropdown.value = !showDropdown.value;
+    };
+
+    const formatDate = (dateString) => {
+      if (!dateString || dateString === 'Date not available') return 'Recently';
+      try {
+        return new Date(dateString).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long'
+        });
+      } catch {
+        return 'Recently';
+      }
+    };
+
+    const fetchUserSettings = async () => {
+      loading.value = true;
+      try {
+        const username = localStorage.getItem('username');
+        if (!username) {
+          message.value = 'Username not found!';
+          return;
         }
-      });
 
-      // Sync dark mode UI
-      if (settings.value.darkMode) {
-        document.documentElement.classList.add('dark-mode');
-      } else {
-        document.documentElement.classList.remove('dark-mode');
+        const response = await fetch(`https://sports321.vercel.app/api/posts?username=${username}`);
+        const user = await response.json();
+
+        userProfile.value = {
+          username: username,
+          display_name: user.display_name || username,
+          created_at: user.created_at || 'Date not available',
+          Music: user.Music || 'Music not available',
+          description: user.description || 'No description available',
+          profile_picture: user.profile_picture || 'https://latestnewsandaffairs.site/public/pfp.jpg'
+        };
+
+        // Update stats if available
+        if (user.stats) {
+          userStats.value = { ...userStats.value, ...user.stats };
+        }
+
+        if (user.preferences) {
+          Object.keys(settings.value).forEach(key => {
+            if (user.preferences.hasOwnProperty(key)) {
+              settings.value[key] = user.preferences[key];
+            }
+          });
+
+          if (settings.value.darkMode) {
+            document.documentElement.classList.add('dark-mode');
+          } else {
+            document.documentElement.classList.remove('dark-mode');
+          }
+        }
+      } catch (error) {
+        message.value = 'Error fetching user settings.';
+        console.error('Error fetching user settings:', error);
+      } finally {
+        loading.value = false;
       }
-    }
-  } catch (error) {
-    message.value = 'Error fetching user settings.';
-    console.error('Error fetching user settings:', error);
-  } finally {
-    loading.value = false;
-  }
-};
-
-const updateUserProfileField = async (field, newValue) => {
-  loading.value = true;
-  const username = localStorage.getItem('username');
-  if (!username) {
-    message.value = 'Username not found!';
-    loading.value = false;
-    return;
-  }
-  try {
-    const body = { username, [field]: newValue };
-    const response = await fetch('https://sports321.vercel.app/api/posts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-
-    if (response.ok) {
-      userProfile.value[field] = newValue;
-      if (field === 'username') {
-        localStorage.setItem('username', newValue);
-      }
-      message.value = `Your ${field} has been updated!`;
-    } else {
-      throw new Error('Update failed');
-    }
-  } catch (error) {
-    message.value = `Failed to update ${field}`;
-    console.error(`Error updating ${field}:`, error);
-  } finally {
-    loading.value = false;
-  }
-};
-
-// Prompt edit functions
-const changeUsername = () => {
-  const newUsername = prompt('Enter your new username:', userProfile.value.username);
-  if (newUsername?.trim()) {
-    updateUserProfileField('username', newUsername.trim());
-  }
-};
-
-const editDescription = () => {
-  const newDescription = prompt('Tell us about yourself:', userProfile.value.description);
-  if (newDescription?.trim()) {
-    updateUserProfileField('description', newDescription.trim());
-  }
-};
-
-const editMusic = () => {
-  const newMusic = prompt('Enter your favorite music:', userProfile.value.Music);
-  if (newMusic?.trim()) {
-    updateUserProfileField('music', newMusic.trim());
-  }
-};
-
-
-const triggerFileInput = () => {
-  const fileInput = document.querySelector('#profileFileInput');
-  fileInput.click();
-};
-
-const handleProfilePictureChange = (event) => {
-  const file = event.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      newProfilePicture.value = e.target.result;
-      userProfile.value.profile_picture = e.target.result;
     };
-    reader.readAsDataURL(file);
-  }
-};
 
-const saveProfilePicture = async () => {
-  if (!newProfilePicture.value) return;
-  loading.value = true;
-  try {
-    const username = localStorage.getItem('username');
-    if (!username) {
-      message.value = 'Username not found!';
-      loading.value = false;
-      return;
-    }
-    // Use correct field name for backend compatibility
-    const response = await fetch('https://sports321.vercel.app/api/posts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, profile_picture: newProfilePicture.value })
+    const updateUserProfileField = async (field, newValue) => {
+      loading.value = true;
+      const username = localStorage.getItem('username');
+      if (!username) {
+        message.value = 'Username not found!';
+        loading.value = false;
+        return;
+      }
+      try {
+        const body = { username, [field]: newValue };
+        const response = await fetch('https://venus-ecru.vercel.app/api/ProfileUpdate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        if (response.ok) {
+          userProfile.value[field] = newValue;
+          if (field === 'username') {
+            localStorage.setItem('username', newValue);
+          }
+          message.value = `Your ${field} has been updated!`;
+          setTimeout(() => message.value = '', 3000);
+        } else {
+          throw new Error('Update failed');
+        }
+      } catch (error) {
+        message.value = `Failed to update ${field}`;
+        console.error(`Error updating ${field}:`, error);
+        setTimeout(() => message.value = '', 3000);
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const changeUsername = () => {
+      const newUsername = prompt('Enter your new username:', userProfile.value.username);
+      if (newUsername?.trim() && newUsername.trim() !== userProfile.value.username) {
+        updateUserProfileField('username', newUsername.trim());
+      }
+    };
+
+    const editDisplayName = () => {
+      const newDisplayName = prompt('Enter your display name:', userProfile.value.display_name || userProfile.value.username);
+      if (newDisplayName?.trim()) {
+        updateUserProfileField('display_name', newDisplayName.trim());
+      }
+    };
+
+    const editDescription = () => {
+      const newDescription = prompt('Tell us about yourself:', userProfile.value.description === 'No description available' ? '' : userProfile.value.description);
+      if (newDescription?.trim()) {
+        updateUserProfileField('description', newDescription.trim());
+      }
+    };
+
+    const editMusic = () => {
+      const newMusic = prompt('Enter your favorite music:', userProfile.value.Music === 'Music not available' ? '' : userProfile.value.Music);
+      if (newMusic?.trim()) {
+        updateUserProfileField('Music', newMusic.trim());
+      }
+    };
+
+    const triggerFileInput = () => {
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) {
+        fileInput.click();
+      }
+    };
+
+    const handleProfilePictureChange = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          newProfilePicture.value = e.target.result;
+          userProfile.value.profile_picture = e.target.result;
+          // Auto-save profile picture
+          saveProfilePicture();
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    const saveProfilePicture = async () => {
+      if (!newProfilePicture.value) return;
+      loading.value = true;
+      try {
+        const username = localStorage.getItem('username');
+        if (!username) {
+          message.value = 'Username not found!';
+          loading.value = false;
+          return;
+        }
+        const response = await fetch('https://venus-ecru.vercel.app/api/ProfileUpdate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, profile_picture: newProfilePicture.value })
+        });
+        if (response.ok) {
+          userProfile.value.profile_picture = newProfilePicture.value;
+          localStorage.setItem('profilePic', newProfilePicture.value);
+          newProfilePicture.value = null;
+          message.value = 'Profile picture updated!';
+          setTimeout(() => message.value = '', 3000);
+        } else {
+          throw new Error('Profile picture update failed');
+        }
+      } catch (error) {
+        message.value = 'Failed to update profile picture';
+        console.error('Error updating profile picture:', error);
+        setTimeout(() => message.value = '', 3000);
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const toggleSetting = async (key) => {
+      settings.value[key] = !settings.value[key];
+      if (key === 'darkMode') {
+        toggleDarkMode();
+      }
+      await saveSettings();
+    };
+
+    const toggleDarkMode = () => {
+      document.documentElement.classList.toggle('dark-mode', settings.value.darkMode);
+      localStorage.setItem('darkMode', settings.value.darkMode);
+    };
+
+    const saveSettings = async () => {
+      loading.value = true;
+      const username = localStorage.getItem('username');
+      if (!username) {
+        message.value = 'Username not found!';
+        loading.value = false;
+        return;
+      }
+      try {
+        const response = await fetch('https://venus-ecru.vercel.app/api/ProfileUpdate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, preferences: settings.value })
+        });
+        if (response.ok) {
+          message.value = 'Settings saved successfully!';
+          setTimeout(() => message.value = '', 3000);
+        } else {
+          throw new Error('Settings save failed');
+        }
+      } catch (error) {
+        message.value = 'Failed to save settings';
+        console.error('Error saving settings:', error);
+        setTimeout(() => message.value = '', 3000);
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const shareProfile = () => {
+      if (navigator.share) {
+        navigator.share({
+          title: `${userProfile.value.display_name || userProfile.value.username}'s Profile`,
+          text: userProfile.value.description,
+          url: window.location.href
+        });
+      } else {
+        // Fallback - copy to clipboard
+        navigator.clipboard.writeText(window.location.href);
+        message.value = 'Profile link copied to clipboard!';
+        setTimeout(() => message.value = '', 3000);
+      }
+    };
+
+    const openBlockedUsers = () => {
+      message.value = 'Blocked users feature coming soon!';
+      setTimeout(() => message.value = '', 3000);
+      showDropdown.value = false;
+    };
+
+    const viewMyActivity = () => {
+      message.value = 'Activity history feature coming soon!';
+      setTimeout(() => message.value = '', 3000);
+      showDropdown.value = false;
+    };
+
+    const logOut = () => {
+      if (confirm('Are you sure you want to log out?')) {
+        localStorage.clear();
+        window.location.reload();
+      }
+      showDropdown.value = false;
+    };
+
+    // Close dropdowns when clicking outside
+    const handleClickOutside = (event) => {
+      const topRight = event.target.closest('.top-right');
+      if (!topRight) {
+        showDropdown.value = false;
+      }
+    };
+
+    // Lifecycle hooks
+    onMounted(() => {
+      checkBlueMarkAccess();
+      fetchUserSettings();
+      
+      // Load saved dark mode preference
+      const savedDarkMode = localStorage.getItem('darkMode');
+      if (savedDarkMode !== null) {
+        settings.value.darkMode = savedDarkMode === 'true';
+        if (settings.value.darkMode) {
+          document.documentElement.classList.add('dark-mode');
+        }
+      }
+
+      // Add click outside listener
+      document.addEventListener('click', handleClickOutside);
     });
-    if (response.ok) {
-      userProfile.value.profile_picture = newProfilePicture.value;
-      localStorage.setItem('profilePic', newProfilePicture.value);
-      newProfilePicture.value = null;
-      message.value = 'Profile picture updated!';
-    } else {
-      throw new Error('Profile picture update failed');
-    }
-  } catch (error) {
-    message.value = 'Failed to update profile picture';
-    console.error('Error updating profile picture:', error);
-  } finally {
-    loading.value = false;
-  }
-};
 
-const toggleSetting = async (key) => {
-  settings.value[key] = !settings.value[key];
-  if (key === 'darkMode') {
-    toggleDarkMode();
-  }
-  // Save immediately for instant feedback
-  await saveSettings();
-};
-
-const toggleDarkMode = () => {
-  document.documentElement.classList.toggle('dark-mode', settings.value.darkMode);
-  localStorage.setItem('darkMode', settings.value.darkMode);
-};
-
-const getStatusText = (key) => {
-  switch (key) {
-    case 'darkMode': return settings.value.darkMode ? 'On' : 'Off';
-    case 'notifications': return settings.value.notifications ? 'On' : 'Off';
-    case 'privateAccount': return settings.value.privateAccount ? 'On' : 'Off';
-    case 'showOnlineStatus': return settings.value.showOnlineStatus ? 'Visible' : 'Hidden';
-    case 'twoFactorAuth': return settings.value.twoFactorAuth ? 'Enabled' : 'Disabled';
-    default: return '';
-  }
-};
-
-const getToggleStyle = (key) => ({
-  width: '50px',
-  height: '26px',
-  borderRadius: '13px',
-  background: settings.value[key] ? '#5865F2' : '#4F545C',
-  position: 'relative',
-  cursor: 'pointer',
-  transition: 'background 0.3s ease'
-});
-
-const getKnobStyle = (key) => ({
-  height: '22px',
-  width: '22px',
-  background: '#FFFFFF',
-  borderRadius: '50%',
-  position: 'absolute',
-  top: '2px',
-  left: settings.value[key] ? '26px' : '2px',
-  transition: 'left 0.3s ease'
-});
-
-const saveSettings = async () => {
-  loading.value = true;
-  const username = localStorage.getItem('username');
-  if (!username) {
-    message.value = 'Username not found!';
-    loading.value = false;
-    return;
-  }
-  try {
-    const response = await fetch('https://sports321.vercel.app/api/posts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, preferences: settings.value })
+    onUnmounted(() => {
+      // Clean up event listener
+      document.removeEventListener('click', handleClickOutside);
     });
-    if (response.ok) {
-      message.value = 'Settings saved successfully!';
-    } else {
-      throw new Error('Settings save failed');
-    }
-  } catch (error) {
-    message.value = 'Failed to save settings';
-    console.error('Error saving settings:', error);
-  } finally {
-    loading.value = false;
+
+    // Return all reactive data and methods
+    return {
+      showDropdown,
+      showSettings,
+      activeTab,
+      loading,
+      message,
+      newProfilePicture,
+      userProfile,
+      userStats,
+      settings,
+      hasBlueMarkAccess,
+      contentTabs,
+      toggleSettings,
+      checkBlueMarkAccess,
+      toggleDropdown,
+      formatDate,
+      fetchUserSettings,
+      updateUserProfileField,
+      changeUsername,
+      editDisplayName,
+      editDescription,
+      editMusic,
+      triggerFileInput,
+      handleProfilePictureChange,
+      saveProfilePicture,
+      toggleSetting,
+      toggleDarkMode,
+      saveSettings,
+      shareProfile,
+      openBlockedUsers,
+      viewMyActivity,
+      logOut,
+      handleClickOutside
+    };
   }
 };
-
-const openBlockedUsers = () => {
-  message.value = 'Blocked users feature coming soon!';
-};
-
-const viewMyActivity = () => {
-  message.value = 'Activity history feature coming soon!';
-};
-
-const viewAboutUs = () => {
-  message.value = 'About us page coming soon!';
-};
-
-const viewTerms = () => {
-  message.value = 'Terms and conditions page coming soon!';
-};
-
-const logOut = () => {
-  localStorage.clear();
-  window.location.reload();
-};
-
-// Lifecycle hook
-onMounted(() => {
-  fetchUserSettings();
-  const savedDarkMode = localStorage.getItem('darkMode');
-  if (savedDarkMode !== null) {
-    settings.value.darkMode = savedDarkMode === 'true';
-    if (settings.value.darkMode) {
-      document.documentElement.classList.add('dark-mode');
-    }
-  }
-});
 </script>
+
+
+
+
 
