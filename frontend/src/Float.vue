@@ -112,9 +112,8 @@
 <script setup>
 import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import Ably from 'ably'
 
-// Reactive states
+// Refs for UI
 const showPanel = ref(false)
 const postText = ref('')
 const imagePreview = ref(null)
@@ -128,32 +127,20 @@ const groupImageData = ref(null)
 const groupImagePreview = ref(null)
 const groupImageInput = ref(null)
 
-const currentTrigger = ref(null)  // '@' or '#'
+const currentTrigger = ref(null)
 const currentWord = ref('')
 
-
-// User info
-const loggedInUserId= ref(localStorage.getItem('userId') || '')
-const loggedInUsername = ref(localStorage.getItem('username') || '')
-const profilePic = ref(localStorage.getItem('profilePic') || '')
-const sessionId = ref(localStorage.getItem('sessionId') || '')
-
-// Reply info from route
+// Route
 const route = useRoute()
 const router = useRouter()
 const replyToPostId = ref(route.query.replyToPostId || null)
 const replyToUsername = ref(route.query.replyToUsername || null)
 
-// Ably setup
-const ably = new Ably.Realtime('eCkrsA.JzcmYQ:JLywAltPtm-KWD6Rd0MItQRgi-I4R7zn6BpI1UVQ3Eg')
-const channel = ably.channels.get('posts-channel')
-
-function togglePanel() {
-  showPanel.value = !showPanel.value
-  if (!showPanel.value) {
-    router.push({ path: '/posts' })
-  }
-}
+// User info
+const loggedInUserId = ref(localStorage.getItem('userId') || '')
+const loggedInUsername = ref(localStorage.getItem('username') || '')
+const profilePic = ref(localStorage.getItem('profilePic') || '')
+const sessionId = ref(localStorage.getItem('sessionId') || '')
 
 // Init reply state
 onMounted(() => {
@@ -170,26 +157,26 @@ onMounted(() => {
   }
 })
 
-// Enhanced input handler for both tags and hashtags
+// Toggle post panel
+function togglePanel() {
+  showPanel.value = !showPanel.value
+  if (!showPanel.value) {
+    router.push({ path: '/posts' })
+  }
+}
+
+// Handle input & detect tags/hashtags
 function handleInput() {
   postText.value = contentEditable.value.innerText
 
   const sel = window.getSelection()
   const caretOffset = sel?.anchorOffset || 0
-
-  // Extract text up to caret
   const textUpToCaret = postText.value.slice(0, caretOffset)
   const match = textUpToCaret.match(/(?:^|\s)([@#])(\w*)$/)
 
-  if (match) {
-    currentTrigger.value = match[1]         // '@' or '#'
-    currentWord.value = match[2] || ''
-  } else {
-    currentTrigger.value = null
-    currentWord.value = ''
-  }
+  currentTrigger.value = match ? match[1] : null
+  currentWord.value = match ? match[2] : ''
 
-  // Highlight all @tags and #hashtags
   const words = postText.value.split(/(\s+)/)
   let html = ''
   words.forEach(word => {
@@ -231,19 +218,16 @@ function placeCaretAtEnd(el) {
   sel.addRange(range)
 }
 
-// Extract tags
-const extractedTags = computed(() => {
-  if (!postText.value) return []
-  return [...new Set(postText.value.match(/@(\w+)/g)?.map(tag => tag.slice(1)) || [])]
-})
+// Extract tags/hashtags
+const extractedTags = computed(() =>
+  [...new Set(postText.value.match(/@(\w+)/g)?.map(tag => tag.slice(1)) || [])]
+)
 
-// Extract hashtags
-const extractedHashtags = computed(() => {
-  if (!postText.value) return []
-  return [...new Set(postText.value.match(/#(\w+)/g)?.map(hashtag => hashtag.slice(1)) || [])]
-})
+const extractedHashtags = computed(() =>
+  [...new Set(postText.value.match(/#(\w+)/g)?.map(tag => tag.slice(1)) || [])]
+)
 
-// Post image upload
+// Upload image (post)
 async function handleImageUpload(event) {
   const file = event.target.files[0]
   if (!file) return
@@ -255,14 +239,14 @@ async function handleImageUpload(event) {
       imageData.value = await blobToBase64(resizedBlob)
       imagePreview.value = reader.result
       uploadedImage.value = file
-    } catch (error) {
+    } catch {
       showAlert('Error processing image.', true)
     }
   }
   reader.readAsDataURL(file)
 }
 
-// Group image upload
+// Upload group image
 async function handleGroupImageUpload(event) {
   const file = event.target.files[0]
   if (!file) return
@@ -273,14 +257,14 @@ async function handleGroupImageUpload(event) {
       const resizedBlob = await resizeImageToMaxSize(reader.result, 100)
       groupImageData.value = await blobToBase64(resizedBlob)
       groupImagePreview.value = reader.result
-    } catch (error) {
+    } catch {
       showAlert('Error processing group image.', true)
     }
   }
   reader.readAsDataURL(file)
 }
 
-// Resize image helper
+// Resize image
 function resizeImageToMaxSize(imageSrc, maxSizeKB = 65) {
   return new Promise((resolve, reject) => {
     const img = new Image()
@@ -288,28 +272,20 @@ function resizeImageToMaxSize(imageSrc, maxSizeKB = 65) {
     img.onload = () => {
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')
-      const maxWidth = 200
-      const scale = maxWidth / img.width
+      const scale = 200 / img.width
       canvas.width = img.width * scale
       canvas.height = img.height * scale
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-      canvas.toBlob(
-        (blob) => {
-          if (blob.size / 1024 <= maxSizeKB) {
-            resolve(blob)
-          } else {
-            reject(new Error('Image exceeds max size after resizing.'))
-          }
-        },
-        'image/webp',
-        0.4
-      )
+      canvas.toBlob(blob => {
+        if (blob && blob.size / 1024 <= maxSizeKB) resolve(blob)
+        else reject(new Error('Image exceeds max size.'))
+      }, 'image/webp', 0.4)
     }
-    img.onerror = () => reject(new Error('Error loading image.'))
+    img.onerror = () => reject(new Error('Image load error.'))
   })
 }
 
-// Convert blob to base64
+// Blob to base64
 function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -319,53 +295,37 @@ function blobToBase64(blob) {
   })
 }
 
-// Dummy notify
+// Alert helper
 function showAlert(message, isError = false) {
   alert((isError ? 'Error: ' : '') + message)
 }
 
-// Function to upload hashtags to separate hashtag API
+// Upload hashtags
 async function uploadHashtags(postId, hashtags, username) {
-  if (!hashtags || hashtags.length === 0) return
-  
+  if (!hashtags.length) return
   try {
-    console.log('Uploading hashtags separately:', hashtags)
-    const response = await fetch('https://199-ten.vercel.app/api/features', {
+    await fetch('https://199-ten.vercel.app/api/features', {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        Accept: 'application/json' 
+        Accept: 'application/json'
       },
       credentials: 'include',
-      body: JSON.stringify({
-        postId: postId,
-        hashtags: hashtags,
-        username: username
-      }),
+      body: JSON.stringify({ postId, hashtags, username }),
     })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Failed to upload hashtags: ${response.status} - ${errorText}`)
-    }
-
-    const result = await response.json()
-    console.log('Hashtags uploaded successfully to separate API:', result)
-    showAlert(`Hashtags saved: ${hashtags.map(h => '#' + h).join(', ')}`, false)
-  } catch (error) {
-    console.error('Error uploading hashtags to separate API:', error)
-    showAlert('Warning: Hashtags could not be saved to hashtag database', true)
+  } catch {
+    showAlert('Warning: Hashtags could not be saved.', true)
   }
 }
 
-// Submit opinion
+// Post opinion
 async function postOpinion() {
   if (!sessionId.value || !loggedInUsername.value) {
-    showAlert('Error: Session ID and Username are required', true)
+    showAlert('Session ID and Username required', true)
     return
   }
   if (!postText.value && !imageData.value) {
-    showAlert('Post content cannot be empty!', true)
+    showAlert('Post cannot be empty!', true)
     return
   }
 
@@ -376,29 +336,28 @@ async function postOpinion() {
     profilePic: profilePic.value,
     photo: imageData.value,
     tags: extractedTags.value,
-    replyTo: replyToPostId.value ? { postId: replyToPostId.value, username: replyToUsername.value } : null
+    replyTo: replyToPostId.value
+      ? { postId: replyToPostId.value, username: replyToUsername.value }
+      : null
   }
 
   try {
-    const response = await fetch('https://sports321.vercel.app/api/postOpinion', {
+    const response = await fetch('https://hamburger-henna.vercel.app/api/postOpinion', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       credentials: 'include',
       body: JSON.stringify(postData),
     })
 
-    if (!response.ok) throw new Error('Failed to submit post')
-
+    if (!response.ok) throw new Error('Submit failed')
     const newPost = await response.json()
     lastSentPostId.value = newPost._id
-    
+
     if (extractedHashtags.value.length > 0) {
-      console.log('Hashtags detected:', extractedHashtags.value)
       await uploadHashtags(newPost._id, extractedHashtags.value, loggedInUsername.value)
     }
-    
-    showAlert('Post submitted successfully!', false)
-    channel.publish('newOpinion', newPost)
+
+    showAlert('Post submitted!', false)
     resetForm()
 
     if (extractedTags.value.length > 0) {
@@ -416,19 +375,19 @@ async function postOpinion() {
 
     router.push({ path: '/posts' })
   } catch (error) {
-    showAlert('Error submitting post: ' + error.message, true)
+    showAlert('Post error: ' + error.message, true)
   }
 }
 
-// Create Group
+// Create group
 async function createGroup() {
   try {
-    const response = await fetch(`https://yupitis.vercel.app/api/groups`, {
+    const response = await fetch('https://yupitis.vercel.app/api/groups', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        'x-user-id': loggedInUserId.value, // Custom header
+        'x-user-id': loggedInUserId.value,
       },
       credentials: 'include',
       body: JSON.stringify({
@@ -436,27 +395,21 @@ async function createGroup() {
         creator: loggedInUsername.value,
         image: groupImageData.value,
       }),
-    });
+    })
 
-    if (!response.ok) throw new Error('Failed to create group');
+    if (!response.ok) throw new Error('Group creation failed')
 
-    const newGroup = await response.json();
-    showAlert('Group created successfully!', false);
-
-    // Reset form values
-    newGroupName.value = '';
-    groupImageData.value = null;
-    groupImagePreview.value = null;
-    if (groupImageInput.value) {
-      groupImageInput.value.value = '';
-    }
-  } catch (error) {
-    console.error('Error creating group:', error);
-    showAlert('Error creating group.', true);
+    showAlert('Group created!', false)
+    newGroupName.value = ''
+    groupImageData.value = null
+    groupImagePreview.value = null
+    if (groupImageInput.value) groupImageInput.value.value = ''
+  } catch {
+    showAlert('Error creating group.', true)
   }
 }
 
-// Reset post form
+// Reset form
 function resetForm() {
   postText.value = ''
   contentEditable.value.innerHTML = ''
@@ -466,16 +419,23 @@ function resetForm() {
   if (fileInput.value) fileInput.value.value = ''
 }
 
-// Realtime listener
-onMounted(() => {
-  channel.subscribe('newOpinion', (message) => {
-    const incomingPost = message.data
-    if (incomingPost?._id && incomingPost._id !== lastSentPostId.value) {
-      showAlert('New post added!', false)
-    }
-  })
-})
+// Placeholder functions (preserving caret logic)
+function getCaretPosition() {
+  const sel = window.getSelection()
+  return sel?.anchorOffset || 0
+}
+
+function setCaretPosition(pos) {
+  const el = contentEditable.value
+  const range = document.createRange()
+  const sel = window.getSelection()
+  range.setStart(el.firstChild || el, pos)
+  range.collapse(true)
+  sel.removeAllRanges()
+  sel.addRange(range)
+}
 </script>
+
 
 <style scoped>
 /* Floating Elements */
@@ -667,3 +627,7 @@ button:hover {
   color: #007bff;
 }
 </style>
+
+
+
+
