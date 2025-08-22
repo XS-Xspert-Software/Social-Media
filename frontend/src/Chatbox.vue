@@ -1,5 +1,5 @@
 <template>
-    <div class="chat-box chatbox-override">
+  <div class="chat-box chatbox-override">
     <!-- Chat Header -->
     <div class="chat-header">
       <div class="header-left">
@@ -20,9 +20,8 @@
 
     <!-- Chat Main Area -->
     <div class="chat-main">
-
       <!-- Messages -->
-      <div id="messages-container">
+      <div id="messages-container" style="overflow-y: auto;">
         <div v-if="incomingCall" class="incoming-call-popup">
           <p>📞 Incoming call from {{ chatWith }}</p>
           <button @click="acceptCall">✅ Accept</button>
@@ -32,670 +31,640 @@
         <div v-if="callEndedNotice" class="call-ended-toast">Call Ended</div>
         <div class="chat-container">
           <div
-            v-for="(msg, index) in messages"
-            :key="index"
-            :class="['message', msg.side === 'user' ? (msg.seen ? 'user-msg-seen' : 'user-msg') : 'other-msg']"
+            v-for="msg in messages"
+            :key="msg.id"
+            :data-message-id="msg.id"
+            :class="['message', getMessageClass(msg), {
+              'message-user': msg.side === 'user',
+              'message-other': msg.side === 'other'
+            }]"
+            style="display: flex; width: 100%; flex-direction: column; margin-bottom: 12px;"
           >
+            <!-- Reply indicator OUTSIDE msg-bubble -->
             <div
-              class="msg-bubble"
-              :class="msg.side === 'user' && msg.seen ? 'user-msg-seen' : ''"
+  v-if="msg.replyTo"
+  class="reply-indicator"
+  :style="msg.side === 'user' ? { alignSelf: 'flex-end' } : { alignSelf: 'flex-start' }"
+  @click="scrollToReplyMessage(msg.replyTo)"
+  title="Click to view original message"
+>
+  <div class="reply-content">
+    <span class="reply-author">{{ getReplyAuthor(msg.replyTo) }}</span>
+    <span class="reply-text">{{ getReplyText(msg.replyTo) }}</span>
+  </div>
+</div>
+
+            <!-- Message with profile photo -->
+            <div 
+              class="message-wrapper"
+              :style="msg.side === 'user' ? { 
+                flexDirection: 'row-reverse', 
+                justifyContent: 'flex-start',
+                marginLeft: 'auto',
+                marginRight: '0'
+              } : { 
+                flexDirection: 'row',
+                justifyContent: 'flex-start',
+                marginLeft: '0',
+                marginRight: 'auto'
+              }"
             >
-              <span v-if="msg.message">{{ msg.message }}</span>
-              <img v-if="msg.photo" :src="msg.photo" alt="Message Photo" class="msg-photo" @click="openFullScreen(msg.photo)" />
-              <div v-if="msg.reactions"><span v-for="reaction in msg.reactions" :key="reaction">{{ reaction }}</span></div>
+              <!-- Profile Photo -->
+              <div class="message-profile-photo">
+                <img 
+                  :src="msg.side === 'user' ? currentUserProfilePic : profileImage" 
+                  :alt="msg.side === 'user' ? 'Your profile' : chatWith + ' profile'"
+                  class="msg-profile-img"
+                />
+              </div>
+
+              <!-- Message Bubble -->
+              <div
+                class="msg-bubble"
+                :class="getMessageClass(msg)"
+                @touchstart="handleTouchStart($event, msg)"
+                @touchmove="handleTouchMove($event, msg)"
+                @touchend="handleTouchEnd($event, msg)"
+                @contextmenu.prevent="setReplyMessage(msg)"
+              >
+                <span v-if="msg.message">{{ msg.message }}</span>
+                <img
+                  v-if="msg.photo"
+                  :src="msg.photo"
+                  alt="Message Photo"
+                  class="msg-photo"
+                  @click="openFullScreen(msg.photo)"
+                />
+                <div v-if="msg.reactions">
+                  <span v-for="reaction in msg.reactions" :key="reaction">{{ reaction }}</span>
+                </div>
+              </div>
             </div>
-            <div class="timestamp">{{ new Date(msg.timestamp).toLocaleTimeString() }}</div>
+            
+            <!-- Timestamp -->
+            <div 
+              class="timestamp" 
+              :style="msg.side === 'user' ? { 
+                alignSelf: 'flex-end', 
+                marginRight: '50px' 
+              } : { 
+                alignSelf: 'flex-start', 
+                marginLeft: '50px' 
+              }"
+            >
+              {{ new Date(msg.timestamp).toLocaleTimeString() }}
+            </div>
           </div>
         </div>
-
-        <div v-if="fullscreenImage" class="fullscreen-overlay" @click="closeFullScreen">
-          <img :src="fullscreenImage" class="fullscreen-image" />
-        </div>
-
-        <div ref="messagesEnd"></div>
       </div>
 
-      <!-- Typing Indicator -->
-      <div v-if="isTyping" id="typing-indicator">{{ chatWith }} is typing...</div>
-
-      <!-- Message Input Area -->
-      <div class="message-input-wrapper">
-        <div class="message-input-row">
-          <button @click="toggleEmojiPicker" class="emoji-button">😃</button>
-          <input type="text" class="message-field" placeholder="Type a message..." v-model="messageInput" @input="sendTypingIndicator" />
-          <input type="file" id="file-input" accept="image/*" @change="previewPhoto($event)" style="display: none;" />
-          <div class="icon-container" @click="triggerFileInput"><i class="fas fa-camera"></i></div>
-          <button @click="sendMessage" class="send-button">Send</button>
-        </div>
-        <div v-if="showEmojiPicker" class="emoji-picker">
-          <div @click="addEmoji('😊')">😊</div>
-          <div @click="addEmoji('😂')">😂</div>
-          <div @click="addEmoji('❤️')">❤️</div>
-          <div @click="addEmoji('👍')">👍</div>
-        </div>
-        <img v-if="imagePreview" :src="imagePreview" alt="Preview" class="image-preview" />
-        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+      <div v-if="fullscreenImage" class="fullscreen-overlay" @click="closeFullScreen">
+        <img :src="fullscreenImage" class="fullscreen-image" />
       </div>
 
+      <div ref="messagesEnd"></div>
     </div>
+
+    <!-- Typing Indicator -->
+    <div v-if="isTyping" id="typing-indicator">{{ chatWith }} is typing...</div>
+
+    <!-- Message Input Area -->
+    <div class="message-input-wrapper" style="z-index: 100;">
+      <!-- Reply Preview -->
+      <div v-if="replyMessage" class="reply-preview">
+        <div class="reply-preview-content">
+          <div class="reply-preview-header">
+            <span class="reply-to">Replying to {{ getReplyAuthor(replyMessage) }}</span>
+            <button @click="cancelReply" class="cancel-reply">×</button>
+          </div>
+          <div class="reply-preview-text">{{ getReplyText(replyMessage) }}</div>
+        </div>
+      </div>
+
+      <div class="message-input-row">
+        <button @click="toggleEmojiPicker" class="emoji-button">😃</button>
+        <input
+          type="text"
+          class="message-field"
+          :placeholder="replyMessage ? 'Reply to message...' : 'Type a message...'"
+          v-model="messageInput"
+          @input="sendTypingIndicator"
+          @keydown.enter="sendMessage"
+        />
+        <input type="file" id="file-input" accept="image/*" @change="previewPhoto($event)" style="display: none;" />
+        <div class="icon-container" @click="triggerFileInput"><i class="fas fa-camera"></i></div>
+        <button @click="sendMessage" class="send-button">Send</button>
+      </div>
+
+      <div v-if="showEmojiPicker" class="emoji-picker">
+        <div @click="addEmoji('😊')">😊</div>
+        <div @click="addEmoji('😂')">😂</div>
+        <div @click="addEmoji('❤️')">❤️</div>
+        <div @click="addEmoji('👍')">👍</div>
+      </div>
+
+      <img v-if="imagePreview" :src="imagePreview" alt="Preview" class="image-preview" />
+      <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
     </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useWebRTC } from './useWebRTC.js'
+import { updateRecentChat, incrementUnreadCount } from './recents.js'
 
-// Props
-const props = defineProps({
-  userId: String,
-  username: String
-})
-
-// Router composables
+const props = defineProps({ userId: String, username: String })
 const route = useRoute()
 const router = useRouter()
 
-// Reactive data
 const messages = ref([])
 const messageInput = ref('')
 const imagePreview = ref(null)
 const fullscreenImage = ref(null)
 const errorMessage = ref('')
-const loggedInUsername = ref('')
-const chatWith = ref('')
-const profileImage = ref('')
-const ablyApiKey = ref('H3Idqw.EWX83w:6cA01tWKUZxX9F1D1bWfE0rR_Tj7nQKCdkG2TGlTdhE')
 const isTyping = ref(false)
 const showEmojiPicker = ref(false)
 const replyMessage = ref(null)
-const ably = ref(null)
-const isOtherUserOnline = ref(false)
-const inCall = ref(false)
-const incomingCall = ref(false)
-const incomingOffer = ref(null)
-const rtcChannel = ref(null)
-const callEndedNotice = ref(false)
-const peerConnection = ref(null)
-const localStream = ref(null)
-const remoteStream = ref(null)
 const currentUserId = ref('')
 const chatWithId = ref('')
+const chatWith = ref('')
+const profileImage = ref('')
+const currentUserProfilePic = ref('')
 
-// Refs for template elements
-const localVideo = ref(null)
-const remoteVideo = ref(null)
+let scrollCheckInterval = null
+let typingTimeout = null
+let typingCooldown = null
 
-// Watchers
-watch(isOtherUserOnline, (newStatus) => {
-  updateChatboxColor()
+const webRTC = useWebRTC()
+const { connectionStatus, isOtherUserOnline, inCall, incomingCall, localVideo, remoteVideo, 
+        startCall, acceptCall, rejectCall, endCall, sendTypingIndicator, cleanup: cleanupWebRTC } = webRTC
+
+const emit = defineEmits(['go-back', 'message-sent', 'message-received'])
+
+const scrollToBottom = () => nextTick(() => {
+  const container = document.getElementById('messages-container')
+  container && (container.scrollTop = container.scrollHeight)
 })
 
-// Methods
-const goBack = () => {
-  router.push('/chat/world')
+const isCurrentUserMessage = (msg) => String(msg.senderId) === String(currentUserId.value) || String(msg.username) === String(currentUserId.value)
+
+const isElementInViewport = (el, container) => {
+  const rect = el.getBoundingClientRect()
+  const containerRect = container.getBoundingClientRect()
+  return rect.top >= containerRect.top && rect.bottom <= containerRect.bottom
 }
 
-const sendTypingIndicator = () => {
-  const typingPayload = { typing: true, senderId: currentUserId.value }
-  ably.value.channels.get(`chat-${currentUserId.value}-${chatWithId.value}`).publish('typing', typingPayload)
-  ably.value.channels.get(`chat-${chatWithId.value}-${currentUserId.value}`).publish('typing', typingPayload)
+const getMessageClass = (msg) => {
+  const isUser = isCurrentUserMessage(msg)
+  return isUser ? (msg.seen ? 'user-msg-seen' : 'user-msg') : (msg.seen ? 'other-msg-seen' : 'other-msg')
 }
 
-const openFullScreen = (imageUrl) => {
-  fullscreenImage.value = imageUrl
+window.webrtcMessageHandler = (message) => {
+  const { type, data, payload } = message
+  const actualData = payload || data
+  
+  if (type === 'newMessage') handleNewMessage(actualData)
+  else if (type === 'typing') handleTypingIndicator(actualData)
+  else if (type === 'messageSeenAcknowledgment') handleMessageSeen(actualData)
 }
 
-const closeFullScreen = () => {
-  fullscreenImage.value = null
+const updateRecentChatsAPI = (messageData) => {
+  if (!currentUserId.value || !chatWithId.value) return
+
+  const chatData = {
+    userId: chatWithId.value, username: chatWith.value,
+    profile_picture: profileImage.value || 'default-pfp.jpg',
+    lastMessage: messageData.message, lastSeen: messageData.timestamp,
+    unreadCount: messageData.isIncoming ? 1 : 0, isOnline: isOtherUserOnline.value,
+  }
+
+  updateRecentChat(currentUserId.value, chatData)
+
+  if (messageData.isIncoming && (localStorage.getItem('chatWithId') !== chatWithId.value || !route.path.includes('chat'))) {
+    incrementUnreadCount(currentUserId.value, chatWithId.value)
+  }
 }
 
-const setupIncomingCallListener = async () => {
-  const incomingChannel = ably.value.channels.get(`rtc-${chatWith.value}-${loggedInUsername.value}`)
+const handleNewMessage = (incomingMsg) => {
+  if (isCurrentUserMessage(incomingMsg) || messages.value.some(msg => msg.id === incomingMsg.id)) return
 
-  incomingChannel.subscribe('offer', async (message) => {
-    incomingOffer.value = message.data
-    incomingCall.value = true
-    rtcChannel.value = ably.value.channels.get(`rtc-${loggedInUsername.value}-${chatWith.value}`)
+  messages.value.push({ ...incomingMsg, side: 'other', seen: false })
+  
+  const lastText = incomingMsg.message || (incomingMsg.photo ? '[Photo]' : '')
+  updateRecentChatsAPI({ message: lastText, timestamp: incomingMsg.timestamp, isIncoming: true })
+  
+  emit('message-received', {
+    senderId: incomingMsg.senderId, message: lastText, timestamp: incomingMsg.timestamp,
+    senderUsername: chatWith.value, senderProfilePicture: profileImage.value || 'default-pfp.jpg'
   })
-
-  incomingChannel.subscribe('call-ended', () => {
-    endCall()
+  
+  nextTick(() => {
+    scrollToBottom()
+    setTimeout(checkUnseenMessagesInView, 100)
   })
 }
 
-const acceptCall = async () => {
-  if (!incomingOffer.value) return
-
-  incomingCall.value = false
-  await prepareCallAsReceiver(incomingOffer.value)
-  incomingOffer.value = null
+const handleTypingIndicator = (data) => {
+  if (String(data.senderId) !== String(chatWithId.value)) return
+  
+  isTyping.value = data.typing
+  clearTimeout(typingTimeout)
+  data.typing && (typingTimeout = setTimeout(() => isTyping.value = false, 3000))
 }
 
-const rejectCall = () => {
-  if (rtcChannel.value) {
-    rtcChannel.value.publish('call-rejected', {
-      from: loggedInUsername.value
-    })
-  }
-  incomingCall.value = false
-  incomingOffer.value = null
-}
+const scrollToReplyMessage = (replyToMessage) => {
+  if (!replyToMessage) return;
+  
+  const messageElement = document.querySelector(`[data-message-id="${replyToMessage.id}"]`);
+  if (!messageElement) return;
 
-const prepareCallAsReceiver = async (offerData) => {
-  try {
-    inCall.value = true
-    await nextTick()
-
-    const incomingChannel = ably.value.channels.get(`rtc-${chatWith.value}-${loggedInUsername.value}`)
-
-    peerConnection.value = new RTCPeerConnection({
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' }
-      ]
-    })
-
-    peerConnection.value.onicecandidate = (event) => {
-      if (event.candidate) {
-        rtcChannel.value.publish('ice-candidate', {
-          candidate: event.candidate.candidate,
-          sdpMid: event.candidate.sdpMid,
-          sdpMLineIndex: event.candidate.sdpMLineIndex
-        })
-      }
-    }
-
-    peerConnection.value.ontrack = (event) => {
-      if (!remoteStream.value) remoteStream.value = new MediaStream()
-      event.streams[0].getTracks().forEach(track => {
-        remoteStream.value.addTrack(track)
-      })
-      if (remoteVideo.value) {
-        remoteVideo.value.srcObject = remoteStream.value
-      }
-    }
-
-    const mediaConstraints = offerData.mode === 'voice'
-      ? { audio: true, video: false }
-      : { audio: true, video: true }
-
-    localStream.value = await navigator.mediaDevices.getUserMedia(mediaConstraints)
-    localStream.value.getTracks().forEach(track => {
-      peerConnection.value.addTrack(track, localStream.value)
-    })
-
-    if (localVideo.value && offerData.mode !== 'voice') {
-      localVideo.value.srcObject = localStream.value
-    }
-
-    await peerConnection.value.setRemoteDescription(new RTCSessionDescription(offerData))
-    const answer = await peerConnection.value.createAnswer()
-    await peerConnection.value.setLocalDescription(answer)
-
-    rtcChannel.value.publish('answer', {
-      type: answer.type,
-      sdp: answer.sdp
-    })
-
-    incomingChannel.subscribe('ice-candidate', async (message) => {
-      try {
-        await peerConnection.value.addIceCandidate(new RTCIceCandidate(message.data))
-      } catch (err) {
-        console.error("❄️ ICE error (receiver):", err)
-      }
-    })
-
-  } catch (error) {
-    console.error("❌ Error in prepareCallAsReceiver:", error)
-    endCall()
-  }
-}
-
-const startCall = async (mode = 'video') => {
-  try {
-    inCall.value = true
-    await nextTick()
-
-    rtcChannel.value = ably.value.channels.get(`rtc-${loggedInUsername.value}-${chatWith.value}`)
-    const remoteRtcChannel = ably.value.channels.get(`rtc-${chatWith.value}-${loggedInUsername.value}`)
-
-    peerConnection.value = new RTCPeerConnection({
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' }
-      ]
-    })
-
-    peerConnection.value.onicecandidate = (event) => {
-      if (event.candidate) {
-        rtcChannel.value.publish('ice-candidate', {
-          candidate: event.candidate.candidate,
-          sdpMid: event.candidate.sdpMid,
-          sdpMLineIndex: event.candidate.sdpMLineIndex
-        })
-      }
-    }
-
-    const mediaConstraints = mode === 'voice'
-      ? { audio: true, video: false }
-      : { audio: true, video: true }
-
-    localStream.value = await navigator.mediaDevices.getUserMedia(mediaConstraints)
-    localStream.value.getTracks().forEach(track => {
-      peerConnection.value.addTrack(track, localStream.value)
-    })
-
-    if (localVideo.value && mode !== 'voice') {
-      localVideo.value.srcObject = localStream.value
-    }
-
-    remoteStream.value = new MediaStream()
-    if (remoteVideo.value) {
-      remoteVideo.value.srcObject = remoteStream.value
-    }
-
-    peerConnection.value.ontrack = (event) => {
-      event.streams[0].getTracks().forEach(track => {
-        remoteStream.value.addTrack(track)
-      })
-    }
-
-    remoteRtcChannel.subscribe('answer', async (message) => {
-      await peerConnection.value.setRemoteDescription(new RTCSessionDescription(message.data))
-    })
-
-    remoteRtcChannel.subscribe('ice-candidate', async (message) => {
-      try {
-        await peerConnection.value.addIceCandidate(new RTCIceCandidate(message.data))
-      } catch (err) {
-        console.error("❄️ ICE error (caller):", err)
-      }
-    })
-
-    remoteRtcChannel.subscribe('call-rejected', () => {
-      alert(`${chatWith.value} rejected the call.`)
-      endCall()
-    })
-
-    const isCaller = loggedInUsername.value.localeCompare(chatWith.value) < 0
-    if (isCaller) {
-      const offer = await peerConnection.value.createOffer()
-      await peerConnection.value.setLocalDescription(offer)
-
-      rtcChannel.value.publish('offer', {
-        type: offer.type,
-        sdp: offer.sdp,
-        mode
-      })
-    }
-
-  } catch (error) {
-    console.error("❌ Error starting call:", error)
-    endCall()
-  }
-}
-
-const endCall = () => {
-  if (rtcChannel.value) {
-    rtcChannel.value.publish('call-ended', { from: loggedInUsername.value })
-  }
-
-  if (peerConnection.value) {
-    peerConnection.value.close()
-    peerConnection.value = null
-  }
-
-  if (localStream.value) {
-    localStream.value.getTracks().forEach(track => track.stop())
-    localStream.value = null
-  }
-
-  if (remoteStream.value) {
-    remoteStream.value.getTracks().forEach(track => track.stop())
-    remoteStream.value = null
-  }
-
-  inCall.value = false
-
-  if (localVideo.value) localVideo.value.srcObject = null
-  if (remoteVideo.value) remoteVideo.value.srcObject = null
-
-  if (rtcChannel.value) {
-    rtcChannel.value.detach()
-    rtcChannel.value = null
-  }
-
-  callEndedNotice.value = true
+  messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  messageElement.classList.add('reply-highlight-animation');
+  
   setTimeout(() => {
-    callEndedNotice.value = false
-  }, 3000)
+    messageElement.classList.remove('reply-highlight-animation');
+  }, 2000);
+};
+
+const handleMessageSeen = (data) => {
+  const msg = messages.value.find(m => m.id === data.messageId || m.id === data.id)
+  msg && (msg.seen = true)
 }
 
 const sendMessage = async () => {
-  if (messageInput.value.trim() || imagePreview.value) {
-    const tempTimestamp = new Date().toISOString()
-    const tempMessage = {
-      username: currentUserId.value,
-      chatWith: chatWithId.value,
-      message: messageInput.value.trim(),
-      timestamp: tempTimestamp,
-      photo: imagePreview.value || null,
-      side: 'user',
-      replyTo: replyMessage.value || null,
-      seen: false,
-    }
-
-    messages.value.push(tempMessage)
-    messageInput.value = ''
-    imagePreview.value = null
-    replyMessage.value = null
-
-    const savedMessage = await sendToServer(tempMessage)
-    if (savedMessage?.id) {
-      const index = messages.value.findIndex(m => m.timestamp === tempTimestamp)
-      if (index !== -1) {
-        messages.value[index] = {
-          ...savedMessage,
-          side: 'user',
-          alignmentClass: savedMessage.seen ? 'user-msg-seen' : 'user-msg',
-        }
-      }
-
-      const channelA = `chat-${currentUserId.value}-${chatWithId.value}`
-      const channelB = `chat-${chatWithId.value}-${currentUserId.value}`
-
-      ably.value.channels.get(channelA).publish('newMessage', savedMessage)
-      ably.value.channels.get(channelB).publish('newMessage', savedMessage)
-    }
-  } else {
+  if (!messageInput.value.trim() && !imagePreview.value) {
     errorMessage.value = 'Please type a message or select an image'
-  }
-}
-
-const sendToServer = async (messageData) => {
-  try {
-    const res = await fetch('https://social-five-beta.vercel.app/api/message', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(messageData),
-    })
-    const result = await res.json()
-    return result.message
-  } catch (err) {
-    errorMessage.value = 'Error sending message to server'
-    console.error(err)
-  }
-}
-
-const markAsSeen = (id) => {
-  const message = messages.value.find(msg => msg.id === id)
-  if (!message || message.senderId === currentUserId.value || message.side === 'user' || message.seen) return
-
-  fetch('https://social-five-beta.vercel.app/api/message', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: message.id }),
-  })
-    .then(() => {
-      ably.value.channels.get(`chat-${chatWithId.value}-${currentUserId.value}`)
-        .publish('messageSeenAcknowledgment', { id: message.id })
-    })
-    .catch(err => {
-      console.error('❌ Error updating seen status:', err)
-    })
-
-  message.seen = true
-  message.alignmentClass = 'user-msg-seen'
-}
-
-const previewPhoto = (event) => {
-  const file = event.target.files[0]
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    imagePreview.value = e.target.result
-  }
-  reader.readAsDataURL(file)
-}
-
-const toggleEmojiPicker = () => {
-  showEmojiPicker.value = !showEmojiPicker.value
-}
-
-const addEmoji = (emoji) => {
-  messageInput.value += emoji
-  showEmojiPicker.value = false
-}
-
-const triggerFileInput = () => {
-  document.getElementById('file-input').click()
-}
-
-const checkUnseenMessagesInView = () => {
-  messages.value.forEach(msg => {
-    if (msg.senderId === currentUserId.value || msg.seen) return
-    const el = document.querySelector(`[data-message-id="${msg.id}"]`)
-    if (el && isElementInViewport(el)) {
-      markAsSeen(msg.id)
-    }
-  })
-}
-
-const isElementInViewport = (el) => {
-  const rect = el.getBoundingClientRect()
-  return (
-    rect.top >= 0 &&
-    rect.left >= 0 &&
-    rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-    rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-  )
-}
-
-const updateChatboxColor = () => {
-  nextTick(() => {
-    const chatboxContainer = document.getElementById('chatbox-container')
-    const chatHeader = document.getElementById('header')
-    if (!chatboxContainer || !chatHeader) return
-
-    if (isOtherUserOnline.value) {
-      chatboxContainer.style.background = 'linear-gradient(90deg, #0d102f, #6a00f4, #f4f9ff)'
-      chatHeader.style.background = 'radial-gradient(circle, #0d102f, #3b00d3, #a371f7)'
-    } else {
-      chatboxContainer.style.background = ''
-      chatHeader.style.backgroundColor = ''
-    }
-  })
-}
-
-// Lifecycle hooks
-onMounted(() => {
-  const currentUserIdFromStorage = localStorage.getItem('userId')
-  const loggedInUsernameFromStorage = localStorage.getItem('username')
-  const profileImageFromStorage = localStorage.getItem('profileImage') || 'pfp3.jpg'
-
-  const chatWithFromStorage = props.username || localStorage.getItem('chatWith')
-  const chatWithIdFromStorage = props.userId || localStorage.getItem('chatWithId')
-
-  if (currentUserIdFromStorage && chatWithIdFromStorage && chatWithFromStorage && loggedInUsernameFromStorage) {
-    currentUserId.value = currentUserIdFromStorage
-    chatWithId.value = chatWithIdFromStorage
-    loggedInUsername.value = loggedInUsernameFromStorage
-    chatWith.value = chatWithFromStorage
-    profileImage.value = profileImageFromStorage
-
-    localStorage.removeItem('chatWith')
-    localStorage.removeItem('chatWithId')
-  } else {
-    alert('Missing chat data. Please select a user to chat with.')
-    router.push('/')
     return
   }
 
-  ably.value = new Ably.Realtime({
-    key: ablyApiKey.value,
-    clientId: currentUserId.value,
-  })
+  const tempId = `temp-${Date.now()}-${Math.random()}`
+  const tempMessage = {
+    id: tempId, username: currentUserId.value, senderId: currentUserId.value,
+    receiverId: chatWithId.value, chatWith: chatWithId.value, message: messageInput.value.trim(),
+    timestamp: new Date().toISOString(), photo: imagePreview.value || null, side: 'user',
+    replyTo: replyMessage.value || null, seen: false
+  }
 
-  const presenceChannelName = `chat-presence-${[currentUserId.value, chatWithId.value].sort().join('-')}`
-  const presenceChannel = ably.value.channels.get(presenceChannelName)
+  messages.value.push(tempMessage)
+  const messageText = messageInput.value.trim()
+  messageInput.value = ''
+  imagePreview.value = null
+  replyMessage.value = null
+  scrollToBottom()
 
-  presenceChannel.presence.enter()
+  try {
+    const response = await fetch('https://recent-six.vercel.app/api/message', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(tempMessage)
+    })
+    const savedMessage = (await response.json()).message
 
-  presenceChannel.presence.subscribe('enter', (member) => {
-    if (member.clientId === chatWithId.value) {
-      isOtherUserOnline.value = true
+    if (savedMessage?.id) {
+      const index = messages.value.findIndex(m => m.id === tempId)
+      index !== -1 && (messages.value[index] = { ...savedMessage, side: 'user' })
+
+      webRTC.sendChatMessage({ ...savedMessage, senderId: currentUserId.value, receiverId: chatWithId.value })
+      
+      const msgText = savedMessage.message || (savedMessage.photo ? '[Photo]' : '')
+      updateRecentChatsAPI({ message: msgText, timestamp: savedMessage.timestamp, isIncoming: false })
+      
+      emit('message-sent', {
+        receiverId: chatWithId.value, message: msgText, timestamp: savedMessage.timestamp,
+        receiverUsername: chatWith.value, receiverProfilePicture: profileImage.value || 'default-pfp.jpg'
+      })
     }
-  })
+  } catch (error) {
+    errorMessage.value = 'Error sending message'
+    const index = messages.value.findIndex(m => m.id === tempId)
+    index !== -1 && messages.value.splice(index, 1)
+    messageInput.value = messageText
+  }
+}
 
-  presenceChannel.presence.subscribe('leave', (member) => {
-    if (member.clientId === chatWithId.value) {
-      isOtherUserOnline.value = false
-    }
-  })
+const markAsSeen = async (messageId) => {
+  const message = messages.value.find(msg => msg.id === messageId)
+  if (!message || isCurrentUserMessage(message) || message.seen) return
 
-  presenceChannel.presence.get((err, members) => {
-    if (err) {
-      console.error("Presence error:", err)
-      return
-    }
-    const isOnline = members.some(m => m.clientId === chatWithId.value)
-    isOtherUserOnline.value = isOnline
-  })
+  try {
+    await fetch('https://recent-six.vercel.app/api/message', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messageIds: [messageId], chatWith: chatWithId.value, currentUser: currentUserId.value })
+    })
+    webRTC.sendMessageSeen(messageId)
+    message.seen = true
+  } catch (error) {
+    console.error('Error marking message as seen:', error)
+  }
+}
 
-  const otherUserChannel = ably.value.channels.get(`chat-${chatWithId.value}-${currentUserId.value}`)
-  otherUserChannel.subscribe('newMessage', (message) => {
-    const incomingMsg = message.data
-    if (incomingMsg.senderId == currentUserId.value) return
+const loadMessages = async () => {
+  try {
+    const response = await fetch(`https://recent-six.vercel.app/api/message?username=${currentUserId.value}&chatWith=${chatWithId.value}`)
+    const data = await response.json()
+    
+    if (Array.isArray(data.messages)) {
+      messages.value = data.messages.map(msg => {
+        const senderId = msg.senderId || msg.username
+        const isCurrentUser = isCurrentUserMessage(msg)
+        return {
+          ...msg, senderId, side: isCurrentUser ? 'user' : 'other',
+          timestamp: msg.timestamp || new Date().toISOString()
+        }
+      })
 
-    const alreadyExists = messages.value.some(msg => msg.id === incomingMsg.id)
-    if (alreadyExists) return
-
-    const receivedMessage = {
-      ...incomingMsg,
-      side: 'other',
-      seen: false,
-    }
-
-    messages.value.push(receivedMessage)
-
-    if (messages.value.length > 0) {
+      await markAllUnseenAsSeen()
+      
       const last = messages.value[messages.value.length - 1]
-      const lastText = last.message || (last.photo ? '[Photo]' : '')
-      const key = `lastMessage-${chatWithId.value}`
-      localStorage.setItem(key, lastText)
-    }
-
-    nextTick(() => {
-      checkUnseenMessagesInView()
-    })
-  })
-
-  const senderChannel = ably.value.channels.get(`chat-${currentUserId.value}-${chatWithId.value}`)
-  senderChannel.subscribe('messageSeenAcknowledgment', (message) => {
-    const messageId = message.data.id
-    const msg = messages.value.find(m => m.id === messageId)
-    if (msg) {
-      msg.seen = true
-      msg.alignmentClass = 'user-msg-seen'
-    }
-  })
-
-  fetch(`https://social-five-beta.vercel.app/api/message?username=${currentUserId.value}&chatWith=${chatWithId.value}`)
-    .then((response) => response.json())
-    .then((data) => {
-      if (Array.isArray(data.messages)) {
-        const alignedMessages = data.messages.map((msg) => ({
-          ...msg,
-          alignmentClass: msg.senderId == currentUserId.value ? 'user-msg' : 'other-msg',
-        }))
-
-        messages.value = alignedMessages
-
-        if (messages.value.length > 0) {
-          const last = messages.value[messages.value.length - 1]
-          const lastText = last.message || (last.photo ? '[Photo]' : '')
-          const key = `lastMessage-${chatWithId.value}`
-          localStorage.setItem(key, lastText)
-        }
-
-        nextTick(() => {
-          const chatboxContainer = document.getElementById('messages-container')
-          if (chatboxContainer) {
-            chatboxContainer.scrollTop = chatboxContainer.scrollHeight
-          }
-        })
-
-        const unseenMessages = alignedMessages.filter(
-          msg => msg.senderId != currentUserId.value && !msg.seen
-        )
-
-        if (unseenMessages.length > 0) {
-          setTimeout(() => {
-            checkUnseenMessagesInView()
-          }, 200)
-        }
+      if (last) {
+        const lastText = last.message || (last.photo ? '[Photo]' : '')
+        lastText && updateRecentChatsAPI({ message: lastText, timestamp: last.timestamp, isIncoming: false })
       }
-    })
-    .catch(() => {
-      errorMessage.value = 'Error loading messages'
+
+      nextTick(() => {
+        scrollToBottom()
+        setupScrollListener()
+        setTimeout(checkUnseenMessagesInView, 1000)
+      })
+    }
+  } catch (error) {
+    errorMessage.value = 'Error loading messages'
+  }
+}
+
+const markAllUnseenAsSeen = async () => {
+  const unseenMessages = messages.value.filter(msg => !isCurrentUserMessage(msg) && !msg.seen)
+  if (!unseenMessages.length) return
+
+  try {
+    await fetch('https://recent-six.vercel.app/api/message', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messageIds: unseenMessages.map(msg => msg.id), chatWith: chatWithId.value, currentUser: currentUserId.value })
     })
 
-  window.addEventListener('beforeunload', () => {
-    if (ably.value) ably.value.close()
+    unseenMessages.forEach(msg => {
+      msg.seen = true
+      webRTC.sendMessageSeen(msg.id)
+    })
+  } catch (error) {
+    console.error('Error marking messages as seen:', error)
+  }
+}
+
+const checkUnseenMessagesInView = () => {
+  const container = document.getElementById('messages-container')
+  if (!container) return
+
+  messages.value
+    .filter(msg => !isCurrentUserMessage(msg) && !msg.seen)
+    .forEach(msg => {
+      const el = document.querySelector(`[data-message-id="${msg.id}"]`)
+      el && isElementInViewport(el, container) && markAsSeen(msg.id)
+    })
+}
+
+const setupScrollListener = () => {
+  nextTick(() => {
+    const container = document.getElementById('messages-container')
+    if (container) {
+      container.addEventListener('scroll', checkUnseenMessagesInView, { passive: true })
+      setTimeout(checkUnseenMessagesInView, 100)
+    }
+    scrollCheckInterval && clearInterval(scrollCheckInterval)
+    scrollCheckInterval = setInterval(checkUnseenMessagesInView, 2000)
   })
+}
 
-  setupIncomingCallListener()
-})
+const goBack = () => { emit('go-back'); router.push('/chat') }
+const previewPhoto = (event) => {
+  const file = event.target.files[0]
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (e) => imagePreview.value = e.target.result
+    reader.readAsDataURL(file)
+  }
+}
+const openFullScreen = (imageUrl) => fullscreenImage.value = imageUrl
+const closeFullScreen = () => fullscreenImage.value = null
+const toggleEmojiPicker = () => showEmojiPicker.value = !showEmojiPicker.value
+const addEmoji = (emoji) => { messageInput.value += emoji; showEmojiPicker.value = false }
+const triggerFileInput = () => document.getElementById('file-input')?.click()
 
-onUnmounted(() => {
-  if (ably.value) {
-    ably.value.close()
+// Touch/swipe variables
+let touchStartX = 0
+let touchStartY = 0
+let touchStartTime = 0
+
+// Reply functions
+const setReplyMessage = (msg) => {
+  replyMessage.value = msg
+  document.querySelector('.message-field')?.focus()
+}
+
+const cancelReply = () => replyMessage.value = null
+
+const getReplyAuthor = (replyMsg) => {
+  if (!replyMsg) return ''
+  return isCurrentUserMessage(replyMsg) ? 'You' : chatWith.value
+}
+
+const getReplyText = (replyMsg) => {
+  if (!replyMsg) return ''
+  return replyMsg.message || (replyMsg.photo ? '[Photo]' : '[Message]')
+}
+
+// Touch handlers for swipe-to-reply
+const handleTouchStart = (event, msg) => {
+  const touch = event.touches[0]
+  touchStartX = touch.clientX
+  touchStartY = touch.clientY
+  touchStartTime = Date.now()
+}
+
+const handleTouchMove = (event, msg) => {
+  if (!touchStartX) return
+  
+  const touch = event.touches[0]
+  const deltaX = touch.clientX - touchStartX
+  const deltaY = touch.clientY - touchStartY
+  
+  // Show reply indicator if swiping right significantly
+  if (deltaX > 50 && Math.abs(deltaY) < 30) {
+    event.currentTarget.style.transform = `translateX(${Math.min(deltaX, 100)}px)`
+    event.currentTarget.style.opacity = Math.max(0.7, 1 - deltaX / 200)
+  }
+}
+
+const handleTouchEnd = (event, msg) => {
+  if (!touchStartX) return
+  
+  const touch = event.changedTouches[0]
+  const deltaX = touch.clientX - touchStartX
+  const deltaY = touch.clientY - touchStartY
+  const deltaTime = Date.now() - touchStartTime
+  
+  // Reset transform
+  event.currentTarget.style.transform = ''
+  event.currentTarget.style.opacity = ''
+  
+  // If swiped right more than 100px, set as reply
+  if (deltaX > 100 && Math.abs(deltaY) < 50 && deltaTime < 1000) {
+    setReplyMessage(msg)
+  }
+  
+  touchStartX = 0
+  touchStartY = 0
+  touchStartTime = 0
+}
+
+const handleStartCall = (mode = 'video') => startCall(mode)
+const handleAcceptCall = () => acceptCall()
+const handleRejectCall = () => rejectCall()
+const handleEndCall = () => endCall()
+window.onCallRejected = () => alert(`${chatWith.value} rejected the call.`)
+
+watch(isOtherUserOnline, () => nextTick(() => {
+  const chatBox = document.querySelector('.chat-box')
+  const chatHeader = document.querySelector('.chat-header')
+  const container = document.getElementById('messages-container')
+  
+  if (isOtherUserOnline.value) {
+    chatBox && (chatBox.style.background = 'linear-gradient(90deg, #0d102f, #6a00f4, #f4f9ff)')
+    chatHeader && (chatHeader.style.background = 'radial-gradient(circle, #0d102f, #3b00d3, #a371f7)')
+    if (container) {
+      container.style.background = 'linear-gradient(135deg, #2d1b69 0%, #11998e 100%)'
+      container.style.border = '2px solid rgba(106, 0, 244, 0.3)'
+      container.style.boxShadow = '0 4px 15px rgba(106, 0, 244, 0.2)'
+    }
+  } else {
+    chatBox && (chatBox.style.background = '')
+    chatHeader && (chatHeader.style.background = '')
+    if (container) {
+      container.style.background = '#000'
+      container.style.border = ''
+      container.style.boxShadow = ''
+    }
+  }
+}), { immediate: true })
+
+watch(messageInput, (newValue, oldValue) => {
+  if (newValue && newValue !== oldValue && connectionStatus.value === 'connected' && !typingCooldown) {
+    sendTypingIndicator(true)
+    typingCooldown = true
+    setTimeout(() => typingCooldown = false, 1000)
   }
 })
 
-// Expose methods and data for template usage
-defineExpose({
-  goBack,
-  sendMessage,
-  sendTypingIndicator,
-  openFullScreen,
-  closeFullScreen,
-  startCall,
-  endCall,
-  acceptCall,
-  rejectCall,
-  previewPhoto,
-  toggleEmojiPicker,
-  addEmoji,
-  triggerFileInput,
-  markAsSeen,
-  // Reactive data
-  messages,
-  messageInput,
-  imagePreview,
-  fullscreenImage,
-  errorMessage,
-  loggedInUsername,
-  chatWith,
-  profileImage,
-  isTyping,
-  showEmojiPicker,
-  replyMessage,
-  isOtherUserOnline,
-  inCall,
-  incomingCall,
-  callEndedNotice,
-  // Template refs
-  localVideo,
-  remoteVideo
+onMounted(async () => {
+  currentUserId.value = localStorage.getItem('userId')
+  chatWith.value = props.username || localStorage.getItem('chatWith')
+  chatWithId.value = props.userId || localStorage.getItem('chatWithId')
+  profileImage.value = localStorage.getItem('profileImage') || 'default-pfp.jpg'
+  currentUserProfilePic.value = localStorage.getItem('profilePic') || 'default-pfp.jpg'
+  
+  // Debug: Confirm the values are set
+  console.log('currentUserProfilePic set to:', currentUserProfilePic.value)
+  console.log('profileImage set to:', profileImage.value)
+
+  await loadMessages()
+  await webRTC.init(currentUserId.value, chatWithId.value, 'wss://chat-server-2-hw1i.onrender.com')
+  setTimeout(() => webRTC.subscribeToChannels(), 300)
+
+  const handleVisibilityChange = () => {
+    if (!document.hidden && connectionStatus.value !== 'connected') {
+      webRTC.reconnectWebSocket('wss://chat-server-2-hw1i.onrender.com')
+      setTimeout(() => { checkUnseenMessagesInView(); markAllUnseenAsSeen() }, 500)
+    }
+  }
+
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+  window.addEventListener('beforeunload', () => webRTC.leavePresence())
 })
+
+onUnmounted(() => {
+  scrollCheckInterval && clearInterval(scrollCheckInterval)
+  typingTimeout && clearTimeout(typingTimeout)
+  cleanupWebRTC()
+  
+  const container = document.getElementById('messages-container')
+  container && container.removeEventListener('scroll', checkUnseenMessagesInView)
+  
+  delete window.webrtcMessageHandler
+  delete window.onCallRejected
+})
+
+const isConnected = computed(() => connectionStatus.value === 'connected')
 </script>
 <style src="./Chatbox.css"></style>
+
 <style scoped>
-.msg-bubble{background-color:var(--bg-secondary);color:var(--text-secondary);padding:0.55rem 0.85rem;border-radius:1.5rem;line-height:1.5;word-break:break-word;box-shadow:0 2px 2px rgba(0,0,0,0.2);max-width:100%}
-.user-msg{align-self:flex-end}
-.other-msg{align-self:flex-start}
-.msg-bubble.user-msg-seen,.user-msg-seen{align-self:flex-end;background-color:var(--accent-light-blue);color:var(--bg-primary);border-radius:12px 12px 0 12px}
-.message-content{line-height:1.4;word-wrap:break-word}
-.timestamp{font-size:0.75rem;color:var(--text-muted);margin-top:4px}</style>
+.reply-indicator {
+  background-color: #111;             /* Slightly lighter than body */
+  border-left: 3px solid #5a9cff;     /* Accent color to indicate a reply */
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  max-width: 75%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9em;
+  opacity: 0.95;                      /* Slight transparency for subtle effect */
+}
+.reply-content {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* ← Adds space between author and text */
+}
+
+.reply-author {
+  color: #9ecbff;              /* Soft blue for author */
+  font-size: 16px;
+}
+
+.reply-text {
+  color: #9ecbff8d;              /* Light gray for message */
+  font-size: 14 px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+.message-wrapper {
+  display: flex;
+  align-items: flex-end;
+  max-width: 80%;
+  margin-bottom: 4px;
+}
+.message-profile-photo {
+  display: flex;
+  align-items: flex-end;
+  margin: 0 8px;
+}
+
+.msg-profile-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ddd;
+  background-color: #f0f0f0;
+}
+.reply-highlight-animation {
+  animation: replyHighlight 1.2s ease-out;
+}
+
+@keyframes replyHighlight {
+  0% {
+    background-color: rgba(255, 255, 255, 0.08); /* soft white highlight */
+  }
+  50% {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+</style>
+
