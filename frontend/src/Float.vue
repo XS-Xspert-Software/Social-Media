@@ -167,16 +167,21 @@ function togglePanel() {
 
 // Handle input & detect tags/hashtags
 function handleInput() {
+  if (!contentEditable.value) return
+
   postText.value = contentEditable.value.innerText
 
-  const sel = window.getSelection()
-  const caretOffset = sel?.anchorOffset || 0
-  const textUpToCaret = postText.value.slice(0, caretOffset)
+  // Get caret offset relative to plain text
+  const caretPos = getCaretCharacterOffsetWithin(contentEditable.value)
+
+  // Regex to detect trigger (@ or #) and the current word
+  const textUpToCaret = postText.value.slice(0, caretPos)
   const match = textUpToCaret.match(/(?:^|\s)([@#])(\w*)$/)
 
   currentTrigger.value = match ? match[1] : null
   currentWord.value = match ? match[2] : ''
 
+  // Split text into words and rebuild html with span wrapping tags
   const words = postText.value.split(/(\s+)/)
   let html = ''
   words.forEach(word => {
@@ -185,14 +190,17 @@ function handleInput() {
     } else if (word.match(/^#\w+$/)) {
       html += `<span class="hashtag">${word}</span>`
     } else {
-      html += word
+      // escape HTML special characters in normal text for safety
+      html += escapeHtml(word)
     }
   })
 
+  // Only update innerHTML if changed to avoid infinite loop
   if (contentEditable.value.innerHTML !== html) {
-    const position = getCaretPosition()
     contentEditable.value.innerHTML = html
-    setCaretPosition(position)
+
+    // Restore caret position correctly
+    setCaretCharacterOffsetWithin(contentEditable.value, caretPos)
   }
 }
 
@@ -209,6 +217,13 @@ function handlePaste(event) {
   document.execCommand('insertText', false, text)
 }
 
+// Utility: Escape HTML characters for safety
+function escapeHtml(text) {
+  const div = document.createElement('div')
+  div.textContent = text
+  return div.innerHTML
+}
+
 function placeCaretAtEnd(el) {
   const range = document.createRange()
   const sel = window.getSelection()
@@ -216,6 +231,53 @@ function placeCaretAtEnd(el) {
   range.collapse(false)
   sel.removeAllRanges()
   sel.addRange(range)
+}
+
+// Caret position helpers
+function getCaretCharacterOffsetWithin(element) {
+  const selection = window.getSelection()
+  let caretOffset = 0
+  if (selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0)
+    const preCaretRange = range.cloneRange()
+    preCaretRange.selectNodeContents(element)
+    preCaretRange.setEnd(range.endContainer, range.endOffset)
+    caretOffset = preCaretRange.toString().length
+  }
+  return caretOffset
+}
+
+function setCaretCharacterOffsetWithin(element, offset) {
+  const range = document.createRange()
+  const sel = window.getSelection()
+
+  let currentNode = null
+  let currentOffset = 0
+
+  const treeWalker = document.createTreeWalker(
+    element,
+    NodeFilter.SHOW_TEXT,
+    null,
+    false
+  )
+
+  while (treeWalker.nextNode()) {
+    const node = treeWalker.currentNode
+    if (offset <= node.length) {
+      currentNode = node
+      currentOffset = offset
+      break
+    } else {
+      offset -= node.length
+    }
+  }
+
+  if (currentNode) {
+    range.setStart(currentNode, currentOffset)
+    range.collapse(true)
+    sel.removeAllRanges()
+    sel.addRange(range)
+  }
 }
 
 // Extract tags/hashtags
@@ -412,28 +474,13 @@ async function createGroup() {
 // Reset form
 function resetForm() {
   postText.value = ''
-  contentEditable.value.innerHTML = ''
+  if (contentEditable.value) contentEditable.value.innerHTML = ''
   imagePreview.value = null
   imageData.value = null
   uploadedImage.value = null
   if (fileInput.value) fileInput.value.value = ''
 }
 
-// Placeholder functions (preserving caret logic)
-function getCaretPosition() {
-  const sel = window.getSelection()
-  return sel?.anchorOffset || 0
-}
-
-function setCaretPosition(pos) {
-  const el = contentEditable.value
-  const range = document.createRange()
-  const sel = window.getSelection()
-  range.setStart(el.firstChild || el, pos)
-  range.collapse(true)
-  sel.removeAllRanges()
-  sel.addRange(range)
-}
 </script>
 
 
@@ -627,6 +674,25 @@ button:hover {
   color: #007bff;
 }
 </style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
 
 
 
