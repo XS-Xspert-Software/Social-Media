@@ -1,271 +1,430 @@
+<!-- Updated template section for paste-2.txt -->
 <template>
   <section class="chat-section">
     <div class="chat-container">
+      <!-- Tabs -->
       <div class="tabs">
-  <button 
-    :class="['tab-button', { active: activeSection === 'Live' }]" 
-    @click="switchSectionWithRoute('Live', '/chat/live')"
-  >
-    Live
-  </button>
-  <button 
-    :class="['tab-button', { active: activeSection === 'WorldChat' }]" 
-    @click="switchSectionWithRoute('WorldChat', '/chat/world')"
-  >
-    World
-  </button>
-  <button 
-    :class="['tab-button', { active: activeSection === 'GroupChat' }]" 
-    @click="switchSectionWithRoute('GroupChat', '/chat/groups')"
-  >
-    Groups
-  </button>
+        <button 
+          :class="['tab-button', { active: activeSection === 'Recent' }]" 
+          @click="switchSectionWithRoute('Recent', '/chat')"
+        >
+          Recent
+        </button>
+        <button 
+          :class="['tab-button', { active: activeSection === 'Friends' }]" 
+          @click="switchSectionWithRoute('Friends', '/chat/friends')"
+        >
+          Friends
+        </button>
+      </div>
+
+      <!-- Recent Chat (Default) -->
+      <div v-if="activeSection === 'Recent'" class="section">
+        <div class="chat-container" :class="{ 'side-by-side': isLargeScreen && selectedUser }">
+          <div class="sections">
+            <!-- Recent Users List -->
+            <div class="section user-list-section">
+              <div id="loading" class="loading" v-if="loading">
+                <div class="spinner"></div>
+              </div>
+
+              <div id="load-more-trigger"></div>
+              <div class="users-container">
+                <!-- Recent chats first -->
+                <div
+                  v-for="recentChat in recentChats"
+                  :key="recentChat.userId || recentChat.id"
+                  class="user-card recent-chat"
+                  @click="handleUserClick(recentChat)"
+                  style="display: flex; align-items: center; padding: 12px 16px; margin: 5px 0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);"
+                >
+                  <div class="profile-picture" style="width: 30px; height: 30px; border-radius: 30%; margin-right: 20px;">
+                    <img :src="recentChat.profile_picture || 'default-pfp.jpg'" :alt="recentChat.username + ' profile'" style="width: 100%; height: 100%; object-fit: cover;" />
+                  </div>
+                 <div class="user-info" style="flex: 1; display: flex; flex-direction: column;">
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div class="username" style="font-size: 1.05rem; color: #fff;">
+      <strong>{{ recentChat.username }}</strong>
+    </div>
+    <div class="last-seen" style="font-size: 0.75rem; color: #999;">
+      {{ formatLastSeen(recentChat.lastSeen) }}
+    </div>
+  </div>
+  <div class="last-message" style="font-size: 0.85rem; color: #ccc;">
+    {{ recentChat.lastMessage }}
+  </div>
 </div>
 
-      <!-- Live Chat (Ably) - Default section with inline logic -->
-      <div v-if="activeSection === 'Live'" class="section">
-        <div id="chat-container" style="min-height: 400px;">
-          <div id="messages" ref="messagesContainer">
-            <div v-for="message in visibleMessages" :key="message.id" class="message">
-              <div class="bubble">
-                <div class="text-row">
-                  <div class="username" :style="getUsernameStyle(message.username)">{{ message.username || 'Unknown' }}</div>
-                  <span class="message-text">{{ message.text || '[Empty Message]' }}</span>
+                  <div v-if="recentChat.unreadCount > 0" class="unread-badge" style="background: #ff4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.7rem; min-width: 18px; text-align: center;">
+                    {{ recentChat.unreadCount }}
+                  </div>
+                </div>
+
+                <!-- Separator if there are recent chats -->
+                <div v-if="recentChats.length > 0" class="separator" style="border-bottom: 1px solid #333; margin: 10px 0;"></div>
+
+                <!-- All users -->
+                <div
+                  v-for="user in filteredUsers"
+                  :key="getUserId(user)"
+                   @click="handleUserClick(user)"
+  class="user-item"
+                  style="display: flex; align-items: center; padding: 12px 16px; margin: 5px 0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);"
+                >
+                  <div class="profile-picture" style="width: 30px; height: 30px; border-radius: 30%; margin-right: 20px;">
+                    <img :src="user.profile_picture || 'default-pfp.jpg'" :alt="user.username + ' profile'" style="width: 100%; height: 100%; object-fit: cover;" />
+                  </div>
+                  <div class="username" style="font-size: 1.05rem; color: #fff;">
+                    <strong>{{ user.username }}</strong>
+                    <div v-if="user.lastMessage" style="font-size: 0.85rem; color: #ccc;">{{ user.lastMessage }}</div>
+                  </div>
                 </div>
               </div>
             </div>
+
+            <!-- Chatbox on large screens with proper event handling -->
+            <div v-if="isLargeScreen && selectedUser" class="chatbox-section" :class="{ active: isLargeScreen }">
+              <Chatbox
+                :key="`chatbox-${getUserId(selectedUser)}-${selectedUser.username}`"
+                :userId="getUserId(selectedUser)"
+                :username="selectedUser.username"
+                :chatWith="selectedUser.username"
+                :chatWithId="getUserId(selectedUser)"
+                :profileImage="selectedUser.profile_picture || 'default-pfp.jpg'"
+                @go-back="handleGoBack"
+                @message-sent="handleMessageSent"
+                @message-received="handleMessageReceived"
+                ref="chatboxComponent"
+              />
+            </div>
           </div>
-          <div id="input-container">
-            <input v-model="inputMessage" id="input-message" type="text" placeholder="Type a message..." @keyup.enter="sendMessage" @input="handleInputChange" />
-            <button id="send-button" @click="sendMessage">Send</button>
-          </div>
-          <div id="warning-message">{{ userStore.warningMessage }}</div>
         </div>
       </div>
 
-      <!-- World Chat (Users List) - Lazy loaded -->
-      <div v-if="worldChatLoaded && activeSection === 'WorldChat'" class="section">
-        <WorldChat />
-      </div>
-
-      <!-- Group Chat (lazy load only when accessed) -->
-      <div v-if="groupChatLoaded && activeSection === 'GroupChat'" class="section">
-        <GroupChat ref="groupChat" @group-click="handleGroupClick" />
+      <!-- Friends Chat -->
+      <div v-if="friendsLoaded && activeSection === 'Friends'" class="section">
+        <FriendsChat />
       </div>
     </div>
   </section>
 </template>
 
 <script>
-import { defineAsyncComponent, nextTick } from 'vue';
-import { useUserStore } from './stores/userStore';
-
-const loadAbly = () => import('ably');
+import { defineAsyncComponent } from 'vue';
+import Chatbox from './Chatbox.vue';
+import {
+  getUserId,
+  normalizeUser,
+  cacheUser,
+  fetchAllUsers,
+  updateRecentChat,
+  loadRecentChats,
+  clearUnreadCount,
+  refreshRecentChats,
+  cleanup
+} from './recents.js';
 
 export default {
   name: 'ChatSection',
   components: {
-    WorldChat: defineAsyncComponent(() => import('./WorldChat.vue')),
-    GroupChat: defineAsyncComponent(() => import('./GroupChat.vue')),
+    Chatbox,
+    FriendsChat: defineAsyncComponent(() => import('./FriendsChat.vue')),
   },
   data() {
     return {
-      activeSection: 'Live',
-      worldChatLoaded: false,
-      groupChatLoaded: false,
-      
-      // Ably Live Chat data
-      inputMessage: '',
-      messages: [],
-      visibleMessages: [],
-      sentMessages: new Set(),
-      username: localStorage.getItem('username')?.trim() || 'Unknown',
-      userColors: new Map(),
-      ably: null,
-      channel: null,
-      messageStartIndex: 0,
-      messageEndIndex: 50,
-      messageHeight: 60,
-      containerHeight: 500,
-      isScrolling: false,
-      scrollTimeout: null,
+      activeSection: 'Recent',
+      friendsLoaded: false,
+      selectedUser: null,
+      isLargeScreen: window.innerWidth >= 768,
+      recentChats: [],
+      loading: true,
+      lastKnownMessages: {},
+      currentUserId: null,
     };
   },
   computed: {
-    userStore() {
-      return useUserStore();
-    },
-    maxVisibleMessages() {
-      return Math.ceil(this.containerHeight / this.messageHeight) + 5;
+    filteredUsers() {
+      const recentUserIds = this.recentChats.map(chat => getUserId(chat));
+      const allUsers = fetchAllUsers();
+      const currentUsername = localStorage.getItem('username');
+      return allUsers.filter(user =>
+        user.username !== currentUsername &&
+        !recentUserIds.includes(getUserId(user))
+      );
     },
   },
   watch: {
     $route: {
       handler(to) {
-        // Handle direct URL navigation
         const sectionMap = {
-          '/chat/live': 'Live',
-          '/chat/world': 'WorldChat',
-          '/chat/groups': 'GroupChat'
+          '/chat': 'Recent',
+          '/chat/friends': 'Friends',
         };
-        
-        const section = sectionMap[to.path];
-        if (section && this.activeSection !== section) {
-          this.switchSection(section);
+        const newSection = sectionMap[to.path];
+        if (newSection && newSection !== this.activeSection) {
+          this.switchSection(newSection);
         }
       },
-      immediate: true
-    }
+      immediate: true,
+    },
   },
   methods: {
-    // New method that combines section switching with routing
+    getUserId,
+    normalizeUser,
+    cacheUser,
+    fetchAllUsers,
+
+    async handleUserClick(user) {
+      if (!user || !user.username) return;
+
+      const normalizedUser = normalizeUser(user);
+      const userId = getUserId(normalizedUser);
+      if (!userId) return;
+
+      // Save to recent chats via API
+      await this.saveRecentChat(normalizedUser);
+      
+      // Clear unread count
+      await this.clearUnreadCount(userId);
+
+      // Update localStorage for current chat session
+      const updates = {
+        chatWith: normalizedUser.username,
+        chatWithId: userId,
+        profileImage: normalizedUser.profile_picture || 'default-pfp.jpg',
+      };
+
+      Object.entries(updates).forEach(([key, value]) => {
+        localStorage.setItem(key, value);
+      });
+
+      if (this.isLargeScreen) {
+        this.selectedUser = normalizedUser;
+      } else {
+        this.selectedUser = null;
+        this.$router.push({
+          name: 'Chatbox',
+          params: {
+            userId: userId,
+            username: normalizedUser.username,
+          },
+        });
+      }
+    },
+
+    async saveRecentChat(user) {
+      if (!this.currentUserId) return;
+
+      const recentChat = {
+        userId: user.userId,
+        id: user.userId,
+        username: user.username || `User ${user.userId}`,
+        profile_picture: user.profile_picture || 'default-pfp.jpg',
+        lastMessage: user.lastMessage || 'Tap to start chatting',
+        lastSeen: new Date().toISOString(),
+        unreadCount: 0,
+        isOnline: user.isOnline || false,
+      };
+
+      // Update via API with batching
+      updateRecentChat(this.currentUserId, recentChat);
+      
+      // Reload recent chats to get updated list
+      await this.loadRecentChats();
+    },
+
+    async clearUnreadCount(userId) {
+      if (!this.currentUserId) return;
+      
+      try {
+        await clearUnreadCount(this.currentUserId, userId);
+        
+        // Update local state
+        const chatIndex = this.recentChats.findIndex(c => getUserId(c) === userId);
+        if (chatIndex !== -1) {
+          this.recentChats[chatIndex].unreadCount = 0;
+        }
+      } catch (error) {
+        console.error('Error clearing unread count:', error);
+      }
+    },
+
+    async loadRecentChats() {
+      if (!this.currentUserId) {
+        this.recentChats = [];
+        return;
+      }
+
+      try {
+        this.loading = true;
+        const chats = await loadRecentChats(this.currentUserId);
+        console.log('Loaded recent chats:', chats); 
+        
+        // Sort by lastSeen and limit to 10
+        this.recentChats = chats
+          .sort((a, b) => new Date(b.lastSeen) - new Date(a.lastSeen))
+          .slice(0, 10);
+      } catch (error) {
+        console.error('Error loading recent chats:', error);
+        this.recentChats = [];
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    formatLastSeen(timestamp) {
+      if (!timestamp) return '';
+      const now = new Date();
+      const lastSeen = new Date(timestamp);
+      const diff = now - lastSeen;
+
+      const minutes = Math.floor(diff / (1000 * 60));
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+      if (minutes < 1) return 'Just now';
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days === 1) return 'Yesterday';
+      if (days < 7) return `${days}d ago`;
+      return lastSeen.toLocaleDateString();
+    },
+
+    async switchSection(section) {
+      if (this.activeSection === section) return;
+      
+      this.activeSection = section;
+      
+      if (section === 'Friends') {
+        this.friendsLoaded = true;
+      } else {
+        await this.loadRecentChats();
+      }
+    },
+
     switchSectionWithRoute(section, route) {
       this.switchSection(section);
-      
-      // Update URL without triggering navigation if different
       if (this.$route.path !== route) {
         this.$router.push(route);
       }
     },
-    
-    // Keep your existing switchSection method
-    switchSection(section) {
-      if (this.activeSection === section) return;
-      this.activeSection = section;
 
-      if (section === 'WorldChat') {
-        this.worldChatLoaded = true;
-      }
+    handleResize() {
+      const wasLargeScreen = this.isLargeScreen;
+      this.isLargeScreen = window.innerWidth >= 768;
 
-      if (section === 'GroupChat') {
-        this.groupChatLoaded = true;
-        this.$nextTick(() => {
-          this.$refs.groupChat?.fetchGroups?.();
+      if (wasLargeScreen && !this.isLargeScreen && this.selectedUser) {
+        this.$router.push({
+          name: 'Chatbox',
+          params: {
+            userId: this.getUserId(this.selectedUser),
+            username: this.selectedUser.username,
+          },
         });
+        this.selectedUser = null;
       }
-  },
-    
-    handleGroupClick(group) {
-      // Handle group click if needed
-      console.log('Group clicked:', group);
     },
 
-    // Ably Live Chat methods
-    getColorForUsername(name) {
-      if (!this.userColors.has(name)) {
-        const colors = [
-          '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
-          '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
-          '#008080', '#e6beff', '#9a6324', '#800000',
-        ];
-        this.userColors.set(name, colors[Math.floor(Math.random() * colors.length)]);
-      }
-      return this.userColors.get(name);
-    },
-    getUsernameStyle(username) {
-      if (username === 'username99') {
-        return {
-          backgroundColor: '#000',
-          color: '#fff',
-          fontSize: '23px',
-          marginRight: '8px',
-          whiteSpace: 'nowrap',
-          padding: '4px 8px',
-          borderRadius: '4px',
-        };
-      }
-      return {
-        fontWeight: 'bold',
-        color: this.getColorForUsername(username),
+    // Handle incoming messages to update recent chats
+    async handleIncomingMessage(messageData) {
+      if (!this.currentUserId) return;
+
+      const chatData = {
+        userId: messageData.senderId,
+        username: messageData.senderUsername,
+        profile_picture: messageData.senderProfilePicture || 'default-pfp.jpg',
+        lastMessage: messageData.message,
+        lastSeen: messageData.timestamp,
+        unreadCount: 1, // Will be incremented properly in updateRecentChat
+        isOnline: true,
       };
+
+      // Update recent chats via API
+      updateRecentChat(this.currentUserId, chatData);
+      
+      // Reload recent chats to reflect changes
+      setTimeout(() => this.loadRecentChats(), 1000);
     },
-    appendMessage(text, username, id) {
-      if (this.sentMessages.has(id)) return;
-      this.messages.push({ text, username, id });
-      this.sentMessages.add(id);
-      this.updateVisibleMessages();
-      nextTick(() => {
-        this.scrollToBottom();
-      });
-    },
-    updateVisibleMessages() {
-      const start = Math.max(0, this.messages.length - this.maxVisibleMessages);
-      this.visibleMessages = this.messages.slice(start);
-    },
-    handleScroll() {
-      if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
-      this.isScrolling = true;
-      this.scrollTimeout = setTimeout(() => {
-        this.isScrolling = false;
-      }, 150);
-    },
-    scrollToBottom() {
-      if (this.$refs.messagesContainer && !this.isScrolling) {
-        this.$refs.messagesContainer.scrollTop = this.$refs.messagesContainer.scrollHeight;
+
+    // Handle outgoing messages to update recent chats
+    async handleOutgoingMessage(messageData) {
+      if (!this.currentUserId) return;
+
+      const chatData = {
+        userId: messageData.receiverId,
+        username: messageData.receiverUsername,
+        profile_picture: messageData.receiverProfilePicture || 'default-pfp.jpg',
+        lastMessage: messageData.message,
+        lastSeen: messageData.timestamp,
+        unreadCount: 0,
+        isOnline: false,
+      };
+
+      // Update recent chats via API
+      updateRecentChat(this.currentUserId, chatData);
+      
+      // Update local state immediately
+      const existingIndex = this.recentChats.findIndex(
+        chat => getUserId(chat) === messageData.receiverId
+      );
+
+      if (existingIndex >= 0) {
+        const existing = this.recentChats[existingIndex];
+        this.recentChats[existingIndex] = { ...existing, ...chatData };
+        
+        // Move to top
+        const [updatedChat] = this.recentChats.splice(existingIndex, 1);
+        this.recentChats.unshift(updatedChat);
+      } else {
+        this.recentChats.unshift(chatData);
       }
+
+      // Keep only 10 recent chats
+      this.recentChats = this.recentChats.slice(0, 10);
     },
-    handleInputChange() {
-      this.userStore.warningMessage = '';
-    },
-    sendMessage() {
-      const message = this.inputMessage.trim();
-      if (!message) return;
-      if (!this.username || this.username === 'Unknown') {
-        this.userStore.warningMessage = 'Please sign up before sending a message.';
-        return;
-      }
-      const messageId = Date.now() + Math.random();
-      this.appendMessage(message, this.username, messageId);
-      if (this.channel) {
-        this.channel.publish('new-message', {
-          text: message,
-          id: messageId,
-          username: this.username,
-        });
-      }
-      this.inputMessage = '';
-    },
-    async initializeAbly() {
+
+    // Refresh recent chats from API
+    async refreshRecentChats() {
+      if (!this.currentUserId) return;
+      
       try {
-        const Ably = await loadAbly();
-        this.ably = new Ably.Realtime('9frHeA.Si13Zw:KVzVyovw6hCu4RRuy6P11Tyl0h7MJIzv2Q_n4YgbNnE');
-        this.ably.connection.on('connected', () => {
-          console.log('Connected to Ably');
-          this.channel = this.ably.channels.get('chat-room');
-          this.channel.subscribe('new-message', (msg) => {
-            const { text, id, username } = msg.data;
-            if (!this.sentMessages.has(id)) {
-              this.appendMessage(text, username, id);
-            }
-          });
-        });
-        this.ably.connection.on('failed', () => {
-          console.error('Failed to connect to Ably');
-          this.userStore.warningMessage = 'Failed to connect to chat service.';
-        });
+        this.loading = true;
+        const chats = await refreshRecentChats(this.currentUserId);
+        this.recentChats = chats
+          .sort((a, b) => new Date(b.lastSeen) - new Date(a.lastSeen))
+          .slice(0, 10);
       } catch (error) {
-        console.error('Failed to load Ably:', error);
-        this.userStore.warningMessage = 'Failed to initialize chat service.';
+        console.error('Error refreshing recent chats:', error);
+      } finally {
+        this.loading = false;
       }
     },
   },
-  mounted() {
-    this.initializeAbly();
-    this.$refs.messagesContainer?.addEventListener('scroll', this.handleScroll);
-  },
+
+  async mounted() {
+    this.currentUserId = localStorage.getItem('userId');
+    await this.loadRecentChats();
+
+    window.addEventListener('resize', this.handleResize);
+
+    // Set up visibility change handler to refresh data when tab becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden && this.activeSection === 'Recent') {
+        this.refreshRecentChats();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    },
+
   beforeUnmount() {
-    if (this.channel) {
-      this.channel.unsubscribe('new-message');
-    }
-    if (this.ably) {
-      this.ably.close();
-    }
-    if (this.scrollTimeout) {
-      clearTimeout(this.scrollTimeout);
-    }
-    this.$refs.messagesContainer?.removeEventListener('scroll', this.handleScroll);
+    window.removeEventListener('resize', this.handleResize);
+    cleanup(); // Clean up pending API calls
   },
 };
 </script>
 
 <style src="./Chatbox.css"></style>
+
+
+
