@@ -7,30 +7,46 @@
     <div v-else class="full-screen-post-content" style="background: #000; height: 100%; padding: 16px; box-sizing: border-box;">
       <!-- Header Navigation -->
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center;">
-          <button class="back-btn" @click="$router.go(-1)" aria-label="Back" style="color: #fff; border: none; background: none; font-size: 32px; cursor: pointer; display: flex; align-items: center;">
-            <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-          </button>
-        </div>
-        
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <button class="bookmark-btn" @click="bookmarkPost" aria-label="Bookmark post" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
-          </button>
-          
-          <button class="share-btn" @click="sharePost" aria-label="Share post" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
-          </button>
-          
-          <div class="more-actions" style="position: relative;">
-            <button class="more-btn" @click="toggleMoreMenu" aria-label="More options" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
-            </button>
-            <div v-if="showMoreMenu" class="more-menu" style="position: absolute; top: 30px; right: 0; background: #2a2a2a; border-radius: 8px; padding: 10px; background-color: #222; min-width: 120px;">
-              <button v-if="postsStore.selectedPost.username === postsStore.loggedInUsername" @click="postsStore.editPost(postsStore.selectedPost._id, postsStore.selectedPost.username)" style="background: none; border: none; color: #ff6b6b; font-size: 14px; cursor: pointer;">Edit</button>
-              <button v-if="postsStore.selectedPost.username === postsStore.loggedInUsername" @click="postsStore.deletePost(postsStore.selectedPost._id)" style="background: none; border: none; color: #ff6b6b; font-size: 14px; cursor: pointer;">Delete</button>
-            </div>
-          </div>
+  <!-- Left: Back Button -->
+  <div style="display: flex; align-items: center;">
+    <button class="back-btn" @click="$router.go(-1)" aria-label="Back" style="color: #fff; border: none; background: none; font-size: 32px; cursor: pointer; display: flex; align-items: center;">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
+        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Right: Bookmark, Share, More Actions -->
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <!-- Bookmark Button -->
+    <button class="bookmark-btn" @click="bookmarkPost" aria-label="Bookmark post" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+      </svg>
+    </button>
+
+    <!-- Share Button -->
+    <button class="share-btn" @click="sharePost" aria-label="Share post" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+        <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+      </svg>
+    </button>
+
+    <!-- More Actions -->
+    <div class="more-actions" style="position: relative;">
+      <button class="more-btn" @click="toggleMoreMenu" aria-label="More options" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+          <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+        </svg>
+      </button>
+
+      <!-- Dropdown -->
+      <div v-if="showMoreMenu" class="more-menu" style="position: absolute; top: 30px; right: 0; background: #2a2a2a; border-radius: 8px; padding: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); min-width: 160px; z-index: 50;">
+        <button style="all:unset;display:block;padding:6px 8px;color:#fff;cursor:pointer;font-size:13px;width:100%;" @click="sharePost">Share</button>
+        <button style="all:unset;display:block;padding:6px 8px;color:#fff;cursor:pointer;font-size:13px;width:100%;" @click="bookmarkPost">Bookmark</button>
+        <button style="all:unset;display:block;padding:6px 8px;color:#ff6b6b;cursor:pointer;font-size:13px;width:100%;" @click="toggleMoreMenu">Close</button>
+      </div>
+    </div>
         </div>
       </div>
       
@@ -184,53 +200,32 @@
 <script setup>
 import { ref, onMounted, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { usePostsStore } from './stores/postsStore'
+import { usePostsStore, onBeforeUnmount } from './stores/postsStore'
 
-const route = useRoute()
-const router = useRouter()
-const postsStore = usePostsStore()
+const postsStore = usePostsStore();
+const router = useRouter();
+const route = useRoute();
+const notify = inject('notify'); // Inject notify function from App.vue
+const showMoreMenu = ref(false);
 
-const showMoreMenu = ref(false)
-const notify = inject('notify', () => {})
-
-const formatViewCount = (count) => {
-  if (count >= 1_000_000) return (count / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M'
-  if (count >= 1_000) return (count / 1_000).toFixed(1).replace(/\.0$/, '') + 'K'
-  return count.toString()
+// Initialize the store with the injected notify function
+if (notify) {
+  postsStore.initialize(notify);
 }
 
-const getUserId = () => {
-  try {
-    return sessionStorage.getItem('userId') || null
-  } catch {
-    return null
-  }
+// Navigate to Upload.vue for tweeting/replying
+function tweetPost(postId, username) {
+  router.push({ path: '/float', query: { replyToPostId: postId, replyToUsername: username } });
 }
 
-const trackPostView = async (postId) => {
-  const userId = getUserId()
-  if (!userId || !postId) return
-
-  try {
-    const response = await fetch('https://venus-ecru.vercel.app/api/views', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ postId, userId })
-    })
-
-    if (response.ok) {
-      const data = await response.json()
-      if (data.viewCount !== undefined && postsStore.selectedPost) {
-        postsStore.selectedPost.views_count = data.viewCount
-      }
-    }
-  } catch {
-    // Silently handle tracking errors
-  }
+// Route to user profile
+function redirectToUserProfile(username) {
+  router.push({ name: 'UserProfile', params: { username } });
 }
 
-const toggleMoreMenu = () => {
-  showMoreMenu.value = !showMoreMenu.value
+// Toggle more menu
+function toggleMoreMenu() {
+  showMoreMenu.value = !showMoreMenu.value;
 }
 
 const sharePost = async () => {
@@ -260,11 +255,6 @@ const sharePost = async () => {
   }
 }
 
-const bookmarkPost = () => {
-  if (postsStore.selectedPost) {
-    postsStore.toggleBookmark(postsStore.selectedPost._id)
-  }
-}
 
 onMounted(async () => {
   console.log('FullScreenPost component mounted')
@@ -306,6 +296,11 @@ onMounted(async () => {
     notify('Error loading post: ' + error.message, true)
   }
 })
+
+onBeforeUnmount(()=>{
+  window.removeEventListener('click', handleGlobalClick, { capture:true });
+  window.removeEventListener('keydown', handleEsc);
+});
 </script>
 
 <style src="./Posts.css"></style>

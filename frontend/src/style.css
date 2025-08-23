@@ -566,5 +566,12 @@ html { font-size: 15px; }
 .admin-page .admin-card .btn { background-image: linear-gradient(145deg,#1a232d,#1e2935); border: 1px solid var(--color-border-soft); color: var(--color-text-secondary); }
 .admin-page .admin-card .btn:hover { background-image: linear-gradient(145deg,#243240,#2c3e50); color: #fff; border-color: var(--color-border-strong); }
 
+.profile-menu { position:absolute; top:36px; right:0; background:#1b2330; border:1px solid var(--color-border-soft); border-radius:8px; padding:8px; min-width:140px; z-index:100; box-shadow:0 4px 16px rgba(0,0,0,.5); }
+.profile-menu button { width:100%; background:transparent; color:#fff; padding:8px 10px; text-align:left; border:none; cursor:pointer; border-radius:6px; font-size:13px; }
+.profile-menu button:hover { background:#243240; }
+.more-actions .more-menu button:hover { background:#3a3f47; border-radius:4px; }
+.more-actions .more-menu { animation: fadeIn .15s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(-4px);} to { opacity:1; transform:translateY(0);} }
+
 
 
