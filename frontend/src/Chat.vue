@@ -1,88 +1,48 @@
-<!-- Updated template section for paste-2.txt -->
 <template>
   <section class="chat-section">
     <div class="chat-container">
-      <!-- Tabs -->
       <div class="tabs">
-        <button 
-          :class="['tab-button', { active: activeSection === 'Recent' }]" 
-          @click="switchSectionWithRoute('Recent', '/chat')"
-        >
-          Recent
-        </button>
-        <button 
-          :class="['tab-button', { active: activeSection === 'Friends' }]" 
-          @click="switchSectionWithRoute('Friends', '/chat/friends')"
-        >
-          Friends
-        </button>
+        <button :class="['tab-button', { active: activeSection === 'Recent' }]" @click="switchSectionWithRoute('Recent', '/chat')">Recent</button>
+        <button :class="['tab-button', { active: activeSection === 'Friends' }]" @click="switchSectionWithRoute('Friends', '/chat/friends')">Friends</button>
       </div>
 
-      <!-- Recent Chat (Default) -->
       <div v-if="activeSection === 'Recent'" class="section">
         <div class="chat-container" :class="{ 'side-by-side': isLargeScreen && selectedUser }">
           <div class="sections">
-            <!-- Recent Users List -->
             <div class="section user-list-section">
-              <div id="loading" class="loading" v-if="loading">
-                <div class="spinner"></div>
-              </div>
-
+              <transition name="fade"><div id="loading" class="loading" v-if="loading"><div class="spinner"></div></div></transition>
               <div id="load-more-trigger"></div>
               <div class="users-container">
-                <!-- Recent chats first -->
-                <div
-                  v-for="recentChat in recentChats"
-                  :key="recentChat.userId || recentChat.id"
-                  class="user-card recent-chat"
-                  @click="handleUserClick(recentChat)"
-                  style="display: flex; align-items: center; padding: 12px 16px; margin: 5px 0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);"
-                >
-                  <div class="profile-picture" style="width: 30px; height: 30px; border-radius: 30%; margin-right: 20px;">
-                    <img :src="recentChat.profile_picture || 'default-pfp.jpg'" :alt="recentChat.username + ' profile'" style="width: 100%; height: 100%; object-fit: cover;" />
+                <transition-group name="fade" tag="div" class="fade-list">
+                  <div v-for="recentChat in recentChats" :key="recentChat.userId || recentChat.id" class="user-card recent-chat" @click="handleUserClick(recentChat)" style="display:flex;align-items:center;padding:12px 16px;margin:5px 0;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+                    <div class="profile-picture" style="width:30px;height:30px;border-radius:30%;margin-right:20px;">
+                      <img :src="recentChat.profile_picture || 'default-pfp.jpg'" :alt="recentChat.username + ' profile'" style="width:100%;height:100%;object-fit:cover;" />
+                    </div>
+                    <div class="user-info" style="flex:1;display:flex;flex-direction:column;">
+                      <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div class="username" style="font-size:1.05rem;color:#fff;"><strong>{{ recentChat.username }}</strong></div>
+                        <div class="last-seen" style="font-size:0.75rem;color:#999;">{{ formatLastSeen(recentChat.lastSeen) }}</div>
+                      </div>
+                      <div class="last-message" style="font-size:0.85rem;color:#ccc;">{{ recentChat.lastMessage }}</div>
+                    </div>
+                    <div v-if="recentChat.unreadCount > 0" class="unread-badge" style="background:#ff4444;color:white;border-radius:50%;padding:2px 6px;font-size:0.7rem;min-width:18px;text-align:center;">{{ recentChat.unreadCount }}</div>
                   </div>
-                 <div class="user-info" style="flex: 1; display: flex; flex-direction: column;">
-  <div style="display: flex; justify-content: space-between; align-items: center;">
-    <div class="username" style="font-size: 1.05rem; color: #fff;">
-      <strong>{{ recentChat.username }}</strong>
-    </div>
-    <div class="last-seen" style="font-size: 0.75rem; color: #999;">
-      {{ formatLastSeen(recentChat.lastSeen) }}
-    </div>
-  </div>
-  <div class="last-message" style="font-size: 0.85rem; color: #ccc;">
-    {{ recentChat.lastMessage }}
-  </div>
-</div>
+                </transition-group>
 
-                  <div v-if="recentChat.unreadCount > 0" class="unread-badge" style="background: #ff4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.7rem; min-width: 18px; text-align: center;">
-                    {{ recentChat.unreadCount }}
+                <div v-if="recentChats.length > 0" class="separator" style="border-bottom:1px solid #333;margin:10px 0;"></div>
+
+                <div v-for="user in filteredUsers" :key="getUserId(user)" @click="handleUserClick(user)" class="user-item" style="display:flex;align-items:center;padding:12px 16px;margin:5px 0;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+                  <div class="profile-picture" style="width:30px;height:30px;border-radius:30%;margin-right:20px;">
+                    <img :src="user.profile_picture || 'default-pfp.jpg'" :alt="user.username + ' profile'" style="width:100%;height:100%;object-fit:cover;" />
                   </div>
-                </div>
-
-                <!-- Separator if there are recent chats -->
-                <div v-if="recentChats.length > 0" class="separator" style="border-bottom: 1px solid #333; margin: 10px 0;"></div>
-
-                <!-- All users -->
-                <div
-                  v-for="user in filteredUsers"
-                  :key="getUserId(user)"
-                   @click="handleUserClick(user)"
-  class="user-item"
-                  style="display: flex; align-items: center; padding: 12px 16px; margin: 5px 0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);"
-                >
-                  <div class="profile-picture" style="width: 30px; height: 30px; border-radius: 30%; margin-right: 20px;">
-                    <img :src="user.profile_picture || 'default-pfp.jpg'" :alt="user.username + ' profile'" style="width: 100%; height: 100%; object-fit: cover;" />
-                  </div>
-                  <div class="username" style="font-size: 1.05rem; color: #fff;">
+                  <div class="username" style="font-size:1.05rem;color:#fff;">
                     <strong>{{ user.username }}</strong>
-                    <div v-if="user.lastMessage" style="font-size: 0.85rem; color: #ccc;">{{ user.lastMessage }}</div>
+                    <div v-if="user.lastMessage" style="font-size:0.85rem;color:#ccc;">{{ user.lastMessage }}</div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Chatbox on large screens with proper event handling -->
             <div v-if="isLargeScreen && selectedUser" class="chatbox-section" :class="{ active: isLargeScreen }">
               <Chatbox
                 :key="`chatbox-${getUserId(selectedUser)}-${selectedUser.username}`"
@@ -101,13 +61,13 @@
         </div>
       </div>
 
-      <!-- Friends Chat -->
       <div v-if="friendsLoaded && activeSection === 'Friends'" class="section">
         <FriendsChat />
       </div>
     </div>
   </section>
 </template>
+
 
 <script>
 import { defineAsyncComponent } from 'vue';
@@ -136,8 +96,8 @@ export default {
       friendsLoaded: false,
       selectedUser: null,
       isLargeScreen: window.innerWidth >= 768,
-      recentChats: [],
-      loading: true,
+      recentChats: JSON.parse(localStorage.getItem('cachedRecentChats') || '[]'),
+      loading: false,
       lastKnownMessages: {},
       currentUserId: null,
     };
@@ -181,19 +141,14 @@ export default {
       const userId = getUserId(normalizedUser);
       if (!userId) return;
 
-      // Save to recent chats via API
-      await this.saveRecentChat(normalizedUser);
-      
-      // Clear unread count
-      await this.clearUnreadCount(userId);
+      this.saveRecentChat(normalizedUser);
+      this.clearUnreadCount(userId);
 
-      // Update localStorage for current chat session
       const updates = {
         chatWith: normalizedUser.username,
         chatWithId: userId,
         profileImage: normalizedUser.profile_picture || 'default-pfp.jpg',
       };
-
       Object.entries(updates).forEach(([key, value]) => {
         localStorage.setItem(key, value);
       });
@@ -226,20 +181,14 @@ export default {
         isOnline: user.isOnline || false,
       };
 
-      // Update via API with batching
       updateRecentChat(this.currentUserId, recentChat);
-      
-      // Reload recent chats to get updated list
-      await this.loadRecentChats();
+      this.loadRecentChats();
     },
 
     async clearUnreadCount(userId) {
       if (!this.currentUserId) return;
-      
       try {
         await clearUnreadCount(this.currentUserId, userId);
-        
-        // Update local state
         const chatIndex = this.recentChats.findIndex(c => getUserId(c) === userId);
         if (chatIndex !== -1) {
           this.recentChats[chatIndex].unreadCount = 0;
@@ -254,19 +203,16 @@ export default {
         this.recentChats = [];
         return;
       }
-
       try {
         this.loading = true;
         const chats = await loadRecentChats(this.currentUserId);
-        console.log('Loaded recent chats:', chats); 
-        
-        // Sort by lastSeen and limit to 10
-        this.recentChats = chats
+        const sorted = chats
           .sort((a, b) => new Date(b.lastSeen) - new Date(a.lastSeen))
           .slice(0, 10);
+        this.recentChats = sorted;
+        localStorage.setItem('cachedRecentChats', JSON.stringify(sorted));
       } catch (error) {
         console.error('Error loading recent chats:', error);
-        this.recentChats = [];
       } finally {
         this.loading = false;
       }
@@ -277,7 +223,6 @@ export default {
       const now = new Date();
       const lastSeen = new Date(timestamp);
       const diff = now - lastSeen;
-
       const minutes = Math.floor(diff / (1000 * 60));
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -292,13 +237,11 @@ export default {
 
     async switchSection(section) {
       if (this.activeSection === section) return;
-      
       this.activeSection = section;
-      
       if (section === 'Friends') {
         this.friendsLoaded = true;
       } else {
-        await this.loadRecentChats();
+        this.loadRecentChats();
       }
     },
 
@@ -325,7 +268,6 @@ export default {
       }
     },
 
-    // Handle incoming messages to update recent chats
     async handleIncomingMessage(messageData) {
       if (!this.currentUserId) return;
 
@@ -335,18 +277,14 @@ export default {
         profile_picture: messageData.senderProfilePicture || 'default-pfp.jpg',
         lastMessage: messageData.message,
         lastSeen: messageData.timestamp,
-        unreadCount: 1, // Will be incremented properly in updateRecentChat
+        unreadCount: 1,
         isOnline: true,
       };
 
-      // Update recent chats via API
       updateRecentChat(this.currentUserId, chatData);
-      
-      // Reload recent chats to reflect changes
       setTimeout(() => this.loadRecentChats(), 1000);
     },
 
-    // Handle outgoing messages to update recent chats
     async handleOutgoingMessage(messageData) {
       if (!this.currentUserId) return;
 
@@ -360,10 +298,8 @@ export default {
         isOnline: false,
       };
 
-      // Update recent chats via API
       updateRecentChat(this.currentUserId, chatData);
-      
-      // Update local state immediately
+
       const existingIndex = this.recentChats.findIndex(
         chat => getUserId(chat) === messageData.receiverId
       );
@@ -371,60 +307,73 @@ export default {
       if (existingIndex >= 0) {
         const existing = this.recentChats[existingIndex];
         this.recentChats[existingIndex] = { ...existing, ...chatData };
-        
-        // Move to top
         const [updatedChat] = this.recentChats.splice(existingIndex, 1);
         this.recentChats.unshift(updatedChat);
       } else {
         this.recentChats.unshift(chatData);
       }
 
-      // Keep only 10 recent chats
       this.recentChats = this.recentChats.slice(0, 10);
+      localStorage.setItem('cachedRecentChats', JSON.stringify(this.recentChats));
     },
 
-    // Refresh recent chats from API
     async refreshRecentChats() {
       if (!this.currentUserId) return;
-      
+
       try {
         this.loading = true;
         const chats = await refreshRecentChats(this.currentUserId);
-        this.recentChats = chats
+        const sorted = chats
           .sort((a, b) => new Date(b.lastSeen) - new Date(a.lastSeen))
           .slice(0, 10);
+        this.recentChats = sorted;
+        localStorage.setItem('cachedRecentChats', JSON.stringify(sorted));
       } catch (error) {
         console.error('Error refreshing recent chats:', error);
       } finally {
         this.loading = false;
       }
     },
-  },
 
-  async mounted() {
-    this.currentUserId = localStorage.getItem('userId');
-    await this.loadRecentChats();
-
-    window.addEventListener('resize', this.handleResize);
-
-    // Set up visibility change handler to refresh data when tab becomes visible
-    const handleVisibilityChange = () => {
+    handleVisibilityChange() {
       if (!document.hidden && this.activeSection === 'Recent') {
         this.refreshRecentChats();
       }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
     },
+  },
+
+  mounted() {
+    this.currentUserId = localStorage.getItem('userId');
+    this.loadRecentChats(); // non-blocking
+    window.addEventListener('resize', this.handleResize);
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
+  },
 
   beforeUnmount() {
     window.removeEventListener('resize', this.handleResize);
-    cleanup(); // Clean up pending API calls
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+    cleanup(); // cleanup API timers etc.
   },
 };
 </script>
 
 <style src="./Chatbox.css"></style>
+<style scoped>
+.fade-list .fade-enter-active,
+.fade-list .fade-leave-active,
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-list .fade-enter-from,
+.fade-list .fade-leave-to,
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
+
+
 
 
 
