@@ -12,7 +12,9 @@
     "@capacitor/cli": "^7.4.0",
     "@capacitor/core": "^7.4.0",
     "@fortawesome/fontawesome-free": "^6.4.0",
-    "ably": "^2.9.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
     "lodash": "^4.17.21",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.3.0",
@@ -24,3 +26,5 @@
     "vite": "^5.0.0"
   }
 }
+
+
