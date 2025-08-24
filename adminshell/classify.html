@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Classification Dashboard</title>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Dev AI Post Classification Dashboard</h1>
+            <p>Classify posts using your AI model - Process up to 100 posts at once</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="loadPosts()">📥 Load Unclassified Posts</button>
+            <button class="btn btn-secondary" onclick="classifyWithAI()">🧠 Auto-Classify with AI</button>
+            <button class="btn btn-success" onclick="saveClassifications()">💾 Save Classifications (0)</button>
+            <div class="status" id="status">Ready</div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalPosts">0</div>
+                <div class="stat-label">Total Posts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="classifiedCount">0</div>
+                <div class="stat-label">Classified</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="pendingCount">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+
+        <div id="postsContainer" class="posts-grid">
+            <div class="loading">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let posts = [];
+        let classifications = {};
+        const categories = ['News', 'Sports', 'Entertainment', 'Story/Rant'];
+
+        // Your AI classification function
+        const classifyPostContent = async (text) => {
+            if (!text || text.trim().length < 10) return null;
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 10000);
+                const resp = await fetch('https://hydra-yaqp.onrender.com/classify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text }),
+                    signal: controller.signal
+                });
+                clearTimeout(timeout);
+                if (!resp.ok) return null;
+                const { label } = await resp.json();
+                const map = {
+                    story_rant: 'Story/Rant',
+                    sports: 'Sports',
+                    entertainment: 'Entertainment',
+                    news: 'News'
+                };
+                return map[label.toLowerCase()] || null;
+            } catch (_) {
+                return null;
+            }
+        };
+
+        const setStatus = (message, isError = false) => {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.style.background = isError ? 'rgba(255, 107, 107, 0.3)' : 'rgba(255, 255, 255, 0.1)';
+        };
+
+        const updateStats = () => {
+            const classified = Object.keys(classifications).length;
+            const total = posts.length;
+            const pending = total - classified;
+
+            document.getElementById('totalPosts').textContent = total;
+            document.getElementById('classifiedCount').textContent = classified;
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('progressFill').style.width = total ? `${(classified / total) * 100}%` : '0%';
+            
+            const saveBtn = document.querySelector('.btn-success');
+            saveBtn.textContent = `💾 Save Classifications (${classified})`;
+        };
+
+        const loadPosts = async () => {
+            setStatus('Loading posts...');
+            try {
+                // Replace with your actual API endpoint
+                const response = await fetch('https://venus-ecru.vercel.app/api/c?limit=100');
+                const data = await response.json();
+                
+                if (data.success) {
+                    posts = data.posts;
+                    classifications = {};
+                    renderPosts();
+                    updateStats();
+                    setStatus(`Loaded ${posts.length} posts`);
+                } else {
+                    throw new Error(data.message || 'Failed to load posts');
+                }
+            } catch (error) {
+                setStatus(`Error: ${error.message}`, true);
+                document.getElementById('postsContainer').innerHTML = 
+                    `<div class="error">Error loading posts: ${error.message}</div>`;
+            }
+        };
+
+        const renderPosts = () => {
+            const container = document.getElementById('postsContainer');
+            if (posts.length === 0) {
+                container.innerHTML = '<div class="error">No unclassified posts found!</div>';
+                return;
+            }
+
+            container.innerHTML = posts.map(post => `
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="post-id">ID: ${post._id}</div>
+                        <div class="post-user">@${post.username}</div>
+                    </div>
+                    <div class="post-message">${post.message || 'No message content'}</div>
+                    <div class="category-buttons">
+                        ${categories.map(cat => `
+                            <button class="category-btn ${classifications[post._id] === cat ? 'selected' : ''}" 
+                                    onclick="selectCategory(${post._id}, '${cat}')">
+                                ${cat}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        const selectCategory = (postId, category) => {
+            classifications[postId] = category;
+            renderPosts();
+            updateStats();
+        };
+
+        const classifyWithAI = async () => {
+            if (posts.length === 0) {
+                setStatus('Please load posts first', true);
+                return;
+            }
+
+            setStatus('Classifying with AI...');
+            let processed = 0;
+
+            for (const post of posts) {
+                if (classifications[post._id]) continue; // Skip already classified
+
+                try {
+                    const category = await classifyPostContent(post.message);
+                    if (category) {
+                        classifications[post._id] = category;
+                    }
+                    processed++;
+                    setStatus(`AI Processing... ${processed}/${posts.length}`);
+                    renderPosts();
+                    updateStats();
+                    
+                    // Small delay to prevent overwhelming the API
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                } catch (error) {
+                    console.error('Error classifying post:', post._id, error);
+                }
+            }
+
+            setStatus(`AI classification complete! Processed ${processed} posts`);
+        };
+
+        const saveClassifications = async () => {
+            const classificationList = Object.entries(classifications).map(([postId, category]) => ({
+                postId: parseInt(postId),
+                category
+            }));
+
+            if (classificationList.length === 0) {
+                setStatus('No classifications to save', true);
+                return;
+            }
+
+            setStatus('Saving classifications...');
+            try {
+                // Replace with your actual API endpoint
+                const response = await fetch('https://venus-ecru.vercel.app/api/c', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ classifications: classificationList })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    setStatus(`✅ Saved ${data.updatedCount} classifications!`);
+                    // Reload posts to get fresh unclassified ones
+                    setTimeout(loadPosts, 1000);
+                } else {
+                    throw new Error(data.message || 'Failed to save');
+                }
+            } catch (error) {
+                setStatus(`Error saving: ${error.message}`, true);
+            }
+        };
+
+        // Load posts on page load
+        loadPosts();
+    </script>
+</body>
+</html>
+
+ <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #000 0%, #0a0a0a 50%, #1a1a1a 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        /* Card Styles */
+        .header, .controls, .post-card, .stat-card {
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(34, 197, 94, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.1));
+            border-color: rgba(34, 197, 94, 0.2);
+            box-shadow: 0 6px 24px rgba(34, 197, 94, 0.1);
+        }
+        
+        .controls, .post-card, .stat-card {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(26, 26, 26, 0.7));
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+        }
+        
+        .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        
+        /* Typography */
+        .header h1 {
+            color: #fff;
+            font-size: 2rem;
+            margin-bottom: 8px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #10b981, #22c55e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p, .post-user { 
+            color: rgba(255, 255, 255, 0.85); 
+            font-size: 1rem; 
+            font-weight: 500; 
+        }
+        
+        /* Buttons */
+        .btn, .category-btn {
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #22c55e, #16a34a);
+            color: white;
+            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+        }
+        
+        .btn:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4); 
+        }
+        
+        .btn-secondary { 
+            background: linear-gradient(45deg, #1a1a1a, #333); 
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4); 
+        }
+        
+        .btn-secondary:hover { 
+            background: linear-gradient(45deg, #333, #4a4a4a); 
+        }
+        
+        .btn-success { 
+            background: linear-gradient(45deg, #059669, #047857); 
+        }
+        
+        .category-btn {
+            border: 2px solid rgba(34, 197, 94, 0.3);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(26, 26, 26, 0.5));
+            color: #fff;
+        }
+        
+        .category-btn:hover { 
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.15)); 
+            transform: scale(1.05); 
+        }
+        
+        .category-btn.selected { 
+            background: linear-gradient(45deg, #22c55e, #16a34a); 
+            border-color: transparent; 
+        }
+        
+        .status {
+            color: #fff;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.15));
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        /* Grid Layouts */
+        .posts-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 15px; 
+        }
+        
+        .stats { 
+            display: flex; 
+            gap: 20px; 
+            margin-bottom: 15px; 
+            flex-wrap: wrap; 
+        }
+        
+        /* Post Cards */
+        .post-card:hover { 
+            transform: translateY(-5px); 
+            border-color: rgba(34, 197, 94, 0.3); 
+        }
+        
+        .post-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px; 
+        }
+        
+        .post-id {
+            background: linear-gradient(45deg, #22c55e, #16a34a);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+        
+        .post-message {
+            color: #fff;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.5), rgba(10, 10, 10, 0.4));
+            padding: 15px;
+            border-radius: 15px;
+            max-height: 120px;
+            overflow-y: auto;
+            border: 1px solid rgba(34, 197, 94, 0.1);
+        }
+        
+        .category-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+        
+        /* Stats */
+        .stat-card { 
+            text-align: center; 
+            flex: 1; 
+            min-width: 120px; 
+        }
+        
+        .stat-card:hover { 
+            transform: translateY(-2px); 
+            border-color: rgba(34, 197, 94, 0.3); 
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #22c55e, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(26, 26, 26, 0.8));
+            border-radius: 20px;
+            height: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #22c55e, #16a34a, #10b981);
+            height: 100%;
+            transition: width 0.4s ease;
+            border-radius: 20px;
+        }
+        
+        /* Loading & Error */
+        .loading { display: flex; justify-content: center; align-items: center; min-height: 200px; }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 3px solid rgba(34, 197, 94, 0.2);
+            border-radius: 50%;
+            border-top-color: #22c55e;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .error {
+            background: linear-gradient(45deg, #ef4444, #dc2626);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            .posts-grid { grid-template-columns: 1fr; }
+            .controls { flex-direction: column; align-items: stretch; }
+            .stats { flex-direction: column; }
+            .header h1 { font-size: 1.8rem; }
+        }
+    </style>
