@@ -12,6 +12,33 @@
 
     <div class="content-wrapper">
         <div id="posts" class="posts-feed">
+<!-- Skeleton placeholders using shared .post-card structure -->
+<div v-if="postsStore.loading" class="skeleton-list">
+  <div v-for="n in 4" :key="'skeleton-' + n" class="post-card skeleton-card">
+    <div class="post-header">
+      <div class="profile-picture">
+        <div class="skeleton skeleton-avatar"></div>
+      </div>
+      <div class="username">
+        <div class="skeleton skeleton-line short"></div>
+      </div>
+    </div>
+    <div class="post-message">
+      <div class="skeleton skeleton-line"></div>
+      <div class="skeleton skeleton-line long"></div>
+      <div class="skeleton skeleton-line"></div>
+    </div>
+    <div class="post-image">
+      <div class="skeleton skeleton-img"></div>
+    </div>
+    <div class="actions">
+      <div class="skeleton skeleton-btn"></div>
+      <div class="skeleton skeleton-btn"></div>
+      <div class="skeleton skeleton-btn"></div>
+    </div>
+  </div>
+</div>
+
   <div v-for="post in postsStore.posts" :key="post._id" class="post-card" :data-id="post._id" :data-liked-by="JSON.stringify(post.likedBy || [])">
     
     <!-- Reply Preview -->
@@ -72,7 +99,7 @@
 
   <!-- Likes -->
   <div style="display: flex; align-items: center; gap: 5px;" :class="{ liked: post.likedBy?.includes(postsStore.loggedInUsername) }" @click="postsStore.likePost(post._id)">
-    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="1.5">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="1.5">
       <path
         d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 
            2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09 
@@ -88,8 +115,8 @@
   <div style="display: flex; align-items: center; gap: 5px;">
      <svg
     viewBox="0 0 24 24"
-    width="18"
-    height="18"
+    width="22"
+    height="22"
     class="views-icon"
   >
     <path
@@ -115,7 +142,7 @@
 
   <!-- Comments -->
   <div @click="$router.push(`/post/${post._id}`)" style="display: flex; align-items: center; gap: 5px;">
-    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="1.5">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="1.5">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
     {{ post.commentCount || '0' }} comments
@@ -204,29 +231,45 @@ const formatViewCount = (count) => {
   return count.toString();
 };
 
-// Watch for changes in selectedSort and trigger sorting
 watch(selectedSort, (newSort) => {
   if (newSort) {
     postsStore.sortPosts(newSort);
   }
 }, { immediate: true });
 
-// Navigate to Upload.vue for tweeting/replying
 function tweetPost(postId, username) {
   router.push({ path: '/float', query: { replyToPostId: postId, replyToUsername: username } });
 }
-
-// Route to user profile
 function redirectToUserProfile(username) {
   router.push({ name: 'UserProfile', params: { username } });
 }
-
-// Expose sort function externally
 defineExpose({
   onExternalSort: (type) => postsStore.sortPosts(type),
 });
 </script>
 
 <style src="./Posts.css"></style>
+<style scoped>
+/* Base skeleton */
+.skeleton{background:#2b2b2b;border-radius:4px;animation:pulse 1.5s infinite ease-in-out}
+
+/* Avatar */
+.skeleton-avatar{width:29px;height:29px;border-radius:50%}
+
+/* Text lines */
+.skeleton-line{height:12px;margin:6px 0;width:92%}
+.skeleton-line.long{width:92%}
+.skeleton-line.short{width:72%}
+
+/* Image */
+.skeleton-img{width:100%;height:120px;border-radius:10px;margin:10px 0 6px}
+@media (min-width:768px){.skeleton-img{width:690px;height:150px}}
+
+/* Buttons */
+.skeleton-btn{width:56px;height:12px;margin-right:14px;border-radius:6px}
+
+/* Animation */
+@keyframes pulse{0%{opacity:1}50%{opacity:.5}100%{opacity:1}}
+</style>
 
 
