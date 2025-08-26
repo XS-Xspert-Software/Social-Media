@@ -54,7 +54,8 @@
 </template>
 
 <script>
-import { useUserStore } from '../../userStore';
+// Correct relative paths to Pinia stores (file lives in src/ alongside stores/ folder)
+import { useUserStore } from './stores/userStore';
 import { useFriendsStore } from './stores/friendsStore';
 import Chatbox from './Chatbox.vue';
 

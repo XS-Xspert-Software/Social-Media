@@ -181,13 +181,16 @@
 
 </div>
       
-      <button v-if="post.username === postsStore.loggedInUsername || post.sessionId === postsStore.sessionId" class="action-btn" @click="postsStore.editPost(post._id, post.username)">
-        Edit
-      </button>
-      
-      <button v-if="post.username === postsStore.loggedInUsername || post.sessionId === postsStore.sessionId" class="action-btn" @click="postsStore.deletePost(post._id)">
-        Delete
-      </button>
+      <!-- Replace inline Edit/Delete with a three-dot menu for own posts -->
+      <div v-if="isOwnPost(post)" class="more-actions" style="position:relative; margin-left:auto;">
+        <button class="more-btn" @click.stop="toggleMenu(post._id)" aria-label="More options" style="background:none;border:none;padding:4px;cursor:pointer;color:#fff;display:flex;align-items:center;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 8a2 2 0 110-4 2 2 0 010 4zm0 2a2 2 0 110 4 2 2 0 010-4zm0 6a2 2 0 110 4 2 2 0 010-4z"/></svg>
+        </button>
+        <div v-if="openMenuFor === post._id" class="more-menu" style="position:absolute;top:28px;right:0;background:#1b2330;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:6px;min-width:140px;z-index:40;">
+          <button @click="handleEdit(post)" style="all:unset;display:block;width:100%;padding:8px 10px;cursor:pointer;color:#fff;font-size:13px;border-radius:6px;">Edit</button>
+          <button @click="handleDelete(post)" style="all:unset;display:block;width:100%;padding:8px 10px;cursor:pointer;color:#ff6b6b;font-size:13px;border-radius:6px;">Delete</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -210,7 +213,7 @@
 <script setup>
 import { usePostsStore } from './stores/postsStore';
 import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router';
-import { inject, watch } from 'vue';
+import { inject, watch, ref, onMounted, onBeforeUnmount } from 'vue';
 
 const postsStore = usePostsStore();
 const { posts } = postsStore; // ✅ include posts to avoid undefined error
@@ -243,6 +246,30 @@ function tweetPost(postId, username) {
 function redirectToUserProfile(username) {
   router.push({ name: 'UserProfile', params: { username } });
 }
+const openMenuFor = ref(null);
+function isOwnPost(p){
+  return p.username === postsStore.loggedInUsername || p.sessionId === postsStore.sessionId;
+}
+function toggleMenu(id){
+  openMenuFor.value = openMenuFor.value === id ? null : id;
+}
+function handleGlobalClick(e){
+  if(!e.target.closest('.more-actions')) openMenuFor.value = null;
+}
+function handleEdit(post){
+  openMenuFor.value = null;
+  postsStore.editPost(post._id, post.username);
+}
+function handleDelete(post){
+  openMenuFor.value = null;
+  postsStore.deletePost(post._id);
+}
+onMounted(()=>{
+  window.addEventListener('click', handleGlobalClick, { capture:true });
+});
+onBeforeUnmount(()=>{
+  window.removeEventListener('click', handleGlobalClick, { capture:true });
+});
 defineExpose({
   onExternalSort: (type) => postsStore.sortPosts(type),
 });

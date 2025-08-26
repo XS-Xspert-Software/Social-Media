@@ -1,12 +1,25 @@
 <template>
   <div>
-    <div class="floating-circle" @click="togglePanel">
+    <!-- Floating Action Button (FAB) -->
+    <div
+      class="floating-circle"
+      @click="togglePanel"
+      :aria-expanded="showPanel.toString()"
+      aria-label="Create post or group"
+      role="button"
+      tabindex="0"
+      @keydown.enter="togglePanel"
+      @keydown.space.prevent="togglePanel"
+    >
       <i class="fas fa-bolt"></i>
     </div>
 
+    <!-- Dimmed overlay behind panel -->
+    <div v-if="showPanel" class="floating-overlay" @click="togglePanel"></div>
+
     <div class="sections">
       <transition name="slide-up">
-        <div v-if="showPanel" class="floating-panel">
+        <div v-if="showPanel" class="floating-panel" role="dialog" aria-modal="true">
           <!-- Fixed Header with Close Button -->
           <div class="panel-fixed-header">
             <h3> Upload</h3>
@@ -110,7 +123,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 // Refs for UI
@@ -155,7 +168,19 @@ onMounted(() => {
       }
     })
   }
+  window.addEventListener('keydown', handleGlobalKeydown)
 })
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalKeydown)
+  document.body.style.overflow = ''
+})
+
+function handleGlobalKeydown(e){
+  if(e.key === 'Escape' && showPanel.value){
+    togglePanel()
+  }
+}
 
 // Toggle post panel
 function togglePanel() {
@@ -164,6 +189,11 @@ function togglePanel() {
     router.push({ path: '/posts' })
   }
 }
+
+// Prevent background scroll while panel is open
+watch(showPanel, (open) => {
+  document.body.style.overflow = open ? 'hidden' : ''
+})
 
 // Handle input & detect tags/hashtags
 function handleInput() {
@@ -488,40 +518,100 @@ function resetForm() {
 /* Floating Elements */
 .floating-circle {
   position: fixed;
-  bottom: 20%;
-  right: 30px;
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border-radius: 50%;
+  bottom: 18px;
+  right: 22px;
+  width: 62px;
+  height: 62px;
+  background: linear-gradient(135deg,#7f5af0,#6246ea,#5332d3);
+  background-size: 300% 300%;
+  border-radius: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 3;
+  z-index: 1200; /* Above everything */
   cursor: pointer;
-  transition: transform 0.3s ease;
+  transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease, background-position 6s linear;
   color: #fff;
+  box-shadow: 0 10px 25px -5px rgba(127,90,240,.5), 0 4px 10px -2px rgba(0,0,0,.5);
+  outline: none;
 }
+.floating-circle:focus-visible {
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.25), 0 10px 25px -5px rgba(127,90,240,.55);
+}
+.floating-circle:hover {
+  transform: translateY(-4px) scale(1.05);
+  background-position: 100% 50%;
+}
+.floating-circle:active {
+  transform: translateY(0) scale(.96);
+}
+.floating-circle i { font-size: 1.4rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,.4)); }
+
+@keyframes floatPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(127,90,240,.55); }
+  50% { box-shadow: 0 0 0 14px rgba(127,90,240,0); }
+}
+.floating-circle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  animation: floatPulse 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.floating-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1100;
+  animation: fadeOverlay .3s ease;
+}
+@keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
+
 .floating-panel {
   position: fixed;
-  inset: 60px 0 0 0;
-  z-index: 3;
+  top: clamp(12px,4vh,42px);
+  bottom: clamp(12px,4vh,42px);
+  right: clamp(12px,4vw,42px);
+  left: clamp(12px,4vw,42px);
+  max-width: 980px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  backdrop-filter: blur(10px);
+  background: linear-gradient(135deg,rgba(20,20,28,.85),rgba(45,27,64,.85));
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 20px 40px -10px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  border-radius: 34px;
+  z-index: 1250;
+  overflow: hidden;
+  animation: panelIn .45s cubic-bezier(.22,1,.36,1);
+}
+@keyframes panelIn { from { opacity:0; transform: translateY(24px) scale(.96); } to { opacity:1; transform: translateY(0) scale(1); } }
+
+@media (max-width: 740px) {
+  .floating-panel {
+    top: 0; left: 0; right: 0; bottom: 0; border-radius: 0; max-width: none; animation: panelInFull .35s ease;
+  }
+  @keyframes panelInFull { from { opacity:0; transform: translateY(30px);} to { opacity:1; transform: translateY(0);} }
 }
 /* Panel Layout */
 .panel-fixed-header {
-  padding: 20px 24px;
-}
-.panel-header {
+  padding: 20px 28px 12px;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(90deg,rgba(255,255,255,0.04),rgba(255,255,255,0));
+  border-bottom: 1px solid rgba(255,255,255,0.06);
 }
-.panel-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0 24px 24px;
-}
+.panel-fixed-header h3 { margin: 0; font-size: 1.15rem; letter-spacing: .5px; background: linear-gradient(135deg,#b892ff,#f093fb); -webkit-background-clip: text; color: transparent; }
+.panel-header { display: flex; }
+.panel-content { flex: 1; overflow-y: auto; padding: 0 28px 32px; }
 /* Input Elements */
 .content-editable, 
 .post-input input,
@@ -588,16 +678,21 @@ function resetForm() {
 /* Upload & Media */
 .file-upload-icon {
   position: absolute;
-  top: 15%;
-  right: 20px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+  top: 14%;
+  right: 18px;
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
   cursor: pointer;
-  color: #667eea;
-  border: none;
-  transition: all 0.2s ease;
+  color: #fff;
+  background: linear-gradient(135deg,#f093fb33,#667eea22);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .3s ease;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.08);
 }
+.file-upload-icon:hover { background: linear-gradient(135deg,#f093fb66,#667eea55); transform: translateY(-2px); }
+.file-upload-icon:active { transform: translateY(0) scale(.95); }
 .image-preview {
   max-width: 300px;
   width: 100%;
@@ -607,25 +702,38 @@ function resetForm() {
 }
 /* Buttons */
 button {
-  background: #f193fb55;
+  background: linear-gradient(135deg,#f093fb33,#667eea22);
   color: #fff;
-  padding: 8px 16px;
-  border-radius: 999px;
+  padding: 10px 20px;
+  border-radius: 18px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background .35s ease, transform .35s ease, box-shadow .35s ease;
+  border: 1px solid rgba(255,255,255,0.08);
+  font-weight: 500;
+  backdrop-filter: blur(6px);
 }
 button:hover {
-  background: #111;
-  transform: scale(1.03);
+  background: linear-gradient(135deg,#f093fb88,#667eea66);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px -5px rgba(0,0,0,.5);
 }
+button:active { transform: translateY(0) scale(.95); box-shadow: 0 4px 10px -3px rgba(0,0,0,.6); }
 .close-btn {
-  width: 60px;
-  height: 60px;
-  background: none;
-  position: fixed;
-  right: 8%;
-  top: 0.5%;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg,#ff6a88,#ff99ac);
+  border-radius: 16px;
+  position: relative;
+  right: 0;
+  top: 0;
+  font-size: 1.4rem;
+  display: flex; align-items: center; justify-content: center;
+  border: none;
+  line-height: 1;
+  padding: 0;
 }
+.close-btn:hover { background: linear-gradient(135deg,#ff6a88,#ff5e78); }
+.close-btn:active { transform: scale(.9); }
 /* Utility Classes */
 .divider {
   height: 2px;
