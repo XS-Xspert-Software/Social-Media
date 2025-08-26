@@ -9,27 +9,52 @@
           </button>
         </div>
         <div class="top-right">
-          <button class="icon-btn" @click="toggleDropdown">
+          <button
+            class="icon-btn"
+            @click.stop="toggleDropdown"
+            @keydown.enter.prevent="openDropdown"
+            @keydown.space.prevent="openDropdown"
+            @keydown.down.prevent="focusFirstItem"
+            aria-haspopup="true"
+            :aria-expanded="showDropdown.toString()"
+            aria-label="Profile menu"
+            ref="menuTrigger"
+          >
             <i class="fas fa-ellipsis-h"></i>
           </button>
-          <div v-show="showDropdown" class="dropdown-menu">
-            <button @click="showSettings = !showSettings" class="dropdown-item">
+          <div
+            v-if="showDropdown"
+            class="dropdown-menu"
+            role="menu"
+            ref="dropdownMenu"
+            @click.stop
+            @keydown.down.prevent="focusNextItem"
+            @keydown.up.prevent="focusPrevItem"
+            @keydown.escape.prevent="closeDropdown"
+            @keydown.home.prevent="focusFirstItem"
+            @keydown.end.prevent="focusLastItem"
+          >
+            <button v-if="!isGuest" @click="showSettings = !showSettings" class="dropdown-item">
               <i class="fas fa-cog"></i>
               Settings
             </button>
-            <button @click="viewMyActivity" class="dropdown-item">
+            <button v-if="!isGuest" @click="viewMyActivity" class="dropdown-item">
               <i class="fas fa-chart-line"></i>
               Activity
             </button>
-            <button @click="openBlockedUsers" class="dropdown-item">
+            <button v-if="!isGuest" @click="openBlockedUsers" class="dropdown-item">
               <i class="fas fa-user-slash"></i>
               Blocked Users
             </button>
             <div class="dropdown-divider"></div>
-            <button @click="logOut" class="dropdown-item danger">
+            <button v-if="!isGuest" @click="logOut" class="dropdown-item danger">
               <i class="fas fa-sign-out-alt"></i>
               Log Out
             </button>
+            <div v-if="isGuest" class="dropdown-item" style="opacity:.65;cursor:default;">
+              <i class="fas fa-user-secret"></i>
+              Guest Mode
+            </div>
           </div>
         </div>
       </div>
@@ -79,14 +104,13 @@
           <div class="profile-info" style="margin-left: 20px;">
   <div class="profile-name">
     <h2>{{ userProfile.display_name || userProfile.username }}</h2>
-    <button class="edit-btn" @click="editDisplayName">
+  <button v-if="!isGuest" class="edit-btn" @click="editDisplayName">
       <i class="fas fa-edit"></i>
     </button>
   </div>       
             <div class="profile-bio">
-              <p v-if="userProfile.description">{{ userProfile.description }}</p>
-              <p v-else class="bio-placeholder" @click="editDescription">Add a bio...</p>
-              <button v-if="userProfile.description" class="edit-btn" @click="editDescription">
+        <p>{{ isGuest ? 'Guest viewing mode' : (userProfile.description || 'No description available') }}</p>
+        <button v-if="!isGuest" class="edit-btn" @click="editDescription">
                 <i class="fas fa-edit"></i>
               </button>
             </div>
@@ -94,7 +118,7 @@
             <div v-if="userProfile.Music" class="profile-music">
               <i class="fas fa-music"></i>
               <span>{{ userProfile.Music }}</span>
-              <button class="edit-btn" @click="editMusic">
+        <button v-if="!isGuest" class="edit-btn" @click="editMusic">
                 <i class="fas fa-edit"></i>
               </button>
             </div>
@@ -226,7 +250,7 @@
 </template>
 
 <style scoped>
-:root{--primary:#405de6;--text:#262626;--text-light:#8e8e8e;--bg:#fafafa;--white:#fff;--border:#dbdbdb;--shadow:0 2px 8px rgba(0,0,0,0.1)}
+:root{--primary:#405de6;--text:#262626;--text-light:#8e8e8e;--bg:#fafafa;--white:#fff;--border:#dbdbdb;--shadow:0 2px 8px rgba(0,0,0,0.1);--anim-fast:120ms cubic-bezier(.4,0,.2,1)}
 .profile-page{margin-top:50px;margin-left:20px;background:var(--bg);font-family:system-ui;min-height:100vh}
 button{border:none;cursor:pointer;transition:0.2s}
 .back-btn,.icon-btn,.close-btn,.edit-btn,.settings-btn{background:none;color:var(--text);padding:8px;border-radius:6px}
@@ -266,9 +290,12 @@ button{border:none;cursor:pointer;transition:0.2s}
 .post-placeholder{height:100%;background:var(--bg);border:2px dashed var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-light)}
 .empty-state{text-align:center;padding:40px;color:var(--text-light)}
 .empty-state h3{margin:16px 0 8px;color:var(--text)}
-.dropdown-menu{position:absolute;top:100%;right:0;background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);min-width:200px;z-index:1000;margin-top:0.5rem}
-.dropdown-item{display:flex;align-items:center;gap:0.75rem;width:100%;padding:0.875rem 1rem;background:none;border:none;text-align:left;cursor:pointer;font-size:0.875rem;color:var(--text)}
-.dropdown-item:hover{background:var(--bg)}
+.top-right{position:relative;display:flex;align-items:center}
+.dropdown-menu{position:absolute;top:100%;right:0;background:var(--white);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 24px -6px rgba(0,0,0,.15),0 4px 12px -4px rgba(0,0,0,.08);min-width:210px;z-index:1200;margin-top:0.55rem;padding:4px 0;overflow:hidden;animation:dropdownIn .25s var(--anim-fast);transform-origin: top right}
+.dropdown-menu:focus{outline:none}
+@keyframes dropdownIn{from{opacity:0;transform:translateY(-6px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+.dropdown-item{display:flex;align-items:center;gap:0.75rem;width:100%;padding:0.75rem 1rem;background:none;border:none;text-align:left;cursor:pointer;font-size:0.85rem;color:var(--text);line-height:1.2;transition:background .18s ease, color .18s ease}
+.dropdown-item:hover,.dropdown-item:focus{background:linear-gradient(90deg,var(--bg),#fff);color:#111;outline:none}
 .dropdown-item.danger{color:#fd1d1d}
 .dropdown-divider{height:1px;background:var(--border);margin:0.5rem 0}
 .settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
@@ -297,13 +324,16 @@ button{border:none;cursor:pointer;transition:0.2s}
 </style>
 
 <script>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 
 export default {
   name: 'ProfilePage',
   setup() {
     // Reactive state
-    const showDropdown = ref(false);
+  const showDropdown = ref(false);
+  const dropdownMenu = ref(null);
+  const menuTrigger = ref(null);
+  const isGuest = ref(!localStorage.getItem('username'));
     const showSettings = ref(false);
     const activeTab = ref('posts');
     const loading = ref(false);
@@ -311,13 +341,14 @@ export default {
     const newProfilePicture = ref(null);
 
     // User profile data
+    const storedUsername = localStorage.getItem('username') || '';
     const userProfile = ref({
-      username: localStorage.getItem('username') || '',
-      display_name: '',
+      username: storedUsername,
+      display_name: storedUsername || 'Guest',
       profile_picture: 'https://latestnewsandaffairs.site/public/pfp.jpg',
-      description: 'No description available',
-      created_at: 'Date not available',
-      Music: 'Music not available'
+      description: storedUsername ? 'No description available' : 'Guest viewing mode',
+      created_at: storedUsername ? 'Date not available' : '—',
+      Music: storedUsername ? 'Music not available' : ''
     });
 
     // User stats (can be fetched from API later)
@@ -386,8 +417,36 @@ export default {
     };
 
     // Methods
+    const openDropdown = () => {
+      if (!showDropdown.value) {
+        showDropdown.value = true;
+        nextTick(() => focusFirstItem());
+      }
+    };
+
+    const closeDropdown = () => {
+      if (showDropdown.value) {
+        showDropdown.value = false;
+        nextTick(() => menuTrigger.value?.focus());
+      }
+    };
+
     const toggleDropdown = () => {
-      showDropdown.value = !showDropdown.value;
+      showDropdown.value ? closeDropdown() : openDropdown();
+    };
+
+    const focusableItems = () => dropdownMenu.value ? Array.from(dropdownMenu.value.querySelectorAll('.dropdown-item')) : [];
+    const focusFirstItem = () => { const items = focusableItems(); if(items.length) items[0].focus(); };
+    const focusLastItem = () => { const items = focusableItems(); if(items.length) items[items.length-1].focus(); };
+    const focusNextItem = () => {
+      const items = focusableItems();
+      const idx = items.indexOf(document.activeElement);
+      if(items.length) items[(idx+1+items.length) % items.length].focus();
+    };
+    const focusPrevItem = () => {
+      const items = focusableItems();
+      const idx = items.indexOf(document.activeElement);
+      if(items.length) items[(idx - 1 + items.length) % items.length].focus();
     };
 
     const formatDate = (dateString) => {
@@ -406,8 +465,8 @@ export default {
       loading.value = true;
       try {
         const username = localStorage.getItem('username');
-        if (!username) {
-          message.value = 'Username not found!';
+        if (!username) { // guest: skip remote
+          loading.value = false;
           return;
         }
 
@@ -450,6 +509,7 @@ export default {
     };
 
     const updateUserProfileField = async (field, newValue) => {
+      if (isGuest.value) return;
       loading.value = true;
       const username = localStorage.getItem('username');
       if (!username) {
@@ -534,6 +594,7 @@ export default {
     };
 
     const saveProfilePicture = async () => {
+      if (isGuest.value) return;
       if (!newProfilePicture.value) return;
       loading.value = true;
       try {
@@ -567,6 +628,7 @@ export default {
     };
 
     const toggleSetting = async (key) => {
+      if (isGuest.value) return;
       settings.value[key] = !settings.value[key];
       if (key === 'darkMode') {
         toggleDarkMode();
@@ -580,6 +642,7 @@ export default {
     };
 
     const saveSettings = async () => {
+      if (isGuest.value) return;
       loading.value = true;
       const username = localStorage.getItem('username');
       if (!username) {
@@ -636,6 +699,7 @@ export default {
     };
 
     const logOut = () => {
+      if (isGuest.value) return;
       if (confirm('Are you sure you want to log out?')) {
         localStorage.clear();
         window.location.reload();
@@ -645,16 +709,20 @@ export default {
 
     // Close dropdowns when clicking outside
     const handleClickOutside = (event) => {
-      const topRight = event.target.closest('.top-right');
-      if (!topRight) {
-        showDropdown.value = false;
+      if(!showDropdown.value) return; // no need to compute
+      const inMenu = event.target.closest('.dropdown-menu');
+      const trigger = event.target.closest('.icon-btn');
+      if(!inMenu && !trigger) {
+        closeDropdown();
       }
     };
 
     // Lifecycle hooks
     onMounted(() => {
-      checkBlueMarkAccess();
       fetchUserSettings();
+      if (!isGuest.value) {
+        checkBlueMarkAccess();
+      }
       
       // Load saved dark mode preference
       const savedDarkMode = localStorage.getItem('darkMode');
@@ -689,7 +757,15 @@ export default {
       contentTabs,
       toggleSettings,
       checkBlueMarkAccess,
-      toggleDropdown,
+  toggleDropdown,
+  openDropdown,
+  closeDropdown,
+  focusFirstItem,
+  focusLastItem,
+  focusNextItem,
+  focusPrevItem,
+  dropdownMenu,
+  menuTrigger,
       formatDate,
       fetchUserSettings,
       updateUserProfileField,
@@ -707,7 +783,8 @@ export default {
       openBlockedUsers,
       viewMyActivity,
       logOut,
-      handleClickOutside
+  handleClickOutside,
+  isGuest
     };
   }
 };
