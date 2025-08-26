@@ -58,6 +58,9 @@ services:
     working_dir: /app
     volumes:
       - ./socketio:/app
+      # Preserve node_modules installed during image build so dependencies (e.g. ws) remain available
+      - websocket_node_modules:/app/node_modules
 
 volumes:
   postgres_data:
+  websocket_node_modules:
