@@ -4,6 +4,73 @@
     box-sizing: border-box;
 scrollbar-color: #222 #000; 
 }
+/* Root design tokens (non-breaking additions) */
+:root {
+  --color-bg: #000000;
+  --color-surface: rgba(255,255,255,0.04);
+  --color-surface-alt: rgba(255,255,255,0.07);
+  --color-border: rgba(255,255,255,0.10);
+  --color-border-strong: rgba(255,255,255,0.18);
+  --color-accent: #667eea;
+  --color-accent-alt: #f093fb;
+  --color-danger: #ff4d61;
+  --color-success: #3ddc97;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --transition-fast: .18s cubic-bezier(.4,0,.2,1);
+  --transition-base: .32s cubic-bezier(.22,1,.36,1);
+  --shadow-sm: 0 2px 4px -2px rgba(0,0,0,.4), 0 4px 12px -4px rgba(0,0,0,.35);
+  --shadow-md: 0 4px 18px -6px rgba(0,0,0,.55), 0 6px 28px -8px rgba(0,0,0,.45);
+  --gradient-accent: linear-gradient(135deg,#667eea,#764ba2);
+  --gradient-hot: linear-gradient(135deg,#f093fb,#f5576c);
+}
+/* Scrollbar polish (WebKit) */
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: #050505; }
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg,#222,#111); border-radius: 6px; border: 2px solid #050505; }
+::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg,#333,#151515); }
+
+/* Reusable glass utility */
+.glass {
+  background: var(--color-surface);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+/* Focus visibility for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--color-accent-alt);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Button utility (opt-in) */
+.btn { 
+  background: linear-gradient(135deg,#ffffff08,#ffffff15);
+  border: 1px solid var(--color-border);
+  padding: 8px 18px;
+  color: #fff;
+  cursor: pointer;
+  font-size: .9rem;
+  border-radius: var(--radius-pill);
+  letter-spacing: .3px;
+  transition: var(--transition-base);
+  backdrop-filter: blur(10px);
+}
+.btn:hover { background: linear-gradient(135deg,#ffffff10,#ffffff26); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.btn:active { transform: translateY(0) scale(.97); }
+.btn-primary { background: var(--gradient-accent); border: none; }
+.btn-primary:hover { filter: brightness(1.07); }
+.btn-danger { background: linear-gradient(135deg,#ff4d61,#c32038); border: none; }
+.btn-danger:hover { filter: brightness(1.1); }
+
+/* Soft card hover enhancer (opt-in) */
+.elevate-hover { transition: var(--transition-base); }
+.elevate-hover:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
 @media(max-width:500px){
   *{
 font-family: Arial, Helvetica, sans-serif;
