@@ -39,9 +39,8 @@
   </div>
 </div>
 
-  <!-- Lazy rendering: only render posts that are visible in viewport -->
-  <div v-for="(post, idx) in postsStore.posts" :key="post._id" class="post-card" :data-id="post._id" :data-liked-by="JSON.stringify(post.likedBy || [])"
-    v-intersect="(isVisible, entry) => { visiblePosts[idx] = isVisible }" v-show="visiblePosts[idx]">
+  <!-- Standard rendering: render all posts -->
+  <div v-for="post in postsStore.posts" :key="post._id" class="post-card" :data-id="post._id" :data-liked-by="JSON.stringify(post.likedBy || [])">
     
     <!-- Reply Preview -->
     <div v-if="post.replyTo" class="reply-preview" style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a); border-left: 2px solid #00b4d8; padding: 10px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 0 6px rgba(0, 180, 216, 0.3);">
@@ -216,26 +215,7 @@
 import { usePostsStore } from './stores/postsStore';
 import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router';
 import { inject, watch, ref, onMounted, onBeforeUnmount } from 'vue';
-// Lazy rendering: track which posts are visible
-const visiblePosts = ref([]);
-// v-intersect directive for lazy rendering
-const vIntersect = {
-  mounted(el, binding) {
-    const observer = new window.IntersectionObserver(([entry]) => {
-      binding.value(entry.isIntersecting, entry);
-    }, { threshold: 0.1 });
-    observer.observe(el);
-    el._observer = observer;
-  },
-  unmounted(el) {
-    if (el._observer) el._observer.disconnect();
-  }
-};
-// Register directive globally if not already
-if (typeof window !== 'undefined' && window.Vue && !window.Vue._hasIntersectDirective) {
-  window.Vue.directive('intersect', vIntersect);
-  window.Vue._hasIntersectDirective = true;
-}
+// ...existing code...
 
 const postsStore = usePostsStore();
 const { posts } = postsStore; // ✅ include posts to avoid undefined error
