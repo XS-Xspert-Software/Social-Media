@@ -39,7 +39,9 @@
   </div>
 </div>
 
-  <div v-for="post in postsStore.posts" :key="post._id" class="post-card" :data-id="post._id" :data-liked-by="JSON.stringify(post.likedBy || [])">
+  <!-- Lazy rendering: only render posts that are visible in viewport -->
+  <div v-for="(post, idx) in postsStore.posts" :key="post._id" class="post-card" :data-id="post._id" :data-liked-by="JSON.stringify(post.likedBy || [])"
+    v-intersect="(isVisible, entry) => { visiblePosts[idx] = isVisible }" v-show="visiblePosts[idx]">
     
     <!-- Reply Preview -->
     <div v-if="post.replyTo" class="reply-preview" style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a); border-left: 2px solid #00b4d8; padding: 10px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 0 6px rgba(0, 180, 216, 0.3);">
@@ -53,7 +55,7 @@
       <div @click="$router.push(`/post/${post.replyTo._id}`)">
         <p class="preview-message clickable" v-html="postsStore.parseMessage(post.replyTo.message)"></p>
       </div>
-      <img v-if="post.replyTo.photo" :src="post.replyTo.photo" alt="Replied Post Image" class="preview-image" />
+    <img v-if="post.replyTo.photo" :src="post.replyTo.photo" alt="Replied Post Image" class="preview-image" loading="lazy" />
     </div>
     
     <!-- Quote Preview -->
@@ -66,13 +68,13 @@
         </div>
       </div>
       <p class="preview-message" v-html="postsStore.parseMessage(post.quoteTo.message)"></p>
-      <img v-if="post.quoteTo.photo" :src="post.quoteTo.photo" alt="Quoted Post Image" class="preview-image" />
+    <img v-if="post.quoteTo.photo" :src="post.quoteTo.photo" alt="Quoted Post Image" class="preview-image" loading="lazy" />
     </div>
     
     <!-- Post Header -->
     <div class="post-header">
       <div class="profile-picture clickable" @click="redirectToUserProfile(post.username)">
-        <img :src="post.profilePicture || 'pfp2.jpg'" :alt="`${post.username}'s profile picture`" />
+        <img :src="post.profilePicture ? post.profilePicture : 'pfp2.jpg'" :alt="`${post.username}'s profile picture`" loading="lazy" />
       </div>
       <div class="username clickable" @click="postsStore.redirectToUserProfile(post.username)">
         <strong>{{ post.username }}</strong>
@@ -86,7 +88,7 @@
     <p class="post-message" v-html="postsStore.parseMessage(post.message)" @click="$router.push(`/post/${post._id}`)"></p>
     
     <!-- Post Image -->
-    <img v-if="post.photo" :src="post.photo" alt="Post Image" class="post-image" @click="$router.push(`/post/${post._id}`)" />
+  <img v-if="post.photo" :src="post.photo" alt="Post Image" class="post-image" @click="$router.push(`/post/${post._id}`)" loading="lazy" />
     
     <!-- Post Timestamp -->
     <div class="post-timestamp">
@@ -214,6 +216,26 @@
 import { usePostsStore } from './stores/postsStore';
 import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router';
 import { inject, watch, ref, onMounted, onBeforeUnmount } from 'vue';
+// Lazy rendering: track which posts are visible
+const visiblePosts = ref([]);
+// v-intersect directive for lazy rendering
+const vIntersect = {
+  mounted(el, binding) {
+    const observer = new window.IntersectionObserver(([entry]) => {
+      binding.value(entry.isIntersecting, entry);
+    }, { threshold: 0.1 });
+    observer.observe(el);
+    el._observer = observer;
+  },
+  unmounted(el) {
+    if (el._observer) el._observer.disconnect();
+  }
+};
+// Register directive globally if not already
+if (typeof window !== 'undefined' && window.Vue && !window.Vue._hasIntersectDirective) {
+  window.Vue.directive('intersect', vIntersect);
+  window.Vue._hasIntersectDirective = true;
+}
 
 const postsStore = usePostsStore();
 const { posts } = postsStore; // ✅ include posts to avoid undefined error

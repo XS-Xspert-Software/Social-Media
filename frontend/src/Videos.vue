@@ -5,7 +5,8 @@
     <form @submit.prevent="handleUpload">
       <div>
         <label for="video">Choose Video:</label>
-        <input type="file" id="video" @change="onFileChange" accept="video/*" required />
+  <!-- Native lazy loading for video previews (if any) -->
+  <input type="file" id="video" @change="onFileChange" accept="video/*" required />
       </div>
 
       <div>
@@ -21,7 +22,10 @@
       <button type="submit">Upload</button>
     </form>
 
-    <div v-if="uploadStatus" class="status">{{ uploadStatus }}</div>
+  <div v-if="uploadStatus" class="status">{{ uploadStatus }}</div>
+  <!-- Example: Lazy loaded video preview (if you add preview rendering)
+  <video v-if="videoFile" :src="videoPreviewUrl" controls preload="none" poster="" style="width:100%;max-width:400px;" loading="lazy"></video>
+  -->
   </div>
 </template>
 

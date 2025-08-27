@@ -16,7 +16,7 @@
                 <transition-group name="fade" tag="div" class="fade-list">
                   <div v-for="recentChat in recentChats" :key="recentChat.userId || recentChat.id" class="user-card recent-chat" @click="handleUserClick(recentChat)" style="display:flex;align-items:center;padding:12px 16px;margin:5px 0;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
                     <div class="profile-picture" style="width:30px;height:30px;border-radius:30%;margin-right:20px;">
-                      <img :src="recentChat.profile_picture || 'default-pfp.jpg'" :alt="recentChat.username + ' profile'" style="width:100%;height:100%;object-fit:cover;" />
+                      <img :src="recentChat.profile_picture || 'default-pfp.jpg'" :alt="recentChat.username + ' profile'" style="width:100%;height:100%;object-fit:cover;" loading="lazy" />
                     </div>
                     <div class="user-info" style="flex:1;display:flex;flex-direction:column;">
                       <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -33,7 +33,7 @@
 
                 <div v-for="user in filteredUsers" :key="getUserId(user)" @click="handleUserClick(user)" class="user-item" style="display:flex;align-items:center;padding:12px 16px;margin:5px 0;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);">
                   <div class="profile-picture" style="width:30px;height:30px;border-radius:30%;margin-right:20px;">
-                    <img :src="user.profile_picture || 'default-pfp.jpg'" :alt="user.username + ' profile'" style="width:100%;height:100%;object-fit:cover;" />
+                    <img :src="user.profile_picture || 'default-pfp.jpg'" :alt="user.username + ' profile'" style="width:100%;height:100%;object-fit:cover;" loading="lazy" />
                   </div>
                   <div class="username" style="font-size:1.05rem;color:#fff;">
                     <strong>{{ user.username }}</strong>
