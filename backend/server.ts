@@ -107,6 +107,9 @@ app.post('/api/posts', createPostRateLimiter, createPost as any);
 app.post('/api/posts/:postId/like', likePost as any);
 app.post('/api/posts/:postId/dislike', dislikePost as any);
 
+// Proxy video upload to remote service (avoids frontend CORS & dev 404)
+// NOTE: /api/video proxy removed due to TypeScript issues and lack of multipart parser. Keep using front-end Vite proxy.
+
 // Get user settings/profile by userId or username
 app.get('/api/user/settings', async (req: Request, res: Response) => {
   try {

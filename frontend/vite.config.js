@@ -10,6 +10,16 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src'),
     },
   },
+  server: {
+    proxy: {
+      '/api/video': {
+        target: 'https://yupitis.vercel.app',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (p) => p.replace(/^\/api\/video/, '/api/video')
+      }
+    }
+  },
   build: {
     rollupOptions: {
       output: {

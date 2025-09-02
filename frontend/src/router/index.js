@@ -26,23 +26,12 @@ const routes = [
   { path: '/chat', name: 'Chat', component: Chat, children:[
       {
         path: '',
-        redirect: 'live' // Default redirect to live chat
+        name: 'ChatHome', // Named empty child fixes Vue Router warning
+        redirect: 'live'
       },
-      {
-        path: 'live',
-        name: 'LiveChat',
-        meta: { section: 'Live' }
-      },
-      {
-        path: 'world',
-        name: 'WorldChat', 
-        meta: { section: 'WorldChat' }
-      },
-      {
-        path: 'groups',
-        name: 'GroupChat',
-        meta: { section: 'GroupChat' }
-      }
+      { path: 'live', name: 'LiveChat', meta: { section: 'Live' } },
+      { path: 'world', name: 'WorldChat', meta: { section: 'WorldChat' } },
+      { path: 'groups', name: 'GroupChat', meta: { section: 'GroupChat' } }
     ]
   },
   { path: '/admin', name: 'Admin', component: Admin },

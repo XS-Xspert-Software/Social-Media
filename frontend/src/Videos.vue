@@ -64,7 +64,8 @@ export default {
       this.uploadStatus = "Uploading...";
 
       try {
-        const res = await fetch("https://yupitis.vercel.app/api/video", {
+  // Use Vite dev proxy to avoid CORS during development
+  const res = await fetch("/api/video", {
           method: "POST",
           body: formData,
         });
