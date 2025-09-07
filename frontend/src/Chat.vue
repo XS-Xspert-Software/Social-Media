@@ -1,5 +1,12 @@
 <template>
   <section class="chat-section">
+    <!-- Show clear login requirement when not authenticated -->
+    <LoginPrompt
+      v-if="!isLoggedIn"
+      message="Log in to see your recent chats and start messaging."
+      :href="loginHref"
+      @login="goLogin"
+    />
     <div class="chat-container">
       <div class="tabs">
         <button :class="['tab-button', { active: activeSection === 'Recent' }]" @click="switchSectionWithRoute('Recent', '/chat')">Recent</button>
@@ -72,6 +79,7 @@
 <script>
 import { defineAsyncComponent } from 'vue';
 import Chatbox from './Chatbox.vue';
+import LoginPrompt from './LoginPrompt.vue';
 import {
   getUserId,
   normalizeUser,
@@ -89,6 +97,7 @@ export default {
   components: {
     Chatbox,
     FriendsChat: defineAsyncComponent(() => import('./FriendsChat.vue')),
+  LoginPrompt,
   },
   data() {
     return {
@@ -103,6 +112,9 @@ export default {
     };
   },
   computed: {
+    isLoggedIn() {
+      return !!localStorage.getItem('username');
+    },
     filteredUsers() {
       const recentUserIds = this.recentChats.map(chat => getUserId(chat));
       const allUsers = fetchAllUsers();
@@ -129,6 +141,12 @@ export default {
     },
   },
   methods: {
+    goLogin() {
+      window.location.href = this.loginHref;
+    },
+    loginHref() {
+      return 'https://latestnewsandaffairs.site/public/signup';
+    },
     getUserId,
     normalizeUser,
     cacheUser,

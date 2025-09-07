@@ -243,6 +243,11 @@ watch(selectedSort, (newSort) => {
 }, { immediate: true });
 
 function tweetPost(postId, username) {
+  // Require login to reply/tweet
+  if (!postsStore.isAuthenticated) {
+    notify?.('Please log in to reply to posts', true);
+    return;
+  }
   router.push({ path: '/float', query: { replyToPostId: postId, replyToUsername: username } });
 }
 function redirectToUserProfile(username) {
@@ -260,10 +265,18 @@ function handleGlobalClick(e){
 }
 function handleEdit(post){
   openMenuFor.value = null;
+  if (!postsStore.isAuthenticated) {
+    notify?.('Please log in to edit your post', true);
+    return;
+  }
   postsStore.editPost(post._id, post.username);
 }
 function handleDelete(post){
   openMenuFor.value = null;
+  if (!postsStore.isAuthenticated) {
+    notify?.('Please log in to delete your post', true);
+    return;
+  }
   postsStore.deletePost(post._id);
 }
 onMounted(()=>{

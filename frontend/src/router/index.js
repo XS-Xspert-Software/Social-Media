@@ -11,6 +11,7 @@ const PostPage = () => import('../PostPage.vue')
 const GroupChatbox = () => import('../GroupChatbox.vue')
 const Float = () => import('../Float.vue')
 const Admin = () => import('../Admin.vue')
+const Notification = () => import('../Notification.vue')
 
 const routes = [
   { path: '/', name: 'Posts', component: Posts },
@@ -22,7 +23,7 @@ const routes = [
   { path: '/chatbox', name: 'Chatbox', component: Chatbox },
   { path: '/group-chat/:groupId/:groupName', name: 'GroupChatbox', component: GroupChatbox },
   { path: '/post/:id', name: 'PostPage', component: PostPage },
-  { path: '/notification', name: 'Notification' },
+  { path: '/notification', name: 'Notification', component: Notification },
   { path: '/chat', name: 'Chat', component: Chat, children:[
       {
         path: '',

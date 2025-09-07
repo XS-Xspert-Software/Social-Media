@@ -1,7 +1,7 @@
 <template>
   <div :class="['app-wrapper', { 'Chatbox-fullscreen': isChatboxRoute, 'no-header-padding': postsStore.selectedPost, 'GroupChatbox-fullscreen': isGroupChatboxRoute}]">
-    <!-- Header -->
-    <header v-if="!isChatboxRoute , !isGroupChatboxRoute && !postsStore.selectedPost">
+  <!-- Header -->
+  <header v-if="!isChatboxRoute && !isGroupChatboxRoute && !postsStore.selectedPost">
        <h1 style="font-size: 23px; margin-left: 3%; display: flex; align-items: center; gap: 8px;">
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="width:24px; height:24px;">
           <path d="M32 2 L38 26 L62 32 L38 38 L32 62 L26 38 L2 32 L26 26 Z"/>
@@ -24,6 +24,14 @@
         </div>
       </div>
     </header>
+
+    <!-- Login prompt for guests -->
+    <LoginPrompt
+      v-if="!isSignedIn"
+      :inline="false"
+      :href="loginHref"
+      @login="authAction"
+    />
 
     <!-- Layout -->
     <div class="layout-container" :class="{ 'with-right-sidebar': !isChatRoute }">
@@ -88,7 +96,7 @@
     
 <Float />
 
-    <!-- Always render Notification component but conditionally show it -->
+  <!-- Always render Notification component but conditionally show it -->
     <Notification
       :logged-in-username="userProfile.username"
       :show-ui="notificationActive"
@@ -99,7 +107,7 @@
     />
 
    <!-- Mobile nav -->
-<nav v-if="!isChatboxRoute , !isGroupChatboxRoute">
+<nav v-if="!isChatboxRoute && !isGroupChatboxRoute">
   <ul>
     <li
       v-for="tab in tabs"
@@ -162,6 +170,7 @@ const PostPage = defineAsyncComponent(() => import('./PostPage.vue'));
 
 import Chatbox from './Chatbox.vue';
 import Alert from './Alert.vue';
+import LoginPrompt from './LoginPrompt.vue';
 
 const jwtCache = new Map();
 
@@ -178,6 +187,7 @@ export default {
     RightSidebar,
     Float,
     Alert,
+  LoginPrompt,
     PostPage
   },
 
@@ -234,7 +244,9 @@ export default {
     },
 
     isChatRoute() {
-      return ['Chat', 'Chatbox'].includes(this.$route.name);
+  // Treat chat child views as chat route for layout purposes
+  const n = this.$route.name;
+  return ['Chat', 'ChatHome', 'LiveChat', 'WorldChat', 'GroupChat', 'Chatbox'].includes(n);
     },
 
     isChatboxRoute() {
@@ -247,6 +259,11 @@ export default {
 
     notificationActive() {
       return this.currentTab === 'notification';
+    },
+
+    loginHref() {
+      // Centralize login target so we can change it easily in one place
+      return 'https://latestnewsandaffairs.site/public/signup';
     },
   },
 
@@ -322,7 +339,8 @@ export default {
       };
 
       if (tab === 'notification') {
-        this.$router.push('/Notification').catch(() => {});
+  // Use named route to avoid case/casing issues
+  this.$router.push({ name: 'Notification' }).catch(() => {});
         return;
       }
 
@@ -435,11 +453,19 @@ export default {
 
     handleRouteChange(to) {
       const tabRoutes = this.tabRoutes.map((r) => r.toLowerCase());
-      if (to.name && tabRoutes.includes(to.name.toLowerCase())) {
-        this.currentTab = to.name.toLowerCase();
-      } else {
-        this.currentTab = 'posts';
+      const name = (to.name || '').toString();
+      const lower = name.toLowerCase();
+      // Normalize chat child routes to 'chat'
+      const chatNames = ['chat', 'chathome', 'livechat', 'worldchat', 'groupchat'];
+      if (chatNames.includes(lower)) {
+        this.currentTab = 'chat';
+        return;
       }
+      if (name && tabRoutes.includes(lower)) {
+        this.currentTab = lower;
+        return;
+      }
+      this.currentTab = 'posts';
     },
   },
 

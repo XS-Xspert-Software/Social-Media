@@ -59,6 +59,12 @@
         </div>
       </div>
     </div>
+    <!-- Clear guest banner for Settings -->
+    <LoginPrompt
+      v-if="isGuest"
+      message="Login to edit your profile and access settings."
+      :href="loginHref"
+    />
 
     <!-- Profile Content -->
     <main class="main-content">
@@ -325,9 +331,11 @@ button{border:none;cursor:pointer;transition:0.2s}
 
 <script>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import LoginPrompt from './LoginPrompt.vue';
 
 export default {
   name: 'ProfilePage',
+  components: { LoginPrompt },
   setup() {
     // Reactive state
   const showDropdown = ref(false);
@@ -374,6 +382,7 @@ export default {
       { key: 'tagged', label: 'Tagged', icon: 'fas fa-user-tag' },
       { key: 'saved', label: 'Saved', icon: 'fas fa-bookmark' }
     ]);
+
 
     // Computed properties
     const toggleSettings = computed(() => [

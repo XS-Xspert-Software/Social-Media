@@ -149,11 +149,21 @@ const router = useRouter()
 const replyToPostId = ref(route.query.replyToPostId || null)
 const replyToUsername = ref(route.query.replyToUsername || null)
 
-// User info
+// User info (kept in sync on action)
 const loggedInUserId = ref(localStorage.getItem('userId') || '')
 const loggedInUsername = ref(localStorage.getItem('username') || '')
 const profilePic = ref(localStorage.getItem('profilePic') || '')
 const sessionId = ref(localStorage.getItem('sessionId') || '')
+const loginHref = 'https://latestnewsandaffairs.site/public/signup'
+
+const isAuthenticated = computed(() => !!(loggedInUsername.value && loggedInUsername.value !== 'Guest'))
+
+function refreshAuthRefs() {
+  loggedInUserId.value = localStorage.getItem('userId') || ''
+  loggedInUsername.value = localStorage.getItem('username') || ''
+  profilePic.value = localStorage.getItem('profilePic') || ''
+  sessionId.value = localStorage.getItem('sessionId') || ''
+}
 
 // Init reply state
 onMounted(() => {
@@ -184,6 +194,12 @@ function handleGlobalKeydown(e){
 
 // Toggle post panel
 function togglePanel() {
+  refreshAuthRefs()
+  if (!isAuthenticated.value) {
+    // Make login requirement obvious and fast-path users to login
+    window.location.href = loginHref
+    return
+  }
   showPanel.value = !showPanel.value
   if (!showPanel.value) {
     router.push({ path: '/posts' })
@@ -412,6 +428,12 @@ async function uploadHashtags(postId, hashtags, username) {
 
 // Post opinion
 async function postOpinion() {
+  refreshAuthRefs()
+  if (!isAuthenticated.value) {
+    showAlert('Please log in to post', true)
+    window.location.href = loginHref
+    return
+  }
   if (!sessionId.value || !loggedInUsername.value) {
     showAlert('Session ID and Username required', true)
     return
@@ -473,6 +495,12 @@ async function postOpinion() {
 
 // Create group
 async function createGroup() {
+  refreshAuthRefs()
+  if (!isAuthenticated.value) {
+    showAlert('Please log in to create a group', true)
+    window.location.href = loginHref
+    return
+  }
   try {
     const response = await fetch('https://yupitis.vercel.app/api/groups', {
       method: 'POST',
@@ -609,7 +637,7 @@ function resetForm() {
   background: linear-gradient(90deg,rgba(255,255,255,0.04),rgba(255,255,255,0));
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
-.panel-fixed-header h3 { margin: 0; font-size: 1.15rem; letter-spacing: .5px; background: linear-gradient(135deg,#b892ff,#f093fb); -webkit-background-clip: text; color: transparent; }
+.panel-fixed-header h3 { margin: 0; font-size: 1.15rem; letter-spacing: .5px; background: linear-gradient(135deg,#b892ff,#f093fb); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .panel-header { display: flex; }
 .panel-content { flex: 1; overflow-y: auto; padding: 0 28px 32px; }
 /* Input Elements */
