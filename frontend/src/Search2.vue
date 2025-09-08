@@ -958,6 +958,12 @@ const redirectToUserProfile = (username) => {
 };
 // Navigate to Upload.vue for tweeting/replying
 function tweetPost(postId, username) {
+  const u = localStorage.getItem('username');
+  if (!u || u === 'Guest') {
+    notify('Please log in to reply to posts', true);
+    window.location.href = 'https://latestnewsandaffairs.site/public/signup';
+    return;
+  }
   router.push({ path: '/float', query: { replyToPostId: postId, replyToUsername: username } });
 }
 

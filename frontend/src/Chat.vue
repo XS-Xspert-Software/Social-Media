@@ -4,7 +4,6 @@
     <LoginPrompt
       v-if="!isLoggedIn"
       message="Log in to see your recent chats and start messaging."
-      :href="loginHref"
       @login="goLogin"
     />
     <div class="chat-container">
@@ -113,7 +112,8 @@ export default {
   },
   computed: {
     isLoggedIn() {
-      return !!localStorage.getItem('username');
+      const u = localStorage.getItem('username');
+      return !!(u && u !== 'Guest');
     },
     filteredUsers() {
       const recentUserIds = this.recentChats.map(chat => getUserId(chat));
@@ -142,11 +142,11 @@ export default {
   },
   methods: {
     goLogin() {
-      window.location.href = this.loginHref;
+      try { localStorage.setItem('postLoginRedirect', this.$route.fullPath || '/chat'); } catch {}
+      const next = encodeURIComponent(this.$route.fullPath || '/chat');
+      window.location.href = `${this.loginHref()}?next=${next}`;
     },
-    loginHref() {
-      return 'https://latestnewsandaffairs.site/public/signup';
-    },
+    loginHref() { return 'https://latestnewsandaffairs.site/public/signup'; },
     getUserId,
     normalizeUser,
     cacheUser,

@@ -29,8 +29,7 @@
     <LoginPrompt
       v-if="!isSignedIn"
       :inline="false"
-      :href="loginHref"
-      @login="authAction"
+      @login="() => authAction()"
     />
 
     <!-- Layout -->
@@ -268,6 +267,12 @@ export default {
   },
 
   methods: {
+    prepareLoginRedirect(targetPath) {
+      try {
+        const next = targetPath || this.$route.fullPath || '/';
+        setLocalStorage('postLoginRedirect', next);
+      } catch {}
+    },
     async fetchUnreadMessagesCount() {
       if (!this.isSignedIn || !this.userProfile.userId) {
         this.unreadMessagesCount = 0;
@@ -418,6 +423,7 @@ export default {
     },
 
     authAction() {
+  this.prepareLoginRedirect();
       if (this.isSignedIn) {
         ['username', 'userId', 'profilePic', 'authToken'].forEach((key) => {
           setLocalStorage(key, '');
@@ -429,7 +435,8 @@ export default {
         });
       }
       this.showProfileMenu = false;
-      window.location.href = 'https://latestnewsandaffairs.site/public/signup';
+  const next = encodeURIComponent(this.$route.fullPath || '/');
+  window.location.href = `https://latestnewsandaffairs.site/public/signup?next=${next}`;
     },
 
     updateUserProfile() {
@@ -443,6 +450,15 @@ export default {
         this.$nextTick(() => {
           this.refreshNotifications();
           this.fetchUnreadMessagesCount();
+          // If we have a stored redirect target from pre-login, route to it once
+          const next = getLocalStorage('postLoginRedirect');
+          if (next) {
+            try {
+              this.$router.push(next).catch(() => {});
+            } finally {
+              setLocalStorage('postLoginRedirect', '');
+            }
+          }
         });
       }
     },

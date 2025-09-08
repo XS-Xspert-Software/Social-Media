@@ -65,6 +65,11 @@
       message="Login to edit your profile and access settings."
       :href="loginHref"
     />
+      <LoginPrompt
+        v-if="isGuest"
+        message="Login to edit your profile and access settings."
+        @login="goLogin"
+      />
 
     <!-- Profile Content -->
     <main class="main-content">
@@ -140,6 +145,11 @@
 
       <!-- Content Tabs -->
       <div class="content-tabs">
+                    const goLogin = () => {
+                      try { localStorage.setItem('postLoginRedirect', window.location.pathname + window.location.search); } catch {}
+                      const next = encodeURIComponent(window.location.pathname + window.location.search);
+                      window.location.href = `${loginHref}?next=${next}`;
+                    };
         <button 
           v-for="tab in contentTabs" 
           :key="tab.key"
@@ -341,7 +351,7 @@ export default {
   const showDropdown = ref(false);
   const dropdownMenu = ref(null);
   const menuTrigger = ref(null);
-  const isGuest = ref(!localStorage.getItem('username'));
+  const isGuest = ref(!(localStorage.getItem('username') && localStorage.getItem('username') !== 'Guest'));
     const showSettings = ref(false);
     const activeTab = ref('posts');
     const loading = ref(false);
@@ -349,7 +359,7 @@ export default {
     const newProfilePicture = ref(null);
 
     // User profile data
-    const storedUsername = localStorage.getItem('username') || '';
+  const storedUsername = localStorage.getItem('username') || '';
     const userProfile = ref({
       username: storedUsername,
       display_name: storedUsername || 'Guest',
@@ -372,6 +382,18 @@ export default {
       privacy: false,
       darkMode: false,
       autoPlay: true
+    });
+
+    // Keep isGuest reactive to username changes
+    const updateGuest = () => {
+      const un = localStorage.getItem('username') || '';
+      isGuest.value = !(un && un !== 'Guest');
+    };
+    onMounted(() => {
+      window.addEventListener('storage', updateGuest);
+    });
+    onUnmounted(() => {
+      window.removeEventListener('storage', updateGuest);
     });
 
     const hasBlueMarkAccess = ref(false);

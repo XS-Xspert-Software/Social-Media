@@ -8,16 +8,7 @@
       </span>
     </div>
     <div class="login-prompt__actions">
-      <a
-        v-if="href"
-        class="login-prompt__button"
-        :href="href"
-        rel="noopener"
-      >
-        {{ ctaLabel || 'Login' }}
-      </a>
       <button
-        v-else
         type="button"
         class="login-prompt__button"
         @click="$emit('login')"
@@ -31,8 +22,7 @@
   <div v-if="inline" class="login-inline" role="note">
     <i class="fas fa-info-circle" aria-hidden="true"></i>
     <span>{{ message || defaultMessage }}</span>
-    <a v-if="href" :href="href" class="login-inline__link">{{ ctaLabel || 'Login' }}</a>
-    <button v-else class="login-inline__link" @click="$emit('login')">{{ ctaLabel || 'Login' }}</button>
+  <button class="login-inline__link" @click="$emit('login')">{{ ctaLabel || 'Login' }}</button>
   </div>
 </template>
 
@@ -42,7 +32,7 @@ export default {
   props: {
     message: { type: String, default: '' },
     ctaLabel: { type: String, default: 'Login' },
-    href: { type: String, default: '' },
+  href: { type: String, default: '' }, // kept for backwards-compat, not used now
     inline: { type: Boolean, default: false },
   },
   computed: {
