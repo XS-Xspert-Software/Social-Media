@@ -200,7 +200,8 @@
 <script setup>
 import { ref, onMounted, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { usePostsStore, onBeforeUnmount } from './stores/postsStore'
+import { usePostsStore } from './stores/postsStore'
+import { onBeforeUnmount } from 'vue'
 
 const postsStore = usePostsStore();
 const router = useRouter();
