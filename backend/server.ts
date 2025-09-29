@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import type { Request, Response } from 'express';
+import multer from 'multer';
 import { registerUser, loginUser, getUserInfo } from './controller/user.js';
 import rateLimit from 'express-rate-limit';
 import { createPost, getPosts, likePost, dislikePost } from './controller/post.js';
@@ -9,6 +10,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 dotenv.config();
+import { uploadVideoToB2 } from './b2.service.js';
 
 // ESM-compatible __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -119,6 +121,21 @@ app.get('/api/user/settings', async (req: Request, res: Response) => {
       user = await getUserInfo(userId as string);
     } else if (username) {
       // Find by username (assuming usernames are unique)
+const upload = multer({ dest: 'uploads/' }); // Temporary upload folder
+app.post('/api/video/upload', upload.single('video'), async (req: Request, res: Response) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No video file uploaded.' });
+    // Use original filename or generate unique name
+    const fileName = req.file.originalname || req.file.filename;
+    const filePath = req.file.path;
+    const fileId = await uploadVideoToB2(filePath, fileName);
+    // Optionally, delete temp file after upload
+    fs.unlink(filePath, () => {});
+    res.json({ success: true, fileId });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
       const found = await db.select().from(users).where(eq(users.username, username as string));
       if (found.length === 0) return res.status(404).json({ error: 'User not found' });
       const { password, ...userInfo } = found[0];
