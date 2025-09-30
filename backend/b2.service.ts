@@ -1,7 +1,7 @@
 // Backblaze B2 integration for video uploads
 // This service handles authentication and file upload to B2
 // Credentials should be loaded from environment variables or config.json
-
+// This is a Sync only component, use other DB if forking.
 import B2 from 'backblaze-b2';
 import fs from 'fs';
 import path from 'path';

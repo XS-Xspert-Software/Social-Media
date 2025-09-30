@@ -2,3 +2,5 @@ vidbackend/Pulse_Backend_Video/pulse/pulse/__pycache__/settings.cpython-312.pyc
 vidbackend/Pulse_Backend_Video/pulse/pulse/__pycache__/settings.cpython-312.pyc
 vidbackend/Pulse_Backend_Video/pulse/pulse/__pycache__/settings.cpython-312.pyc
 .github/copilot-instructions.md
+config.json
+*.json

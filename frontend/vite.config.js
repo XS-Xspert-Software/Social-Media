@@ -16,9 +16,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/video': {
-        target: 'https://yupitis.vercel.app',
+        target: 'http://localhost:3000',
         changeOrigin: true,
-        secure: true,
+        secure: false,
         rewrite: (p) => p.replace(/^\/api\/video/, '/api/video')
       }
     }

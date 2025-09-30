@@ -65,7 +65,7 @@ export default {
 
       try {
   // Use Vite dev proxy to avoid CORS during development
-  const res = await fetch("/api/video", {
+  const res = await fetch("/api/video/upload", {
           method: "POST",
           body: formData,
         });
