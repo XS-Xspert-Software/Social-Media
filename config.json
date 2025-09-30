@@ -1,7 +1,0 @@
-{
-  "federationTrustedServers": [
-    "https://pulse-demo.example.com",
-    "https://another-trusted-server.com"
-  ],
-  "ALLOW_TEST_POST_UPLOAD": true
-}
