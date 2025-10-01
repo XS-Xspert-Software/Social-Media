@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
+import 'dotenv/config';
 
 // Add Vitest config for jsdom environment
 import { configDefaults } from 'vitest/config';
@@ -16,7 +17,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/video': {
-        target: 'http://localhost:3000',
+        // Use container hostname when running via Docker; allow override with VITE_API_BASE
+        target: process.env.VITE_API_BASE || 'http://backend:3000',
         changeOrigin: true,
         secure: false,
         rewrite: (p) => p.replace(/^\/api\/video/, '/api/video')

@@ -15,6 +15,11 @@ services:
     build: ./backend
     environment:
       - DATABASE_URL=postgresql://postgres:sync@db:5432/social_db
+      # Backblaze B2 credentials are read at runtime from environment variables.
+      # Define these in a local .env file (NOT committed) or your deployment environment.
+      - B2_KEY_ID=${B2_KEY_ID}
+      - B2_APP_KEY=${B2_APP_KEY}
+      - B2_BUCKET_ID=${B2_BUCKET_ID}
     ports:
       - "3000:3000"
     depends_on:

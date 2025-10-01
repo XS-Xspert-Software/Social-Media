@@ -1,3 +1,4 @@
+
 <template>
   <div class="friends-container">
     <div class="friends-section" :class="{ 'split-view': isLargeScreen && selectedFriend }">

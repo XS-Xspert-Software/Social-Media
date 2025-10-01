@@ -113,6 +113,22 @@ app.post('/api/posts/:postId/dislike', dislikePost as any);
 // NOTE: /api/video proxy removed due to TypeScript issues and lack of multipart parser. Keep using front-end Vite proxy.
 
 // Get user settings/profile by userId or username
+// Video upload endpoint (Backblaze B2)
+const upload = multer({ dest: 'uploads/' }); // Temporary upload folder
+app.post('/api/video/upload', upload.single('video'), async (req: Request, res: Response) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No video file uploaded.' });
+    const fileName = req.file.originalname || req.file.filename;
+    const filePath = req.file.path;
+  const videoInfo = await uploadVideoToB2(filePath, fileName);
+    fs.unlink(filePath, () => {}); // cleanup
+  return res.json({ success: true, video: videoInfo });
+  } catch (err: any) {
+    log('error', 'Video upload failed', err);
+    return res.status(500).json({ error: err.message || 'Upload failed' });
+  }
+});
+
 app.get('/api/user/settings', async (req: Request, res: Response) => {
   try {
     const { userId, username } = req.query;
@@ -120,22 +136,6 @@ app.get('/api/user/settings', async (req: Request, res: Response) => {
     if (userId) {
       user = await getUserInfo(userId as string);
     } else if (username) {
-      // Find by username (assuming usernames are unique)
-const upload = multer({ dest: 'uploads/' }); // Temporary upload folder
-app.post('/api/video/upload', upload.single('video'), async (req: Request, res: Response) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: 'No video file uploaded.' });
-    // Use original filename or generate unique name
-    const fileName = req.file.originalname || req.file.filename;
-    const filePath = req.file.path;
-    const fileId = await uploadVideoToB2(filePath, fileName);
-    // Optionally, delete temp file after upload
-    fs.unlink(filePath, () => {});
-    res.json({ success: true, fileId });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
       const found = await db.select().from(users).where(eq(users.username, username as string));
       if (found.length === 0) return res.status(404).json({ error: 'User not found' });
       const { password, ...userInfo } = found[0];
@@ -143,10 +143,10 @@ app.post('/api/video/upload', upload.single('video'), async (req: Request, res: 
     } else {
       return res.status(400).json({ error: 'userId or username required' });
     }
-    res.json({ user });
+    return res.json({ user });
   } catch (e: any) {
     log('error', e.message);
-    res.status(400).json({ error: e.message });
+    return res.status(400).json({ error: e.message });
   }
 });
 
