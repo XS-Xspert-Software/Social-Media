@@ -22,6 +22,30 @@
         </li>
       </ul>
     </div>
+    <div class="panel-section gradient-soft" v-if="shorts.length">
+      <h3 class="panel-title">Shorts of the Day</h3>
+      <ul class="stat-list">
+        <li v-for="s in shorts" :key="s.id" style="display:flex;align-items:center;gap:8px;min-height:38px;">
+          <video v-if="s.videoUrl" :src="s.videoUrl" style="width:28px;height:28px;border-radius:6px;object-fit:cover;" muted playsinline preload="metadata" />
+          <div style="flex:1;overflow:hidden;">
+            <strong style="font-size:0.72rem;color:#fff;">{{ s.userId }}</strong>
+            <div style="font-size:0.68rem;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">{{ s.title || s.description || '' }}</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div class="panel-section gradient-soft" v-if="postsOfDay.length">
+      <h3 class="panel-title">Posts of the Day</h3>
+      <ul class="stat-list">
+        <li v-for="p in postsOfDay" :key="p._id" style="display:flex;align-items:center;gap:8px;min-height:38px;">
+          <img v-if="p.photo" :src="p.photo" alt="post" style="width:28px;height:28px;border-radius:6px;object-fit:cover;" />
+          <div style="flex:1;overflow:hidden;">
+            <strong style="font-size:0.72rem;color:#fff;">{{ p.username }}</strong>
+            <div style="font-size:0.68rem;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">{{ p.message.slice(0, 48) }}<span v-if="p.message.length>48">…</span></div>
+          </div>
+        </li>
+      </ul>
+    </div>
   </aside>
 </template>
 <script setup>
@@ -33,11 +57,28 @@ const stats = ref([
   { label: 'Following', value: 0 }
 ]);
 const suggested = ref([]);
+const shorts = ref([]);
+const postsOfDay = ref([]);
 function follow(u){/* placeholder follow action */}
-onMounted(()=>{
-  // lightweight deferred fetch examples (backend assumed ready)
-  // fetch('/api/user/stats').then(r=>r.json()).then(d=>{ stats.value = d.stats || stats.value; }).catch(()=>{});
-  // fetch('/api/user/suggested').then(r=>r.json()).then(d=>{ suggested.value = d.users || []; }).catch(()=>{});
+onMounted(async ()=>{
+  // Fetch random shorts (videos)
+  try {
+    const shortsRes = await fetch('https://chyna.vercel.app/api/shorts');
+    const shortsData = await shortsRes.json();
+    if (shortsData.success && Array.isArray(shortsData.shorts)) {
+      // Shuffle and take 3
+      shorts.value = shortsData.shorts.sort(() => Math.random() - 0.5).slice(0, 3);
+    }
+  } catch {}
+  // Fetch random posts of the day
+  try {
+    const postsRes = await fetch('/api/posts');
+    const postsData = await postsRes.json();
+    if (Array.isArray(postsData.posts)) {
+      // Shuffle and take 3
+      postsOfDay.value = postsData.posts.sort(() => Math.random() - 0.5).slice(0, 3);
+    }
+  } catch {}
 });
 </script>
 <style scoped>
