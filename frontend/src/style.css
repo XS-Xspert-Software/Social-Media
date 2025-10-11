@@ -301,7 +301,155 @@ nav li:hover {
     line-height: 1.4;
 }
 /* Optimized and minified CSS */
-button{margin-top:10px;padding:7px 15px;background-color:rgba(255,255,255,.482);color:#000;border:none;border-radius:15px;cursor:pointer;font-size:12px;transition:background-color .3s ease,transform .2s ease}
+
+/* Global Glassmorphic Button Styles */
+button,
+.btn,
+.action-btn,
+.back-btn,
+.upload-submit-btn,
+.profile-feed-btn,
+.close-btn,
+.toggle-btn,
+.follow-btn,
+.accept-btn,
+.decline-btn,
+.mark-read-btn,
+.icon-button,
+.hangup-button,
+.cancel-reply,
+.emoji-button,
+.send-button,
+.tab-button,
+.share-btn,
+.more-btn,
+.like-btn,
+.views-btn,
+.comment-btn,
+.tweet-btn,
+.kick-btn,
+.sort-button,
+.edit-btn,
+.delete-btn,
+.leave-button,
+.remove-image,
+.remove-btn,
+.cancel-edit,
+.login-prompt__button,
+.login-inline__link,
+.modal-cancel,
+.modal-confirm,
+.close-full-screen-btn,
+.sidebar-tab-btn,
+.bottom-nav-btn {
+  background: linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.18) 100%);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1.5px solid rgba(255,255,255,0.18);
+  border-radius: 18px;
+  color: #fff;
+  box-shadow: 0 4px 18px -6px rgba(0,0,0,.22), 0 6px 28px -8px rgba(0,0,0,.18);
+  padding: 9px 22px;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: .2px;
+  cursor: pointer;
+  transition: background 0.25s, box-shadow 0.25s, transform 0.18s;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+}
+button:hover,
+.btn:hover,
+.action-btn:hover,
+.back-btn:hover,
+.upload-submit-btn:hover,
+.profile-feed-btn:hover,
+.close-btn:hover,
+.toggle-btn:hover,
+.follow-btn:hover,
+.accept-btn:hover,
+.decline-btn:hover,
+.mark-read-btn:hover,
+.icon-button:hover,
+.hangup-button:hover,
+.cancel-reply:hover,
+.emoji-button:hover,
+.send-button:hover,
+.tab-button:hover,
+.share-btn:hover,
+.more-btn:hover,
+.like-btn:hover,
+.views-btn:hover,
+.comment-btn:hover,
+.tweet-btn:hover,
+.kick-btn:hover,
+.sort-button:hover,
+.edit-btn:hover,
+.delete-btn:hover,
+.leave-button:hover,
+.remove-image:hover,
+.remove-btn:hover,
+.cancel-edit:hover,
+.login-prompt__button:hover,
+.login-inline__link:hover,
+.modal-cancel:hover,
+.modal-confirm:hover,
+.close-full-screen-btn:hover,
+.sidebar-tab-btn:hover,
+.bottom-nav-btn:hover {
+  background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.28) 100%);
+  box-shadow: 0 8px 32px -8px rgba(0,0,0,.28), 0 12px 36px -12px rgba(0,0,0,.22);
+  transform: translateY(-2px) scale(1.03);
+}
+button:active,
+.btn:active,
+.action-btn:active,
+.back-btn:active,
+.upload-submit-btn:active,
+.profile-feed-btn:active,
+.close-btn:active,
+.toggle-btn:active,
+.follow-btn:active,
+.accept-btn:active,
+.decline-btn:active,
+.mark-read-btn:active,
+.icon-button:active,
+.hangup-button:active,
+.cancel-reply:active,
+.emoji-button:active,
+.send-button:active,
+.tab-button:active,
+.share-btn:active,
+.more-btn:active,
+.like-btn:active,
+.views-btn:active,
+.comment-btn:active,
+.tweet-btn:active,
+.kick-btn:active,
+.sort-button:active,
+.edit-btn:active,
+.delete-btn:active,
+.leave-button:active,
+.remove-image:active,
+.remove-btn:active,
+.cancel-edit:active,
+.login-prompt__button:active,
+.login-inline__link:active,
+.modal-cancel:active,
+.modal-confirm:active,
+.close-full-screen-btn:active,
+.sidebar-tab-btn:active,
+.bottom-nav-btn:active {
+  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.13) 100%);
+  box-shadow: 0 2px 8px -2px rgba(0,0,0,.18);
+  transform: scale(.98);
+}
+
+/* Remove legacy button background for full override */
+button {
+  background: none;
+}
 
 .image-preview-container{position:relative;display:inline-block;max-width:100%;margin-bottom:15px}
 .image-preview-container img{max-width:300px;max-height:280px;border-radius:10px;display:block}

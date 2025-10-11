@@ -540,12 +540,17 @@ export default {
 }
 
 .back-btn {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 24px;
+  background: rgba(24, 32, 54, 0.55);
+  border: 1.5px solid rgba(255,255,255,0.18);
+  color: #e8eefc;
+  font-size: 22px;
+  border-radius: 14px;
   cursor: pointer;
-  padding: 8px;
+  padding: 7px 16px;
+  box-shadow: 0 4px 18px 0 rgba(31, 38, 135, 0.10);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  transition: box-shadow 0.2s, background 0.2s;
 }
 
 .upload-header h1 {
@@ -630,11 +635,11 @@ export default {
 }
 
 .upload-submit-btn {
-  background: linear-gradient(135deg, #eab366 0%, #764ba2 100%);
-  border: none;
-  color: #fff;
-  padding: 14px;
-  border-radius: 8px;
+  background: rgba(24, 32, 54, 0.55);
+  border: 1.5px solid rgba(255,255,255,0.18);
+  color: #e8eefc;
+  padding: 12px 24px;
+  border-radius: 16px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
@@ -642,6 +647,10 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  box-shadow: 0 4px 18px 0 rgba(31, 38, 135, 0.10);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  transition: box-shadow 0.2s, background 0.2s;
 }
 
 .upload-submit-btn:disabled {
@@ -812,16 +821,19 @@ export default {
   position: absolute;
   top: 16px;
   left: 16px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: #fff;
-  font-size: 24px;
+  background: rgba(24, 32, 54, 0.55);
+  border: 1.5px solid rgba(255,255,255,0.18);
+  color: #e8eefc;
+  font-size: 22px;
   width: 40px;
   height: 40px;
   border-radius: 50%;
   cursor: pointer;
   z-index: 10;
-  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 18px 0 rgba(31, 38, 135, 0.10);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  transition: box-shadow 0.2s, background 0.2s;
 }
 
 .video-info {

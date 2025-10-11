@@ -111,7 +111,17 @@ onMounted(()=>{
 .info { flex: 1; display: flex; flex-direction: column; line-height: 1.05; }
 .info strong { font-size: 0.66rem; color: #fff; font-weight: 600; }
 .info small { font-size: 0.55rem; color: #7f8a96; margin-top: 2px; }
-.follow-btn { background: linear-gradient(135deg,#129f85,#2266dd); border: none; color: #fff; font-size: 0.58rem; font-weight: 600; padding: 5px 10px; border-radius: 18px; cursor: pointer; transition: .25s; }
+.follow-btn {
+  background: none !important;
+  border: none;
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: .25s;
+}
 .follow-btn:hover { filter: brightness(1.15); }
 .follow-btn:active { transform: translateY(1px); }
 

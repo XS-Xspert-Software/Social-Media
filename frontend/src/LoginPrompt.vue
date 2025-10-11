@@ -51,19 +51,23 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  background: linear-gradient(90deg, #10192b 80%, #1e293b 100%);
+  background: rgba(24, 32, 54, 0.55);
   color: #e8eefc;
-  border: 1.5px solid #223366;
-  border-radius: 16px;
-  padding: 10px 22px 10px 18px;
+  border: 1.5px solid rgba(255,255,255,0.18);
+  border-radius: 22px;
+  padding: 14px 28px 14px 22px;
   margin: 80px auto 10px auto;
-  min-height: 36px;
+  min-height: 38px;
   max-width: 420px;
   width: 100%;
-  box-shadow: 0 4px 18px 0 rgba(0,0,0,0.18), 0 1.5px 4px 0 rgba(30,40,60,0.10);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18), 0 1.5px 4px 0 rgba(30,40,60,0.10);
   font-size: 15px;
   font-weight: 500;
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
   transition: box-shadow 0.2s, background 0.2s;
+  border-bottom: 1.5px solid rgba(255,255,255,0.22);
+  border-top: 1.5px solid rgba(255,255,255,0.10);
 }
 .login-prompt__content {
   display: flex;

@@ -220,8 +220,9 @@ button[type="submit"]:disabled {
   color: #666;
 }
 
+
 .toggle-btn {
-  background: none;
+  background: none !important;
   border: none;
   color: #667eea;
   cursor: pointer;

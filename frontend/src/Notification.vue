@@ -477,15 +477,7 @@ h2 {
   color: white;
 }
 
-.accept-btn {
-  background-color: #28a745;
-}
-
-.decline-btn {
-  background-color: #dc3545;
-}
-
-.mark-read-btn {
-  background-color: #007bff;
+.accept-btn, .decline-btn, .mark-read-btn {
+  background: none !important;
 }
 </style>

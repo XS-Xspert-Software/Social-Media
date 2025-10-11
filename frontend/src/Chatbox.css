@@ -17,11 +17,21 @@
 .username{font-size:1rem;cursor:pointer;color:var(--text-primary)}
 .user-card{margin:0;padding:0;cursor:pointer}
 .users-container{display:flex;flex-direction:column}
-.icon-button,.hangup-button,.send-button{border:none;border-radius:6px;cursor:pointer;transition:all 0.2s ease}
-.icon-button{background:var(--bg-primary);color:white;padding:0.4rem 0.7rem;font-size:1.1rem;margin-left:0.5rem}
-.hangup-button{background:var(--accent-red);color:white;padding:0.4rem 0.7rem}
-.send-button{background:var(--accent-blue);color:var(--bg-primary);padding:0.45rem 0.7rem;font-size:0.85rem;font-weight:600}
-.emoji-button{background:transparent;border:none;font-size:1.2rem;cursor:pointer;color:var(--accent-blue)}
+.icon-button,.hangup-button,.send-button{
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: none !important;
+  color: inherit;
+}
+.emoji-button{
+  background: none !important;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--accent-blue);
+}
 
 .tabs{display:flex;justify-content:center;border-bottom:1px solid #333;position:relative;gap:28%;width:90%;margin:50px auto}
 .tabs button{background:none;border:none;padding:12px 0;color:#aaa;font-size:14px;font-weight:500;position:relative;cursor:pointer;transition:color 0.3s ease}
