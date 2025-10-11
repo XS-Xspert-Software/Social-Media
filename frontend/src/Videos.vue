@@ -57,6 +57,18 @@
             <span class="char-count">{{ uploadForm.description.length }}/500</span>
           </div>
 
+          <div class="input-group">
+            <input
+              v-model="uploadForm.hashtags"
+              type="text"
+              placeholder="Add hashtags (comma or space separated)"
+              class="custom-input"
+              maxlength="100"
+              required
+            />
+            <span class="char-count">At least 1 hashtag required</span>
+          </div>
+
           <button 
             @click="uploadShort" 
             :disabled="!selectedFile || uploading"
@@ -85,6 +97,7 @@
 
     <!-- Grid View -->
     <div v-if="!fullscreenIndex && fullscreenIndex !== 0 && currentView === 'feed'" class="grid-view">
+      <button class="profile-feed-btn" @click="loadMyShorts">My Feed</button>
       <div 
         v-for="(short, index) in shorts" 
         :key="short.id"
@@ -104,55 +117,60 @@
     <!-- Fullscreen View -->
     <div v-if="fullscreenIndex !== null" class="fullscreen-view">
       <div class="fullscreen-container">
-        <video
-          ref="video"
-          :src="shorts[fullscreenIndex].videoUrl"
-          class="fullscreen-video"
-          loop
-          autoplay
-          playsinline
-          @click="togglePlay"
-        />
+        <div class="video-flex-row">
+          <div class="video-flex-main">
+            <video
+              ref="video"
+              :src="shorts[fullscreenIndex].videoUrl"
+              class="fullscreen-video"
+              loop
+              autoplay
+              playsinline
+              @click="togglePlay"
+            />
 
-        <button @click="closeFullscreen" class="close-btn">✕</button>
+            <button @click="closeFullscreen" class="close-btn">✕</button>
 
-        <div class="video-actions">
-          <button class="action-btn" @click="likeShort">
-            <span class="icon">❤️</span>
-            <span>{{ formatCount(shorts[fullscreenIndex].hearts) }}</span>
-          </button>
-          <button class="action-btn">
-            <span class="icon">💬</span>
-            <span>{{ formatCount(shorts[fullscreenIndex].comments) }}</span>
-          </button>
-          <button class="action-btn">
-            <span class="icon">🔗</span>
-            <span>Share</span>
-          </button>
-          <div class="avatar">{{ shorts[fullscreenIndex].userId[0].toUpperCase() }}</div>
-        </div>
+            <div class="video-info">
+              <p class="username">@{{ shorts[fullscreenIndex].userId }}</p>
+              <h3>{{ shorts[fullscreenIndex].title }}</h3>
+              <p class="description">{{ shorts[fullscreenIndex].description }}</p>
+            </div>
 
-        <div class="video-info">
-          <p class="username">@{{ shorts[fullscreenIndex].userId }}</p>
-          <h3>{{ shorts[fullscreenIndex].title }}</h3>
-          <p class="description">{{ shorts[fullscreenIndex].description }}</p>
-        </div>
-
-        <div class="swipe-controls">
-          <button 
-            v-if="fullscreenIndex > 0"
-            @click="prevVideo" 
-            class="swipe-arrow"
-          >
-            ↑
-          </button>
-          <button 
-            v-if="fullscreenIndex < shorts.length - 1"
-            @click="nextVideo" 
-            class="swipe-arrow"
-          >
-            ↓
-          </button>
+            <div class="swipe-controls">
+              <button 
+                v-if="fullscreenIndex > 0"
+                @click="prevVideo" 
+                class="swipe-arrow"
+              >
+                ↑
+              </button>
+              <button 
+                v-if="fullscreenIndex < shorts.length - 1"
+                @click="nextVideo" 
+                class="swipe-arrow"
+              >
+                ↓
+              </button>
+            </div>
+          </div>
+          <div class="video-flex-side">
+            <div class="video-actions">
+              <button class="action-btn" @click="likeShort">
+                <span class="icon">❤️</span>
+                <span>{{ formatCount(shorts[fullscreenIndex].hearts) }}</span>
+              </button>
+              <button class="action-btn">
+                <span class="icon">💬</span>
+                <span>{{ formatCount(shorts[fullscreenIndex].comments) }}</span>
+              </button>
+              <button class="action-btn">
+                <span class="icon">🔗</span>
+                <span>Share</span>
+              </button>
+              <div class="avatar">{{ shorts[fullscreenIndex].userId[0].toUpperCase() }}</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -173,7 +191,8 @@ export default {
       fullscreenIndex: null,
       uploadForm: {
         title: '',
-        description: ''
+        description: '',
+        hashtags: '' // comma or space separated
       },
       selectedFile: null,
       previewUrl: null,
@@ -252,6 +271,24 @@ export default {
 
     async loadMyShorts() {
       this.loading = true;
+      // If user is guest (id 20), show random posts from all users
+      if (this.userId === '20') {
+        this.currentView = 'feed';
+        this.currentIndex = 0;
+        try {
+          const response = await fetch(`${this.API_URL}/shorts`);
+          const data = await response.json();
+          if (data.success) {
+            // Shuffle posts for randomness
+            this.shorts = data.shorts.sort(() => Math.random() - 0.5);
+          }
+        } catch (error) {
+          console.error('Error loading shorts:', error);
+        } finally {
+          this.loading = false;
+        }
+        return;
+      }
       this.currentView = 'profile';
       this.currentIndex = 0;
       
@@ -300,6 +337,14 @@ export default {
 
     async uploadShort() {
       if (!this.selectedFile || !this.userId) return;
+
+      // Validate hashtags
+      const hashtagsArr = (this.uploadForm.hashtags || '').split(/[ ,]+/).map(h => h.trim()).filter(Boolean);
+      if (hashtagsArr.length < 1) {
+        this.uploadError = true;
+        this.uploadMessage = 'Please enter at least one hashtag.';
+        return;
+      }
 
       this.uploading = true;
       this.uploadProgress = 0;
@@ -357,7 +402,8 @@ export default {
             key,
             userId: this.userId,
             title: this.uploadForm.title || 'Untitled',
-            description: this.uploadForm.description || ''
+            description: this.uploadForm.description || '',
+            hashtags: hashtagsArr
           })
         });
 
@@ -370,6 +416,7 @@ export default {
           setTimeout(() => {
             this.uploadForm.title = '';
             this.uploadForm.description = '';
+            this.uploadForm.hashtags = '';
             this.selectedFile = null;
             this.previewUrl = null;
             this.uploadProgress = 0;
@@ -709,14 +756,56 @@ export default {
 
 .fullscreen-container {
   position: relative;
-  width: 100%;
+  width: 100vw;
   height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-flex-row {
+  display: flex;
+  flex-direction: row;
+  width: 100vw;
+  height: 100vh;
+}
+
+.video-flex-main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 .fullscreen-video {
   width: 100%;
   height: 100%;
+  max-width: 480px;
+  max-height: 100vh;
   object-fit: contain;
+  background: #000;
+  z-index: 1;
+}
+
+.video-flex-side {
+  width: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  z-index: 2;
+}
+
+.video-actions {
+  position: static;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
 }
 
 .close-btn {
@@ -733,45 +822,6 @@ export default {
   cursor: pointer;
   z-index: 10;
   backdrop-filter: blur(10px);
-}
-
-.video-actions {
-  position: absolute;
-  right: 12px;
-  bottom: 120px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  align-items: center;
-}
-
-.action-btn {
-  background: none;
-  border: none;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.icon {
-  font-size: 28px;
-}
-
-.avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #a27c4b 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  font-weight: bold;
-  border: 2px solid #fff;
 }
 
 .video-info {

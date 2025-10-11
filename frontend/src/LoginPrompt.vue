@@ -38,7 +38,7 @@ export default {
   computed: {
     defaultMessage() {
       // Human-like copy: short and clear for slow/older devices
-      return 'You are in guest mode. Log in to chat, post, and receive notifications.'
+  return 'Log in to chat, post, and get notifications.'
     }
   }
 }
@@ -50,29 +50,53 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  background: #0b1020;
+  gap: 18px;
+  background: linear-gradient(90deg, #10192b 80%, #1e293b 100%);
   color: #e8eefc;
-  border: 1px solid #1b2a55;
-  border-radius: 10px;
-  padding: 10px 12px;
-  margin: 8px 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  border: 1.5px solid #223366;
+  border-radius: 16px;
+  padding: 10px 22px 10px 18px;
+  margin: 80px auto 10px auto;
+  min-height: 36px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 4px 18px 0 rgba(0,0,0,0.18), 0 1.5px 4px 0 rgba(30,40,60,0.10);
+  font-size: 15px;
+  font-weight: 500;
+  transition: box-shadow 0.2s, background 0.2s;
 }
-.login-prompt__content { display: flex; align-items: center; gap: 10px; }
-.login-prompt__text { font-size: 14px; line-height: 1.3; }
+.login-prompt__content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.login-prompt__text {
+  font-size: 15px;
+  line-height: 1.3;
+  color: #e8eefc;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  max-width: 100vw;
+}
 .login-prompt__button {
-  background: linear-gradient(180deg, #2563eb, #1d4ed8);
-  color: white;
+  background: linear-gradient(180deg, #2563eb 60%, #1d4ed8 100%);
+  color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 14px;
+  border-radius: 10px;
+  padding: 7px 20px 7px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.10);
   text-decoration: none;
   cursor: pointer;
   white-space: nowrap;
+  transition: background 0.18s, box-shadow 0.18s;
 }
-.login-prompt__button:active { transform: translateY(1px); }
+.login-prompt__button:active {
+  transform: translateY(1.5px) scale(0.98);
+  background: linear-gradient(180deg, #1d4ed8 80%, #2563eb 100%);
+}
 
 /* Inline variant for embedding within empty states */
 .login-inline { display: flex; align-items: center; gap: 8px; color: #dbeafe; }
