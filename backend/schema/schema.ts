@@ -68,6 +68,10 @@ export const posts = pgTable("posts", {
   userId: uuid("user_id").notNull(),
   content: text("content").notNull(),
   imageUrl: varchar("image_url", { length: 255 }),
+  videoUrl: varchar("video_url", { length: 255 }),
+  title: varchar("title", { length: 255 }),
+  description: text("description"),
+  hashtags: text("hashtags"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

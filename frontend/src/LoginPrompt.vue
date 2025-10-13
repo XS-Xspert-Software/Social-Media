@@ -29,16 +29,17 @@
 <script>
 export default {
   name: 'LoginPrompt',
+  emits: ['login'], // Declare the 'login' event for proper event handling
   props: {
     message: { type: String, default: '' },
     ctaLabel: { type: String, default: 'Login' },
-  href: { type: String, default: '' }, // kept for backwards-compat, not used now
+    href: { type: String, default: '' }, // kept for backwards-compat, not used now
     inline: { type: Boolean, default: false },
   },
   computed: {
     defaultMessage() {
       // Human-like copy: short and clear for slow/older devices
-  return 'Log in to chat, post, and get notifications.'
+      return 'Log in to chat, post, and get notifications.'
     }
   }
 }

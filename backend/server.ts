@@ -120,9 +120,27 @@ app.post('/api/video/upload', upload.single('video'), async (req: Request, res: 
     if (!req.file) return res.status(400).json({ error: 'No video file uploaded.' });
     const fileName = req.file.originalname || req.file.filename;
     const filePath = req.file.path;
-  const videoInfo = await uploadVideoToB2(filePath, fileName);
+    const videoInfo = await uploadVideoToB2(filePath, fileName);
     fs.unlink(filePath, () => {}); // cleanup
-  return res.json({ success: true, video: videoInfo });
+
+    // Save metadata to posts table
+    const { userId, title, description, hashtags } = req.body;
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+    // Import db and posts schema
+    const { db } = await import('./schema/index.js');
+    const { posts } = await import('./schema/schema.js');
+    const inserted = await db.insert(posts).values({
+      userId,
+      content: description || '',
+      videoUrl: videoInfo.url || videoInfo.downloadUrl || '',
+      title: title || '',
+      description: description || '',
+      hashtags: hashtags || '',
+      createdAt: new Date(),
+    }).returning();
+    const newPost = inserted[0];
+
+    return res.json({ success: true, video: videoInfo, post: newPost });
   } catch (err: any) {
     log('error', 'Video upload failed', err);
     return res.status(500).json({ error: err.message || 'Upload failed' });

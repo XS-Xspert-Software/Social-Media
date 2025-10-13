@@ -156,18 +156,48 @@
           </div>
           <div class="video-flex-side">
             <div class="video-actions">
-              <button class="action-btn" @click="likeShort">
+              <button class="action-btn glass-btn" @click="likeShort">
                 <span class="icon">❤️</span>
                 <span>{{ formatCount(shorts[fullscreenIndex].hearts) }}</span>
               </button>
-              <button class="action-btn">
+              <button class="action-btn glass-btn" @click="openComments(shorts[fullscreenIndex].id)">
                 <span class="icon">💬</span>
                 <span>{{ formatCount(shorts[fullscreenIndex].comments) }}</span>
               </button>
-              <button class="action-btn">
+              <button class="action-btn glass-btn" @click="shareShort(shorts[fullscreenIndex].id)">
                 <span class="icon">🔗</span>
                 <span>Share</span>
               </button>
+/* Glassmorphic Shorts Action Buttons */
+.action-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-size: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-bottom: 8px;
+  border: none;
+  background: none;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+
+.glass-btn {
+  background: rgba(24, 32, 54, 0.55);
+  border: 1.5px solid rgba(255,255,255,0.18);
+  color: #e8eefc;
+  box-shadow: 0 4px 18px 0 rgba(31, 38, 135, 0.10);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+}
+
+.glass-btn:hover {
+  background: rgba(34, 44, 74, 0.75);
+  box-shadow: 0 6px 24px 0 rgba(31, 38, 135, 0.18);
+}
               <div class="avatar">{{ shorts[fullscreenIndex].userId[0].toUpperCase() }}</div>
             </div>
           </div>
@@ -182,7 +212,7 @@ export default {
   name: 'ShortsApp',
   data() {
     return {
-      API_URL: 'https://chyna.vercel.app/api',
+  API_URL: 'https://chyna.vercel.app/api',
       userId: '20',
       currentView: 'feed',
       shorts: [],
@@ -199,13 +229,30 @@ export default {
       uploading: false,
       uploadProgress: 0,
       uploadMessage: '',
-      uploadError: false
+      uploadError: false,
+      wheelTimeout: null, // Moved from methods to data
+      lastWheelTime: 0    // Moved from methods to data
     };
   },
 
   mounted() {
     this.loadShorts();
     this.setupSwipeGestures();
+    // Keyboard/mouse navigation for shorts
+    window.addEventListener('keydown', this.handleKeydown);
+    window.addEventListener('wheel', this.handleWheel, { passive: false });
+  },
+  watch: {
+    fullscreenIndex(val) {
+      // Only enable navigation when in fullscreen
+      if (val !== null && val !== undefined) {
+        window.addEventListener('keydown', this.handleKeydown);
+        window.addEventListener('wheel', this.handleWheel, { passive: false });
+      } else {
+        window.removeEventListener('keydown', this.handleKeydown);
+        window.removeEventListener('wheel', this.handleWheel);
+      }
+    }
   },
 
   methods: {
@@ -221,6 +268,33 @@ export default {
 
     closeFullscreen() {
       this.fullscreenIndex = null;
+      // Remove navigation listeners
+      window.removeEventListener('keydown', this.handleKeydown);
+      window.removeEventListener('wheel', this.handleWheel);
+    },
+
+    handleKeydown(e) {
+      if (this.fullscreenIndex === null || this.fullscreenIndex === undefined) return;
+      if (e.key === 'ArrowUp') {
+        this.prevVideo();
+        e.preventDefault();
+      } else if (e.key === 'ArrowDown') {
+        this.nextVideo();
+        e.preventDefault();
+      }
+    },
+
+    handleWheel(e) {
+      if (this.fullscreenIndex === null || this.fullscreenIndex === undefined) return;
+      const now = Date.now();
+      if (now - this.lastWheelTime < 350) return; // debounce
+      this.lastWheelTime = now;
+      if (e.deltaY > 0) {
+        this.nextVideo();
+      } else if (e.deltaY < 0) {
+        this.prevVideo();
+      }
+      e.preventDefault();
     },
 
     togglePlay() {
@@ -234,8 +308,26 @@ export default {
       }
     },
 
-    likeShort() {
-      this.shorts[this.fullscreenIndex].hearts++;
+    async likeShort() {
+      const short = this.shorts[this.fullscreenIndex];
+      if (!short) return;
+      try {
+        // Optimistic UI update
+        short.hearts = (short.hearts || 0) + 1;
+        const res = await fetch(`${this.API_URL}/shorts/${short.id}/like`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: this.userId })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          short.hearts = (short.hearts || 1) - 1;
+          alert(data.error || 'Failed to like');
+        }
+      } catch (e) {
+        short.hearts = (short.hearts || 1) - 1;
+        alert('Failed to like: ' + e.message);
+      }
     },
 
     nextVideo() {
@@ -468,11 +560,31 @@ export default {
     },
 
     openComments(id) {
-      console.log('Comments:', id);
+      // TODO: Open a modal or drawer for comments
+      alert('Comments feature coming soon!');
     },
 
-    shareShort(id) {
-      console.log('Share:', id);
+    async shareShort(id) {
+      const short = this.shorts.find(s => s.id === id);
+      const shareUrl = window.location.origin + '/short/' + id;
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: short?.title || 'Short',
+            text: short?.description || '',
+            url: shareUrl
+          });
+        } catch (e) {
+          // User cancelled or error
+        }
+      } else {
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          alert('Link copied to clipboard!');
+        } catch {
+          alert('Could not copy link');
+        }
+      }
     },
 
     formatDate(dateString) {
