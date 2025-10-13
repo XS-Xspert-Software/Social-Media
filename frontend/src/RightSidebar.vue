@@ -1,7 +1,7 @@
 // Message to who ever is maintaning this file: change the api servers; those are official if you are the client
 <template>
-  <aside class="right-sidebar-wrapper">
-    <div class="panel-section gradient-soft outline-accent">
+  <aside class="right-sidebar-wrapper simple-ui">
+    <div class="panel-section soft-bg outline-accent">
       <h3 class="panel-title">Quick Stats</h3>
       <ul class="stat-list">
         <li v-for="s in stats" :key="s.label">
@@ -10,39 +10,39 @@
         </li>
       </ul>
     </div>
-    <div class="panel-section gradient-soft" v-if="suggested.length">
+    <div class="panel-section soft-bg" v-if="suggested.length">
       <h3 class="panel-title">Suggested</h3>
       <ul class="suggest-list">
-        <li v-for="u in suggested" :key="u.username" class="suggest-item">
-          <img :src="u.avatar" :alt="u.username" class="avatar" @error="e=>e.target.src=defaultAvatar" />
+        <li v-for="u in suggested" :key="u.username" class="suggest-item simple-item">
+          <img :src="u.avatar" :alt="u.username" class="avatar large" @error="e=>e.target.src=defaultAvatar" />
           <div class="info">
             <strong>{{ u.username }}</strong>
             <small>{{ u.tagline }}</small>
           </div>
-          <button class="follow-btn" @click="follow(u)">Follow</button>
+          <button class="follow-btn modern" @click="follow(u)">Follow</button>
         </li>
       </ul>
     </div>
-    <div class="panel-section gradient-soft" v-if="shorts.length">
+    <div class="panel-section soft-bg" v-if="shorts.length">
       <h3 class="panel-title">Shorts of the Day</h3>
       <ul class="stat-list">
-        <li v-for="s in shorts" :key="s.id" style="display:flex;align-items:center;gap:8px;min-height:38px;">
-          <video v-if="s.videoUrl" :src="s.videoUrl" style="width:28px;height:28px;border-radius:6px;object-fit:cover;" muted playsinline preload="metadata" />
-          <div style="flex:1;overflow:hidden;">
-            <strong style="font-size:0.72rem;color:#fff;">{{ s.userId }}</strong>
-            <div style="font-size:0.68rem;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">{{ s.title || s.description || '' }}</div>
+        <li v-for="s in shorts" :key="s.id" class="simple-item">
+          <video v-if="s.videoUrl" :src="s.videoUrl" class="mini-video" muted playsinline preload="metadata" />
+          <div class="mini-info">
+            <strong>{{ s.userId }}</strong>
+            <div class="mini-desc">{{ s.title || s.description || '' }}</div>
           </div>
         </li>
       </ul>
     </div>
-    <div class="panel-section gradient-soft" v-if="postsOfDay.length">
+    <div class="panel-section soft-bg" v-if="postsOfDay.length">
       <h3 class="panel-title">Posts of the Day</h3>
       <ul class="stat-list">
-        <li v-for="p in postsOfDay" :key="p._id" style="display:flex;align-items:center;gap:8px;min-height:38px;">
-          <img v-if="p.photo" :src="p.photo" alt="post" style="width:28px;height:28px;border-radius:6px;object-fit:cover;" />
-          <div style="flex:1;overflow:hidden;">
-            <strong style="font-size:0.72rem;color:#fff;">{{ p.username }}</strong>
-            <div style="font-size:0.68rem;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">{{ p.message.slice(0, 48) }}<span v-if="p.message.length>48">…</span></div>
+        <li v-for="p in postsOfDay" :key="p._id" class="simple-item">
+          <img v-if="p.photo" :src="p.photo" alt="post" class="mini-img" />
+          <div class="mini-info">
+            <strong>{{ p.username }}</strong>
+            <div class="mini-desc">{{ p.message.slice(0, 48) }}<span v-if="p.message.length>48">…</span></div>
           </div>
         </li>
       </ul>
@@ -83,33 +83,58 @@ onMounted(async ()=>{
 });
 </script>
 <style scoped>
-/* Improved responsive + non cut-off layout */
-.right-sidebar-wrapper {
-  /* prevent stretching */
+/* Simpler, more beautiful sidebar */
+.right-sidebar-wrapper.simple-ui {
   flex: 0 0 auto;
   width: 100%;
-  max-width: 240px; /* keep narrow so feed has room */
-  padding: 0 4px 24px;
+  max-width: 250px;
+  padding: 0 8px 28px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 22px;
-  position: sticky; /* stay visible while scrolling feed */
-  top: 72px; /* sits below fixed header */
-  align-self: flex-start; /* avoid full height stretch */
+  gap: 26px;
+  position: sticky;
+  top: 72px;
+  align-self: flex-start;
+  background: none;
 }
 
 /* Allow panels to shrink gracefully */
-.panel-section {
-  padding: 12px 14px;
-  border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 14px;
-  background: linear-gradient(155deg,#121a23,#19232e 60%,#1d2833);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  box-shadow: 0 2px 10px -3px rgba(0,0,0,0.55);
+/* Softer, lighter panel background */
+.panel-section.soft-bg {
+  padding: 24px 24px 18px 24px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(34,40,60,0.38) 0%, rgba(80,120,255,0.13) 100%);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.22), 0 1.5px 4px 0 rgba(30,40,60,0.10);
+  border: 2px solid rgba(255,255,255,0.22);
   position: relative;
-  overflow: hidden; /* clip shine */
+  overflow: visible;
+  margin-bottom: 0;
+  backdrop-filter: blur(28px) saturate(220%);
+  -webkit-backdrop-filter: blur(28px) saturate(220%);
+  /* Glass shine overlay */
+}
+
+.panel-section.soft-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(120deg,rgba(255,255,255,0.22) 0%,rgba(255,255,255,0.07) 100%);
+  z-index: 0;
+}
+.panel-section.soft-bg::after {
+  content: "";
+  position: absolute;
+  left: 18px; top: 8px;
+  width: 60%; height: 18px;
+  background: linear-gradient(90deg,rgba(255,255,255,0.32) 0%,rgba(255,255,255,0.04) 100%);
+  border-radius: 12px;
+  filter: blur(12px);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* Subtle gradient outline on hover only */
@@ -129,59 +154,135 @@ onMounted(async ()=>{
 .panel-section.outline-accent:hover::after { opacity: .85; }
 
 .panel-title {
-  margin: 0 0 8px;
-  font-size: 0.78rem;
-  letter-spacing: .6px;
+  margin: 0 0 10px;
+  font-size: 0.92rem;
+  letter-spacing: .5px;
+  font-weight: 700;
+  color: #f3f6fa;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+
+.stat-list, .suggest-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.stat-list li, .simple-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.92rem;
+  color: #e0e6ef;
+  background: none;
+  border-radius: 10px;
+  padding: 6px 0 6px 0;
+  border: none;
+  min-height: 38px;
+}
+.label { font-weight: 500; color: #b6c2d1; }
+.value { font-weight: 700; color: #fff; }
+
+
+.suggest-item.simple-item {
+  background: none;
+  box-shadow: none;
+  padding: 8px 0;
+  transition: background 0.18s;
+}
+.suggest-item.simple-item:hover {
+  background: rgba(255,255,255,0.04);
+}
+.avatar.large {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid rgba(255,255,255,0.10);
+}
+.info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  min-width: 0;
+}
+.info strong {
+  font-size: 0.98em;
+  color: #fff;
   font-weight: 600;
-  color: #e6edf3;
-  text-transform: uppercase;
 }
-
-.stat-list, .suggest-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.stat-list li {
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 0.68rem; padding: 4px 0 3px;
-  color: #98a4b1; border-bottom: 1px solid rgba(255,255,255,0.05);
+.info small {
+  font-size: 0.82em;
+  color: #b6c2d1;
+  margin-top: 1px;
 }
-.stat-list li:last-child { border-bottom: none; }
-.label { font-weight: 500; }
-.value { font-weight: 600; color: #fff; }
-
-.suggest-item { display: flex; align-items: center; gap: 10px; padding: 6px 6px; border-radius: 10px; transition: .25s; background: linear-gradient(135deg,#18222c,#1d2833); }
-.suggest-item:hover { transform: translateY(-2px); box-shadow: 0 4px 12px -4px rgba(0,0,0,.65); }
-.avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.08); }
-.info { flex: 1; display: flex; flex-direction: column; line-height: 1.05; }
-.info strong { font-size: 0.66rem; color: #fff; font-weight: 600; }
-.info small { font-size: 0.55rem; color: #7f8a96; margin-top: 2px; }
-.follow-btn {
-  background: none !important;
+.follow-btn.modern {
+  background: linear-gradient(90deg,#43b581,#8951ff);
   border: none;
   color: #fff;
-  font-size: 0.58rem;
-  font-weight: 600;
-  padding: 5px 10px;
-  border-radius: 18px;
+  font-size: 0.92em;
+  font-weight: 700;
+  padding: 6px 18px;
+  border-radius: 16px;
   cursor: pointer;
-  transition: .25s;
+  box-shadow: 0 2px 8px -4px #8951ff44;
+  transition: background 0.18s, box-shadow 0.18s;
 }
-.follow-btn:hover { filter: brightness(1.15); }
-.follow-btn:active { transform: translateY(1px); }
+.follow-btn.modern:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 4px 16px -6px #8951ff66;
+}
+.follow-btn.modern:active {
+  filter: brightness(0.98);
+}
+
+/* Mini video and image for shorts/posts */
+.mini-video, .mini-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #232b36;
+  flex-shrink: 0;
+}
+.mini-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.mini-info strong {
+  font-size: 0.98em;
+  color: #fff;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.mini-desc {
+  font-size: 0.89em;
+  color: #b6c2d1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
 
 /* Compact heights: if viewport short, allow internal scroll without cutting off */
 @media (max-height: 800px) {
-  .right-sidebar-wrapper { gap: 16px; }
-  .panel-section { padding: 10px 12px; }
-  .stat-list li { font-size: 0.64rem; }
+  .right-sidebar-wrapper.simple-ui { gap: 16px; }
+  .panel-section.soft-bg { padding: 12px 10px; }
+  .stat-list li, .simple-item { font-size: 0.88rem; }
 }
 @media (max-height: 640px) {
-  .right-sidebar-wrapper { top: 64px; }
-  .panel-section { max-height: 260px; overflow: auto; }
+  .right-sidebar-wrapper.simple-ui { top: 64px; }
+  .panel-section.soft-bg { max-height: 260px; overflow: auto; }
 }
-
-/* Large desktop can widen slightly */
-@media (min-width: 1500px) { .right-sidebar-wrapper { max-width: 270px; } }
-
-/* Hide entirely on tablets & phones (already handled at 768px in original) */
-@media (max-width: 1024px) { .right-sidebar-wrapper { top: 68px; } }
-@media (max-width: 900px) { .right-sidebar-wrapper { display: none; } }
+@media (min-width: 1500px) { .right-sidebar-wrapper.simple-ui { max-width: 280px; } }
+@media (max-width: 1024px) { .right-sidebar-wrapper.simple-ui { top: 68px; } }
+@media (max-width: 900px) { .right-sidebar-wrapper.simple-ui { display: none; } }
 </style>

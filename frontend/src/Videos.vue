@@ -128,6 +128,15 @@
               playsinline
               @click="togglePlay"
             />
+            <!-- Preload next 3 videos for instant navigation -->
+            <template v-for="i in [1,2,3]" :key="i">
+              <video
+                v-if="shorts[fullscreenIndex + i]"
+                :src="shorts[fullscreenIndex + i].videoUrl"
+                preload="auto"
+                style="display:none;"
+              />
+            </template>
 
             <button @click="closeFullscreen" class="close-btn">✕</button>
 
@@ -186,17 +195,39 @@
 }
 
 .glass-btn {
-  background: rgba(24, 32, 54, 0.55);
-  border: 1.5px solid rgba(255,255,255,0.18);
+  background: linear-gradient(135deg, rgba(34,40,60,0.38) 0%, rgba(80,120,255,0.13) 100%);
+  border: 2px solid rgba(255,255,255,0.22);
   color: #e8eefc;
-  box-shadow: 0 4px 18px 0 rgba(31, 38, 135, 0.10);
-  backdrop-filter: blur(14px) saturate(160%);
-  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.22), 0 1.5px 4px 0 rgba(30,40,60,0.10);
+  backdrop-filter: blur(28px) saturate(220%);
+  -webkit-backdrop-filter: blur(28px) saturate(220%);
+  position: relative;
+  overflow: visible;
 }
-
+.glass-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(120deg,rgba(255,255,255,0.22) 0%,rgba(255,255,255,0.07) 100%);
+  z-index: 0;
+}
+.glass-btn::after {
+  content: "";
+  position: absolute;
+  left: 12px; top: 8px;
+  width: 60%; height: 18px;
+  background: linear-gradient(90deg,rgba(255,255,255,0.32) 0%,rgba(255,255,255,0.04) 100%);
+  border-radius: 12px;
+  filter: blur(12px);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 1;
+}
 .glass-btn:hover {
-  background: rgba(34, 44, 74, 0.75);
-  box-shadow: 0 6px 24px 0 rgba(31, 38, 135, 0.18);
+  background: linear-gradient(135deg, rgba(34,44,74,0.55) 0%, rgba(80,120,255,0.22) 100%);
+  box-shadow: 0 12px 36px 0 rgba(31, 38, 135, 0.28);
 }
               <div class="avatar">{{ shorts[fullscreenIndex].userId[0].toUpperCase() }}</div>
             </div>
