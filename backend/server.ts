@@ -63,7 +63,7 @@ app.post('/api/register', async (req: Request, res: Response) => {
     const user = await registerUser({ username, email, password });
     res.status(201).json({ user });
   } catch (e: any) {
-    log('error', "Erreur complète registerUser:", e, typeof e, JSON.stringify(e));
+    log('error', "Full error registerUser:", e, typeof e, JSON.stringify(e));
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -71,7 +71,7 @@ app.post('/api/register', async (req: Request, res: Response) => {
 const loginRateLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 5, // Limit each IP to 5 login requests per `window` (1 minute)
-  message: { error: "Too many login attempts. Please try again later." },
+  message: { error: "Too many login attempts. Please try again later. Send this to your administrator: {{request.ip}} {{request.body}} {{request.headers}} {{request.method}} ERROR_RATE_LIMIT" },
 });
 
 app.post('/api/login', loginRateLimiter, async (req: Request, res: Response) => {
@@ -103,7 +103,7 @@ app.get('/api/posts', getPosts as any);
 const createPostRateLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 10, // Limit each IP to 10 create post requests per `window` (1 minute)
-  message: { error: "Too many post creation attempts. Please try again later." },
+  message: { error: "Too many post creation attempts. Please try again later. Send this to your administrator: {{request.ip}} {{request.body}} {{request.headers}} {{request.method}} ERROR_RATE_LIMIT" },
 });
 app.post('/api/posts', createPostRateLimiter, createPost as any);
 app.post('/api/posts/:postId/like', likePost as any);

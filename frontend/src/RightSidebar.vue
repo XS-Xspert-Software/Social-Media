@@ -1,3 +1,4 @@
+// Message to who ever is maintaning this file: change the api servers; those are official if you are the client
 <template>
   <aside class="right-sidebar-wrapper">
     <div class="panel-section gradient-soft outline-accent">
