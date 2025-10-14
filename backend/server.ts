@@ -200,7 +200,19 @@ function wrapAsync(fn: any) {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 }
-
+/**
+ * Wraps a route handler in a try/catch for synchronous errors.
+ * Not currently used, but kept for future use.
+ */
+function safetyCheck(fn: any) {
+  return function(req: Request, res: Response, next: any) {
+    try {
+      return fn(req, res, next);
+    } catch (e) {
+      next(e);
+    }
+  };
+}
 // --- Decentralized/Federation Endpoints ---
 // Use the global fetch API available in Node.js v18+
 // If you need to support older Node.js versions, install 'node-fetch' and import it at the top
@@ -291,7 +303,7 @@ app.get('/federation/discover', (req: Request, res: Response) => {
     description: 'API discovery for Pulse federation. Endpoints reflect the current remote API configuration.'
   });
 });
-
+// Api goes <br/> lol
 // Accept incoming federation requests (for future: e.g. push posts, follow, etc.)
 app.post('/federation/inbox', (req: Request, res: Response) => {
   log('info', 'Received federation inbox:', req.body);
