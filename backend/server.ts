@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url';
 dotenv.config();
 import { uploadVideoToB2 } from './b2.service.js';
 
+// Typescript compatible copy of server.js server.ts is the only one maintained file now
 // ESM-compatible __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
