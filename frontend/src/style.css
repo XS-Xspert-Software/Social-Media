@@ -636,18 +636,20 @@ button {
 
 .sidebar li,
 .sidebar-sort .sort-button {
-  margin: 15%;
+  margin: 0 0 20px 0;
   padding: 10px 14px;
   border: none;
   text-align: left;
   font-size: 19px;
   line-height: 1.2;
-  margin-bottom: 20px;
   cursor: pointer;
   display: block;
-  width: 100%;
+  width: auto;
   border-radius: 12px;
   transition: all 0.3s cubic-bezier(.16,1,.3,1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sidebar li:hover,
