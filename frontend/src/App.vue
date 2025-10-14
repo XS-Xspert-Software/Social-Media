@@ -543,7 +543,7 @@ export default {
 
 <style scoped>
 .fade-enter-active, .fade-leave-active {
-  transition: opacity 0.2s ease;
+  transition: opacity 0.3s cubic-bezier(.16,1,.3,1);
 }
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
@@ -552,9 +552,15 @@ export default {
   font-size: 19px;
   cursor: pointer;
   margin-right: 16px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  padding: 6px 12px;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(.16,1,.3,1);
+  background: rgba(255,255,255,0.05);
+}
+.username-display:hover {
+  background: rgba(255,255,255,0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 .fancy-title {
   font-size: 24px;
@@ -570,21 +576,27 @@ export default {
   position: absolute;
   top: 2px;
   right: 2px;
-  background: #ef4444;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
   color: white;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1;
-  padding: 2px 5px;
+  padding: 3px 6px;
   border-radius: 999px;
-  min-width: 16px;
-  height: 16px;
+  min-width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 5;
-  box-shadow: 0 0 3px rgba(0, 0, 0, 0.25);
-  border: 1px solid #111;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  border: 1.5px solid #111;
+  animation: pulse-badge 2s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 /* 🟩 Chat-specific badge color */
