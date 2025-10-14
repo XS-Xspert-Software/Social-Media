@@ -683,7 +683,6 @@ button {
   top: 50px;
   position: sticky;
   overflow-y: auto;
-  border-left: 1px solid red;
   display: none; /* shown when with-right-sidebar class is active */
 }
 
