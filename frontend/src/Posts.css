@@ -13,14 +13,233 @@
 /* Badges & States */
 .verified-badge{color:#1da1f2;margin-left:15px;font-size:14px;vertical-align:middle}.liked{color:#ff5555}.bookmarked{color:#ffd700}
 
-/* Modals */
-.full-screen-post-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #000; display: flex; justify-content: center; align-items: center; z-index: 1; } .full-screen-post-content { background: #000; width: 100%;border-radius: 10px; padding: 20px; position: relative; max-height: 100vh; overflow: auto; } .modal { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 1; padding: 20px; } .modal-content { background: #1a1a1a; padding: 20px; border-radius: 14px 10px; color: #e0fefc; text-align: center; box-shadow: 0 0 12px rgba(0,255,224,.2); border: 1px solid #2e2e2e; max-width: 90vw; max-height: 90vh; overflow: auto; }
+/* Modals - Liquid Glass */
+.full-screen-post-modal { 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  right: 0; 
+  bottom: 0; 
+  background: rgba(0,0,0,0.85); 
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  z-index: 1; 
+} 
 
-/* Buttons */
-.close-full-screen-btn{position:absolute;top:12px;background:#222;color:#fff;border:none;width:32px;height:32px;font-size:18px;display:flex;align-items:center;justify-content:center}.close-full-screen-btn:hover{background:#dd1010}.sort-button{flex-shrink:0;font-size:13px;padding:6px 16px;border:none;border-radius:30px;color:#e0fefc;background:none !important;transition:all .25s ease-in-out}.sort-button:hover{color:#000;border-color:#00e6d8;background:none !important;}.action-btn{color:inherit;display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:4px;transition:background-color .2s;background:none !important;border:none;}.action-btn:hover{background:none !important;}.action-btn svg{width:20px;height:20px;fill:currentColor}.comment-btn{max-height:40px;margin:0;padding:0}.delete-comment-btn{color:#1da1f2;font-size:14px;padding:4px 8px;will-change:color}.comment button:hover{color:#fff}
+.full-screen-post-content { 
+  background: linear-gradient(135deg, rgba(10,10,15,0.95), rgba(20,20,30,0.98));
+  backdrop-filter: blur(20px) saturate(130%);
+  -webkit-backdrop-filter: blur(20px) saturate(130%);
+  width: 100%;
+  border-radius: 16px; 
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 
+    0 20px 60px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+  padding: 20px; 
+  position: relative; 
+  max-height: 100vh; 
+  overflow: auto; 
+} 
 
-/* Modal Actions */
-.modal-actions { display: flex; flex-wrap: wrap; gap: 10px;z-index: 4; margin-top: 16px; } .modal-actions button { flex: 1; min-width: 120px; padding: 6px 12px; font-size: 13px; font-weight: 600; border: 2px solid transparent; color: inherit; } .modal-cancel { color: #ff4d4f; background: #121212; border-color: #ff4d4f; } .modal-cancel:hover { background: #a00; color: #fff; box-shadow: 0 0 6px rgba(255,77,79,.4); } .modal-confirm { color: #00ffe0; background: #121212; border-color: #00ffe0; } .modal-confirm:hover { background: linear-gradient(135deg, #00ffe0, #00bfff); color: #000; box-shadow: 0 0 6px rgba(0,255,224,.4); }
+.modal { 
+  position: fixed; 
+  inset: 0; 
+  background: rgba(0,0,0,0.7); 
+  backdrop-filter: blur(8px); 
+  -webkit-backdrop-filter: blur(8px);
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  z-index: 1; 
+  padding: 20px; 
+} 
+
+.modal-content { 
+  background: linear-gradient(135deg, rgba(26,26,35,0.95), rgba(35,35,45,0.98));
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  padding: 24px; 
+  border-radius: 16px; 
+  color: #e0fefc; 
+  text-align: center; 
+  box-shadow: 
+    0 12px 40px rgba(0,255,224,0.15),
+    inset 0 1px 0 rgba(255,255,255,0.12); 
+  border: 1px solid rgba(255,255,255,0.12); 
+  max-width: 90vw; 
+  max-height: 90vh; 
+  overflow: auto; 
+}
+
+/* Buttons - Liquid Glass */
+.close-full-screen-btn{
+  position:absolute;
+  top:12px;
+  background: linear-gradient(135deg, rgba(42, 52, 84, 0.7), rgba(80, 120, 255, 0.3));
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  color:#fff;
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 
+    0 4px 16px rgba(31, 38, 135, 0.25),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+  width:32px;
+  height:32px;
+  font-size:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(.16,1,.3,1);
+}
+
+.close-full-screen-btn:hover{
+  background: linear-gradient(135deg, rgba(221, 16, 16, 0.7), rgba(180, 40, 40, 0.5));
+  transform: scale(1.05);
+  box-shadow: 
+    0 6px 20px rgba(221, 16, 16, 0.4),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.sort-button{
+  flex-shrink:0;
+  font-size:13px;
+  padding:8px 18px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius:24px;
+  color:#e0fefc;
+  background: linear-gradient(135deg, rgba(34, 40, 60, 0.5), rgba(80, 120, 255, 0.2)) !important;
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 
+    0 4px 12px rgba(31, 38, 135, 0.2),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  transition:all 0.3s cubic-bezier(.16,1,.3,1);
+}
+
+@supports not (backdrop-filter: blur(10px)) {
+  .sort-button {
+    background: linear-gradient(135deg, rgba(34, 40, 60, 0.85), rgba(80, 120, 255, 0.4)) !important;
+  }
+}
+
+.sort-button:hover{
+  color:#fff;
+  border-color: rgba(102,126,234,0.6);
+  background: linear-gradient(135deg, rgba(102,126,234,0.3), rgba(118,75,162,0.3)) !important;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 6px 16px rgba(102,126,234, 0.3),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.action-btn{
+  color:inherit;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:5px 10px;
+  border-radius:8px;
+  transition: all 0.3s cubic-bezier(.16,1,.3,1);
+  background:none !important;
+  border:none;
+}
+
+.action-btn:hover{
+  background: rgba(255,255,255,0.08) !important;
+  transform: scale(1.05);
+}
+
+.action-btn svg{
+  width:20px;
+  height:20px;
+  fill:currentColor;
+  transition: transform 0.3s ease;
+}
+
+.action-btn:hover svg{
+  transform: scale(1.1);
+}
+
+.comment-btn{
+  max-height:40px;
+  margin:0;
+  padding:0;
+}
+
+.delete-comment-btn{
+  color:#1da1f2;
+  font-size:14px;
+  padding:4px 8px;
+  will-change:color;
+  transition: all 0.3s ease;
+}
+
+.comment button:hover{
+  color:#fff;
+}
+
+/* Modal Actions - Liquid Glass */
+.modal-actions { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 12px;
+  z-index: 4; 
+  margin-top: 20px; 
+} 
+
+.modal-actions button { 
+  flex: 1; 
+  min-width: 120px; 
+  padding: 10px 16px; 
+  font-size: 13px; 
+  font-weight: 600; 
+  border: 1.5px solid transparent; 
+  color: inherit; 
+  border-radius: 12px;
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  transition: all 0.3s cubic-bezier(.16,1,.3,1);
+  box-shadow: 
+    0 4px 12px rgba(0,0,0,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+} 
+
+.modal-cancel { 
+  color: #ff6b6b; 
+  background: linear-gradient(135deg, rgba(40,20,20,0.7), rgba(60,20,20,0.5));
+  border-color: rgba(255,77,79,0.4); 
+} 
+
+.modal-cancel:hover { 
+  background: linear-gradient(135deg, rgba(170,0,0,0.8), rgba(200,20,20,0.6));
+  color: #fff; 
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 6px 20px rgba(255,77,79,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.15); 
+  border-color: rgba(255,77,79,0.6);
+} 
+
+.modal-confirm { 
+  color: #00ffe0; 
+  background: linear-gradient(135deg, rgba(0,60,60,0.7), rgba(0,80,100,0.5));
+  border-color: rgba(0,255,224,0.4); 
+} 
+
+.modal-confirm:hover { 
+  background: linear-gradient(135deg, rgba(0,255,224,0.25), rgba(0,191,255,0.25)); 
+  color: #fff; 
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 6px 20px rgba(0,255,224,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.15); 
+  border-color: rgba(0,255,224,0.6);
+}
 
 /* Sorting */
 .Sort{display:flex;overflow-x:auto;margin-top:50px;white-space:nowrap;margin-right:20px;padding:10px 16px;gap:14px;-ms-overflow-style:none;scrollbar-width:none}
@@ -31,8 +250,42 @@
 /* Reply System */
 .reply-layer{transition:all .3s ease;border-left:3px solid #1da1f2;background:#000;box-shadow:0 2px 6px rgba(0,0,0,.3)}.reply{transition:background .2s ease}.reply:hover{background:#3a3a3a}
 
-/* Menus */
-.more-menu{background:#2a2a2a;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.3);z-index:2;padding:10px;min-width:120px}.more-menu button:hover{background:#3a3a3a}
+/* Menus - Liquid Glass Effect */
+.more-menu{
+  background: linear-gradient(135deg, rgba(42, 52, 84, 0.7), rgba(80, 120, 255, 0.3));
+  border-radius: 12px;
+  box-shadow: 
+    0 8px 32px rgba(31, 38, 135, 0.3),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    0 1px 0 rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  z-index: 2;
+  padding: 10px;
+  min-width: 140px;
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+/* Fallback for browsers without backdrop-filter */
+@supports not (backdrop-filter: blur(10px)) {
+  .more-menu {
+    background: linear-gradient(135deg, rgba(42, 52, 84, 0.95), rgba(80, 120, 255, 0.5));
+  }
+}
+
+.more-menu button{
+  background: transparent;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(.16,1,.3,1);
+  padding: 8px 12px;
+  color: #e0e0e0;
+}
+
+.more-menu button:hover{
+  background: rgba(255,255,255,0.12);
+  transform: translateX(2px);
+  color: #fff;
+}
 
 /* Preview Cards */
 .preview-card{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);padding:10px;margin-bottom:12px}.preview-header{display:flex;align-items:center;gap:10px;margin-bottom:6px}.preview-avatar{width:28px;height:28px;border:1px solid #444}.preview-user-info{display:flex;flex-direction:column}.preview-username{font-weight:bold}.preview-timestamp{font-size:12px;color:#999}.preview-message{font-size:13px;color:#ccc;margin:4px 0}.preview-image{width:100%;max-width:150px;border-radius:6px;margin-top:6px}.reply-preview{border-left:2px solid #00b4d8;box-shadow:0 0 6px rgba(0,180,216,.3)}.reply-preview .preview-username{color:#00b4d8}.reply-preview .preview-message{cursor:pointer}.quote-preview{border-left:2px solid #ff6b6b;box-shadow:0 0 6px rgba(255,107,107,.3)}.quote-preview .preview-username{color:#ff6b6b}
