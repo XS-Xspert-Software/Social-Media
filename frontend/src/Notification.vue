@@ -136,7 +136,7 @@ const acceptFriendRequest = async notification => {
   notification.processing = true;
   
   try {
-    const res = await fetch('https://sports321.vercel.app/api/Follow', {
+  const res = await fetch('/api/Follow', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -177,7 +177,7 @@ const declineFriendRequest = async notification => {
   notification.processing = true;
   
   try {
-    const res = await fetch('https://sports321.vercel.app/api/Follow', {
+  const res = await fetch('/api/Follow', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -235,7 +235,7 @@ const fetchNotifications = async () => {
   }
 
   try {
-    const res = await fetch(`https://sports321.vercel.app/api/notification?username=${props.loggedInUsername}`)
+  const res = await fetch(`/api/notification?username=${props.loggedInUsername}`)
     if (!res.ok) throw new Error('Failed to fetch')
     const data = await res.json()
 

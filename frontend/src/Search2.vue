@@ -137,18 +137,25 @@
 
       <!-- More Actions -->
       <div class="more-actions" style="position: relative;">
-        <button class="more-btn" @click="toggleMoreMenu" aria-label="More options"
+        <button class="more-btn" @click="(e)=>toggleMoreMenu(e)" aria-label="More options"
           style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
             <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
           </svg>
         </button>
 
-        <!-- Dropdown -->
-        <div v-if="showMoreMenu" class="more-menu"
-          style="position: absolute; top: 30px; right: 0; background: #2a2a2a; border-radius: 8px; padding: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); min-width: 120px;">
-          <!-- Add menu options here -->
-        </div>
+        <!-- Dropdown portaled to body to avoid clipping -->
+        <Teleport to="body">
+      <div v-if="showMoreMenu" class="more-menu portal" :style="{
+              position: 'fixed',
+              top: headerMenuCoords.top + 'px',
+              left: headerMenuCoords.left + 'px',
+        minWidth: '200px',
+              zIndex: 2000
+            }">
+            <!-- Add menu options here -->
+          </div>
+        </Teleport>
       </div>
     </div>
   </div>
@@ -577,6 +584,7 @@ const loading = ref(false);
 const relationshipStatus = ref({ isFollowing: false, friendshipStatus: 'none' });
 const currentTab = ref('posts');
 const showMoreMenu = ref(false);
+const headerMenuCoords = ref({ top: 0, left: 0 });
 const hours = ref(24);
 
 const formatViewCount = (count) => {
@@ -655,9 +663,24 @@ const sharePost = async () => {
   }
 };
 
-// More menu toggle
-const toggleMoreMenu = () => {
-  showMoreMenu.value = !showMoreMenu.value;
+// More menu toggle with viewport-fixed coordinates to avoid clipping
+const computeHeaderMenuCoords = (e) => {
+  try {
+    const btn = e?.currentTarget || e?.target?.closest('button');
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const estimatedWidth = 200;
+    const padding = 12;
+    let left = rect.right - estimatedWidth;
+    left = Math.max(padding, Math.min(left, window.innerWidth - estimatedWidth - padding));
+    const top = Math.min(rect.bottom + 6, window.innerHeight - 10);
+    headerMenuCoords.value = { top, left };
+  } catch {}
+};
+const toggleMoreMenu = (e) => {
+  if (showMoreMenu.value) { showMoreMenu.value = false; return; }
+  computeHeaderMenuCoords(e);
+  showMoreMenu.value = true;
 };
 
 // Follow/Unfollow functionality
@@ -990,16 +1013,22 @@ watch(() => localStorage.getItem('username'), (newUsername) => {
   }
 });
 
-// Close more menu when clicking outside
+// Close more menu when clicking outside or on scroll/resize
 watch(showMoreMenu, (isOpen) => {
   if (isOpen) {
     const closeMenu = (e) => {
       if (!e.target.closest('.more-actions')) {
         showMoreMenu.value = false;
         document.removeEventListener('click', closeMenu);
+        window.removeEventListener('scroll', closeMenu, true);
+        window.removeEventListener('resize', closeMenu, true);
       }
     };
-    setTimeout(() => document.addEventListener('click', closeMenu), 100);
+    setTimeout(() => {
+      document.addEventListener('click', closeMenu);
+      window.addEventListener('scroll', closeMenu, true);
+      window.addEventListener('resize', closeMenu, true);
+    }, 100);
   }
 });
 

@@ -111,7 +111,7 @@ export const usePostsStore = defineStore('posts', {
     async fetchPosts(page = 1, sort = 'general') {
       this.loading = true;
       try {
-        const apiUrl = 'https://sports321.vercel.app/api/posts';
+  const apiUrl = (import.meta.env?.VITE_API_URL || '/api') + '/posts';
         const params = new URLSearchParams({ page: page.toString(), limit: '10' });
         
         const shouldUsePersonalizedFeed = this.shouldUsePersonalizedFeed && sort === 'general';
@@ -120,7 +120,7 @@ export const usePostsStore = defineStore('posts', {
           : params.set('sort', sort);
 
         this.feedType = shouldUsePersonalizedFeed ? 'personalized' : 'public';
-        const response = await fetch(apiUrl + '?' + params.toString());
+  const response = await fetch(apiUrl + '?' + params.toString());
         return response.ok ? await response.json() : { posts: [], hasMorePosts: false };
       } catch (error) {
         console.error('Error fetching posts:', error);

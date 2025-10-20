@@ -264,10 +264,20 @@
     inset 0 -1px 0 rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.2);
   z-index: 2;
-  padding: 10px;
-  min-width: 140px;
+  padding: 12px 10px;
+  min-width: 180px;
   backdrop-filter: blur(40px) saturate(180%);
   -webkit-backdrop-filter: blur(40px) saturate(180%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* When portaled to body, ensure layering and bounds */
+.more-menu.portal{
+  z-index: 2000;
+  max-height: 60vh;
+  overflow: auto;
 }
 
 /* Fallback for browsers without backdrop-filter */
@@ -281,8 +291,9 @@
   background: transparent;
   border-radius: 8px;
   transition: all 0.3s cubic-bezier(.16,1,.3,1);
-  padding: 8px 12px;
+  padding: 10px 12px;
   color: #e0e0e0;
+  white-space: nowrap;
 }
 
 .more-menu button:hover{

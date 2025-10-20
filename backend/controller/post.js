@@ -84,5 +84,22 @@ export const getPosts = async (req, res) => {
         showComments: false,
         commentInput: ''
     }));
+    // If no local posts, proxy a remote feed to keep UI populated in dev
+    if (!postsOut.length) {
+        try {
+            const base = process.env.REMOTE_POSTS_FALLBACK || 'https://sports321.vercel.app/api/posts';
+            const page = (req.query.page || '1').toString();
+            const limit = (req.query.limit || '10').toString();
+            const sort = (req.query.sort || 'general').toString();
+            const url = `${base}?page=${encodeURIComponent(page)}&limit=${encodeURIComponent(limit)}&sort=${encodeURIComponent(sort)}`;
+            const r = await fetch(url);
+            if (r.ok) {
+                const remoteJson = await r.json();
+                return res.json(remoteJson);
+            }
+        } catch (e) {
+            // swallow and fall through to empty array
+        }
+    }
     res.json({ posts: postsOut });
 };

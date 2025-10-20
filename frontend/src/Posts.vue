@@ -184,13 +184,26 @@
       
       <!-- Replace inline Edit/Delete with a three-dot menu for own posts -->
       <div v-if="isOwnPost(post)" class="more-actions" style="position:relative; margin-left:auto;">
-        <button class="more-btn" @click.stop="toggleMenu(post._id)" aria-label="More options" style="background:none;border:none;padding:4px;cursor:pointer;color:#fff;display:flex;align-items:center;">
+        <button class="more-btn" @click.stop="toggleMenu(post._id, $event)" aria-label="More options" style="background:none;border:none;padding:4px;cursor:pointer;color:#fff;display:flex;align-items:center;">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 8a2 2 0 110-4 2 2 0 010 4zm0 2a2 2 0 110 4 2 2 0 010-4zm0 6a2 2 0 110 4 2 2 0 010-4z"/></svg>
         </button>
-        <div v-if="openMenuFor === post._id" class="more-menu" style="position:absolute;top:28px;right:0;background:#1b2330;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:6px;min-width:140px;z-index:40;">
-          <button @click="handleEdit(post)" style="all:unset;display:block;width:100%;padding:8px 10px;cursor:pointer;color:#fff;font-size:13px;border-radius:6px;">Edit</button>
-          <button @click="handleDelete(post)" style="all:unset;display:block;width:100%;padding:8px 10px;cursor:pointer;color:#ff6b6b;font-size:13px;border-radius:6px;">Delete</button>
-        </div>
+        <!-- Portal the menu to body to avoid clipping by overflow:hidden parents -->
+        <Teleport to="body">
+          <div
+            v-if="openMenuFor === post._id"
+            class="more-menu portal"
+            :style="{
+              position: 'fixed',
+              top: menuCoords.top + 'px',
+              left: menuCoords.left + 'px',
+              minWidth: '200px',
+              zIndex: 2000
+            }"
+          >
+            <button @click="handleEdit(post)" style="all:unset;display:block;width:100%;padding:8px 10px;cursor:pointer;color:#fff;font-size:13px;border-radius:6px;">Edit</button>
+            <button @click="handleDelete(post)" style="all:unset;display:block;width:100%;padding:8px 10px;cursor:pointer;color:#ff6b6b;font-size:13px;border-radius:6px;">Delete</button>
+          </div>
+        </Teleport>
       </div>
     </div>
   </div>
@@ -254,11 +267,30 @@ function redirectToUserProfile(username) {
   router.push({ name: 'UserProfile', params: { username } });
 }
 const openMenuFor = ref(null);
+const menuCoords = ref({ top: 0, left: 0 });
 function isOwnPost(p){
   return p.username === postsStore.loggedInUsername || p.sessionId === postsStore.sessionId;
 }
-function toggleMenu(id){
-  openMenuFor.value = openMenuFor.value === id ? null : id;
+function computeMenuCoordsFromEvent(e){
+  try {
+    const btn = e?.currentTarget || e?.target?.closest('button');
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+  const estimatedWidth = 200; // px
+  const padding = 12; // viewport padding
+    let left = rect.right - estimatedWidth;
+    left = Math.max(padding, Math.min(left, window.innerWidth - estimatedWidth - padding));
+    const top = Math.min(rect.bottom + 6, window.innerHeight - 10); // place under button
+    menuCoords.value = { top, left };
+  } catch {}
+}
+function toggleMenu(id, e){
+  if (openMenuFor.value === id) {
+    openMenuFor.value = null;
+    return;
+  }
+  computeMenuCoordsFromEvent(e);
+  openMenuFor.value = id;
 }
 function handleGlobalClick(e){
   if(!e.target.closest('.more-actions')) openMenuFor.value = null;
@@ -281,9 +313,14 @@ function handleDelete(post){
 }
 onMounted(()=>{
   window.addEventListener('click', handleGlobalClick, { capture:true });
+  // Close on scroll/resize to avoid misaligned portal
+  window.addEventListener('scroll', handleGlobalClick, { capture:true });
+  window.addEventListener('resize', handleGlobalClick, { capture:true });
 });
 onBeforeUnmount(()=>{
   window.removeEventListener('click', handleGlobalClick, { capture:true });
+  window.removeEventListener('scroll', handleGlobalClick, { capture:true });
+  window.removeEventListener('resize', handleGlobalClick, { capture:true });
 });
 defineExpose({
   onExternalSort: (type) => postsStore.sortPosts(type),

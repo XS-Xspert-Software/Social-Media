@@ -177,68 +177,6 @@
                 <span class="icon">🔗</span>
                 <span>Share</span>
               </button>
-/* Glassmorphic Shorts Action Buttons */
-.action-btn {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  font-size: 22px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  margin-bottom: 12px;
-  border: none;
-  background: none;
-  transition: all 0.4s cubic-bezier(.16,1,.3,1);
-}
-
-.glass-btn {
-  background: linear-gradient(135deg, rgba(34,40,60,0.45) 0%, rgba(80,120,255,0.18) 100%);
-  border: 2px solid rgba(255,255,255,0.25);
-  color: #e8eefc;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.22), 0 1.5px 4px 0 rgba(30,40,60,0.10);
-  backdrop-filter: blur(32px) saturate(180%);
-  -webkit-backdrop-filter: blur(32px) saturate(180%);
-  position: relative;
-  overflow: hidden;
-}
-.glass-btn::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(120deg,rgba(255,255,255,0.25) 0%,rgba(255,255,255,0.08) 100%);
-  z-index: 0;
-}
-.glass-btn::after {
-  content: "";
-  position: absolute;
-  left: 14px; top: 10px;
-  width: 50%; height: 20px;
-  background: linear-gradient(90deg,rgba(255,255,255,0.4) 0%,rgba(255,255,255,0.05) 100%);
-  border-radius: 12px;
-  filter: blur(14px);
-  opacity: 0.6;
-  pointer-events: none;
-  z-index: 1;
-}
-.glass-btn:hover {
-  background: linear-gradient(135deg, rgba(34,44,74,0.65) 0%, rgba(80,120,255,0.28) 100%);
-  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.35), 0 2px 6px 0 rgba(30,40,60,0.15);
-  transform: scale(1.1) translateY(-2px);
-  border-color: rgba(255,255,255,0.35);
-}
-.glass-btn:active {
-  transform: scale(0.95);
-  box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.20);
-}
-.glass-btn .icon {
-  font-size: 24px;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-}
               <div class="avatar">{{ shorts[fullscreenIndex].userId[0].toUpperCase() }}</div>
             </div>
           </div>
@@ -253,7 +191,8 @@ export default {
   name: 'ShortsApp',
   data() {
     return {
-  API_URL: 'https://chyna.vercel.app/api',
+      // Videos service base URL (remote) - per request, use chyna backend for shorts
+      API_URL: 'https://chyna.vercel.app/api',
       userId: '20',
       currentView: 'feed',
       shorts: [],
@@ -355,7 +294,7 @@ export default {
       try {
         // Optimistic UI update
         short.hearts = (short.hearts || 0) + 1;
-        const res = await fetch(`${this.API_URL}/shorts/${short.id}/like`, {
+        const res = await fetch(`${this.API_URL}/posts/${short.id}/like`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: this.userId })
@@ -389,7 +328,7 @@ export default {
       this.currentIndex = 0;
       
       try {
-        const response = await fetch(`${this.API_URL}/shorts`);
+  const response = await fetch(`${this.API_URL}/shorts`);
         const data = await response.json();
         
         if (data.success) {
@@ -651,6 +590,69 @@ export default {
 .shorts-feed {
   min-height: 100vh;
   color: #fff;
+}
+
+/* Glassmorphic Shorts Action Buttons */
+.action-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-size: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-bottom: 12px;
+  border: none;
+  background: none;
+  transition: all 0.4s cubic-bezier(.16,1,.3,1);
+}
+
+.glass-btn {
+  background: linear-gradient(135deg, rgba(34,40,60,0.45) 0%, rgba(80,120,255,0.18) 100%);
+  border: 2px solid rgba(255,255,255,0.25);
+  color: #e8eefc;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.22), 0 1.5px 4px 0 rgba(30,40,60,0.10);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  position: relative;
+  overflow: hidden;
+}
+.glass-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(120deg,rgba(255,255,255,0.25) 0%,rgba(255,255,255,0.08) 100%);
+  z-index: 0;
+}
+.glass-btn::after {
+  content: "";
+  position: absolute;
+  left: 14px; top: 10px;
+  width: 50%; height: 20px;
+  background: linear-gradient(90deg,rgba(255,255,255,0.4) 0%,rgba(255,255,255,0.05) 100%);
+  border-radius: 12px;
+  filter: blur(14px);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 1;
+}
+.glass-btn:hover {
+  background: linear-gradient(135deg, rgba(34,44,74,0.65) 0%, rgba(80,120,255,0.28) 100%);
+  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.35), 0 2px 6px 0 rgba(30,40,60,0.15);
+  transform: scale(1.1) translateY(-2px);
+  border-color: rgba(255,255,255,0.35);
+}
+.glass-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.20);
+}
+.glass-btn .icon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
 
 /* Upload FAB */

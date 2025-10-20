@@ -64,7 +64,7 @@ function follow(u){/* placeholder follow action */}
 onMounted(async ()=>{
   // Fetch random shorts (videos)
   try {
-    const shortsRes = await fetch('https://chyna.vercel.app/api/shorts');
+    const shortsRes = await fetch('/api/shorts');
     const shortsData = await shortsRes.json();
     if (shortsData.success && Array.isArray(shortsData.shorts)) {
       // Shuffle and take 3

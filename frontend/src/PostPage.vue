@@ -34,18 +34,26 @@
 
     <!-- More Actions -->
     <div class="more-actions" style="position: relative;">
-      <button class="more-btn" @click="toggleMoreMenu" aria-label="More options" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
+      <button class="more-btn" @click="(e)=>toggleMoreMenu(e)" aria-label="More options" style="background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
           <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
         </svg>
       </button>
 
-      <!-- Dropdown -->
-      <div v-if="showMoreMenu" class="more-menu" style="position: absolute; top: 30px; right: 0; background: #2a2a2a; border-radius: 8px; padding: 10px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); min-width: 160px; z-index: 50;">
-        <button style="all:unset;display:block;padding:6px 8px;color:#fff;cursor:pointer;font-size:13px;width:100%;" @click="sharePost">Share</button>
-        <button style="all:unset;display:block;padding:6px 8px;color:#fff;cursor:pointer;font-size:13px;width:100%;" @click="bookmarkPost">Bookmark</button>
-        <button style="all:unset;display:block;padding:6px 8px;color:#ff6b6b;cursor:pointer;font-size:13px;width:100%;" @click="toggleMoreMenu">Close</button>
-      </div>
+      <!-- Dropdown portaled to body -->
+      <Teleport to="body">
+    <div v-if="showMoreMenu" class="more-menu portal" :style="{
+            position: 'fixed',
+            top: headerMenuCoords.top + 'px',
+            left: headerMenuCoords.left + 'px',
+      minWidth: '200px',
+            zIndex: 2000
+          }">
+          <button style="all:unset;display:block;padding:6px 8px;color:#fff;cursor:pointer;font-size:13px;width:100%;" @click="sharePost">Share</button>
+          <button style="all:unset;display:block;padding:6px 8px;color:#fff;cursor:pointer;font-size:13px;width:100%;" @click="bookmarkPost">Bookmark</button>
+          <button style="all:unset;display:block;padding:6px 8px;color:#ff6b6b;cursor:pointer;font-size:13px;width:100%;" @click="toggleMoreMenu">Close</button>
+        </div>
+      </Teleport>
     </div>
         </div>
       </div>

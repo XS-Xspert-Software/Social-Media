@@ -112,6 +112,65 @@ app.post('/api/posts/:postId/dislike', dislikePost as any);
 // Proxy video upload to remote service (avoids frontend CORS & dev 404)
 // NOTE: /api/video proxy removed due to TypeScript issues and lack of multipart parser. Keep using front-end Vite proxy.
 
+// Shorts API: list posts that have a videoUrl
+app.get('/api/shorts', async (req: Request, res: Response) => {
+  try {
+    const { db } = await import('./schema/index.js');
+    const { posts } = await import('./schema/schema.js');
+    // Fetch recent posts and filter those with a non-empty videoUrl
+    const rows = await db.select().from(posts);
+    // Sort newest first if createdAt exists
+    rows.sort((a: any, b: any) => {
+      const at = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bt = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bt - at;
+    });
+    const shorts = rows
+      .filter((p: any) => p.videoUrl && String(p.videoUrl).trim() !== '')
+      .map((p: any) => ({
+        id: p.id,
+        userId: p.userId,
+        videoUrl: p.videoUrl,
+        title: p.title || '',
+        description: p.description || p.content || '',
+        hashtags: p.hashtags || '',
+        hearts: 0,
+        views: 0,
+        comments: 0,
+        createdAt: p.createdAt
+      }));
+    return res.json({ success: true, shorts });
+  } catch (e: any) {
+    log('error', 'Failed to load shorts', e);
+    return res.status(500).json({ success: false, error: 'Failed to load shorts' });
+  }
+});
+
+// Notifications: simple local stub for development/testing
+app.get('/api/notification', async (req: Request, res: Response) => {
+  try {
+    const username = (req.query.username || '').toString();
+    // Return empty list for now; integrate with real notifications later
+    return res.json({ notifications: [], username });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Failed to fetch notifications' });
+  }
+});
+
+// Follow actions: local stub to satisfy frontend interactions
+app.post('/api/Follow', async (req: Request, res: Response) => {
+  try {
+    const { action, requester, recipient } = req.body || {};
+    if (!action || !requester || !recipient) {
+      return res.status(400).json({ error: 'Missing fields' });
+    }
+    // Pretend success for all actions in dev
+    return res.json({ ok: true, action, requester, recipient });
+  } catch (e: any) {
+    return res.status(500).json({ error: 'Follow action failed' });
+  }
+});
+
 // Get user settings/profile by userId or username
 // Video upload endpoint (Backblaze B2)
 const upload = multer({ dest: 'uploads/' }); // Temporary upload folder
