@@ -165,18 +165,26 @@
           </div>
           <div class="video-flex-side">
             <div class="video-actions">
-              <button class="action-btn glass-btn" @click="likeShort">
-                <span class="icon">❤️</span>
-                <span>{{ formatCount(shorts[fullscreenIndex].hearts) }}</span>
-              </button>
-              <button class="action-btn glass-btn" @click="openComments(shorts[fullscreenIndex].id)">
-                <span class="icon">💬</span>
-                <span>{{ formatCount(shorts[fullscreenIndex].comments) }}</span>
-              </button>
-              <button class="action-btn glass-btn" @click="shareShort(shorts[fullscreenIndex].id)">
-                <span class="icon">🔗</span>
-                <span>Share</span>
-              </button>
+              <div class="action-group">
+                <button class="action-btn glass-btn" @click="likeShort">
+                  <span class="icon">❤️</span>
+                </button>
+                <span class="action-label">{{ formatCount(shorts[fullscreenIndex].hearts) }}</span>
+              </div>
+
+              <div class="action-group">
+                <button class="action-btn glass-btn" @click="openComments(shorts[fullscreenIndex].id)">
+                  <span class="icon">💬</span>
+                </button>
+                <span class="action-label">{{ formatCount(shorts[fullscreenIndex].comments) }}</span>
+              </div>
+
+              <div class="action-group">
+                <button class="action-btn glass-btn" @click="shareShort(shorts[fullscreenIndex].id)">
+                  <span class="icon">🔗</span>
+                </button>
+                <span class="action-label">Share</span>
+              </div>
               <div class="avatar">{{ shorts[fullscreenIndex].userId[0].toUpperCase() }}</div>
             </div>
           </div>
@@ -653,6 +661,43 @@ export default {
 .glass-btn .icon {
   font-size: 24px;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Action buttons layout (button + label) */
+.action-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.9);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  user-select: none;
+}
+
+/* Minimal avatar chip on the action rail */
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(24, 32, 54, 0.65);
+  border: 1.5px solid rgba(255,255,255,0.25);
+  color: #e8eefc;
+  font-weight: 700;
+  margin-top: 8px;
+  box-shadow: 0 4px 18px 0 rgba(31, 38, 135, 0.15);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
 }
 
 /* Upload FAB */
@@ -1001,8 +1046,8 @@ export default {
 
 .close-btn {
   position: absolute;
-  top: 16px;
-  left: 16px;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  left: calc(env(safe-area-inset-left, 0px) + 16px);
   background: rgba(24, 32, 54, 0.65);
   border: 2px solid rgba(255,255,255,0.25);
   color: #e8eefc;
@@ -1016,6 +1061,10 @@ export default {
   backdrop-filter: blur(20px) saturate(170%);
   -webkit-backdrop-filter: blur(20px) saturate(170%);
   transition: all 0.3s cubic-bezier(.16,1,.3,1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .close-btn:hover {
