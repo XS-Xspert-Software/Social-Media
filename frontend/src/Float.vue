@@ -154,7 +154,7 @@ const loggedInUserId = ref(localStorage.getItem('userId') || '')
 const loggedInUsername = ref(localStorage.getItem('username') || '')
 const profilePic = ref(localStorage.getItem('profilePic') || '')
 const sessionId = ref(localStorage.getItem('sessionId') || '')
-const loginHref = 'https://latestnewsandaffairs.site/public/signup'
+const loginHref = 'https://endless.sbs/public/signup'
 
 const isAuthenticated = computed(() => !!(loggedInUsername.value && loggedInUsername.value !== 'Guest'))
 

@@ -84,7 +84,7 @@
                   :src="userProfile.profile_picture"
                   alt="Profile Picture"
                   class="profile-avatar"
-                  @error="e => e.target.src = 'https://latestnewsandaffairs.site/public/pfp.jpg'"
+                  @error="e => e.target.src = 'https://endless.sbs/public/pfp.jpg'"
                 />
                 <div class="avatar-overlay">
                   <i class="fas fa-camera"></i>
@@ -363,7 +363,7 @@ export default {
     const userProfile = ref({
       username: storedUsername,
       display_name: storedUsername || 'Guest',
-      profile_picture: 'https://latestnewsandaffairs.site/public/pfp.jpg',
+  profile_picture: 'https://endless.sbs/public/pfp.jpg',
       description: storedUsername ? 'No description available' : 'Guest viewing mode',
       created_at: storedUsername ? 'Date not available' : '—',
       Music: storedUsername ? 'Music not available' : ''
@@ -510,7 +510,7 @@ export default {
           created_at: user.created_at || 'Date not available',
           Music: user.Music || 'Music not available',
           description: user.description || 'No description available',
-          profile_picture: user.profile_picture || 'https://latestnewsandaffairs.site/public/pfp.jpg'
+          profile_picture: user.profile_picture || 'https://endless.sbs/public/pfp.jpg'
         };
 
         // Update stats if available

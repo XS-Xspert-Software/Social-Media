@@ -23,6 +23,14 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       }
+      ,
+      // Proxy to legacy posts API to avoid CORS in dev
+      '/oldapi': {
+        target: 'https://sports321.vercel.app',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/oldapi/, '')
+      }
     }
   },
   build: {

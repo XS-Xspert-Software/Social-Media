@@ -18,7 +18,7 @@
         >
           <div class="profile-picture" style="width: 50px; height: 50px; border-radius: 50%; margin-right: 15px; overflow: hidden; background-color: #ccc;">
             <img 
-              :src="group.image || 'https://latestnewsandaffairs.site/public/pfp1.jpg'" 
+              :src="group.image || 'https://endless.sbs/public/pfp1.jpg'" 
               :alt="group.name + ' image'" 
               style="width: 100%; height: 100%; object-fit: cover;" 
             />
@@ -48,7 +48,7 @@
         >
           <div class="profile-picture" style="width: 40px; height: 40px; border-radius: 50%; margin-right: 15px; overflow: hidden; background-color: #ccc;">
             <img 
-              :src="group.image || 'https://latestnewsandaffairs.site/public/pfp1.jpg'" 
+              :src="group.image || 'https://endless.sbs/public/pfp1.jpg'" 
               :alt="group.name + ' image'" 
               style="width: 100%; height: 100%; object-fit: cover;" 
             />

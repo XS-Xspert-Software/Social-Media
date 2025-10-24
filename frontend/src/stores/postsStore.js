@@ -39,6 +39,12 @@ export const usePostsStore = defineStore('posts', {
   actions: {
     async makeApiCall(endpoint, method = 'POST', body = null, customHeaders = {}) {
   try {
+    // In dev, route legacy API calls through Vite proxy to avoid CORS
+    if (import.meta && import.meta.env && import.meta.env.DEV && typeof endpoint === 'string') {
+      if (endpoint.startsWith('https://sports321.vercel.app')) {
+        endpoint = endpoint.replace('https://sports321.vercel.app', '/oldapi');
+      }
+    }
     const config = {
       method,
       headers: {
@@ -111,7 +117,10 @@ export const usePostsStore = defineStore('posts', {
     async fetchPosts(page = 1, sort = 'general') {
       this.loading = true;
       try {
-  const apiUrl = (import.meta.env?.VITE_API_URL || '/api') + '/posts';
+  // Use Vite proxy in dev to avoid CORS; use absolute in prod/static
+  const apiUrl = (import.meta?.env?.DEV)
+    ? '/oldapi/api/posts'
+    : 'https://sports321.vercel.app/api/posts';
         const params = new URLSearchParams({ page: page.toString(), limit: '10' });
         
         const shouldUsePersonalizedFeed = this.shouldUsePersonalizedFeed && sort === 'general';

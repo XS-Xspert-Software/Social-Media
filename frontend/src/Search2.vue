@@ -314,7 +314,7 @@
                 <!-- Reply Preview -->
                    <div v-if="post.replyTo" class="reply-preview" style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a); border-left: 2px solid #00b4d8; padding: 10px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 0 6px rgba(0, 180, 216, 0.3);">
                   <div class="reply-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-                    <img :src="post.replyTo.profilePicture || 'https://latestnewsandaffairs.site/public/pfp.jpg'" alt="User Profile Picture" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #444;" />
+                    <img :src="post.replyTo.profilePicture || 'https://endless.sbs/public/pfp.jpg'" alt="User Profile Picture" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #444;" />
                     <div style="display: flex; flex-direction: column;">
                       <strong style="color: #00b4d8;">{{ post.replyTo.username }}</strong>
                       <small style="color: #999;">{{ postsStore.formatTimestamp(post.replyTo.timestamp) }}</small>
@@ -329,7 +329,7 @@
                 <!-- Quote Preview -->
                 <div v-if="post.quoteTo" class="preview-card quote-preview">
                   <div class="preview-header">
-                    <img :src="post.quoteTo.profilePicture || 'https://latestnewsandaffairs.site/public/pfp.jpg'" alt="User Profile Picture" class="preview-avatar" />
+                    <img :src="post.quoteTo.profilePicture || 'https://endless.sbs/public/pfp.jpg'" alt="User Profile Picture" class="preview-avatar" />
                     <div class="preview-user-info">
                       <strong class="preview-username">{{ post.quoteTo.username }}</strong>
                       <small class="preview-timestamp">{{ postsStore.formatTimestamp(post.quoteTo.timestamp) }}</small>
@@ -984,7 +984,7 @@ function tweetPost(postId, username) {
   const u = localStorage.getItem('username');
   if (!u || u === 'Guest') {
     notify('Please log in to reply to posts', true);
-    window.location.href = 'https://latestnewsandaffairs.site/public/signup';
+  window.location.href = 'https://endless.sbs/public/signup';
     return;
   }
   router.push({ path: '/float', query: { replyToPostId: postId, replyToUsername: username } });

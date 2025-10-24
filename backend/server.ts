@@ -11,6 +11,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 dotenv.config();
 import { uploadVideoToB2 } from './b2.service.js';
+import { eq, desc } from 'drizzle-orm';
 
 // ESM-compatible __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -145,6 +146,58 @@ app.get('/api/shorts', async (req: Request, res: Response) => {
     return res.status(500).json({ success: false, error: 'Failed to load shorts' });
   }
 });
+
+// --- Comments API (uses same DB/posts as video metadata) ---
+// List comments for a post (flat list; replies supported via parentId if needed later)
+app.get('/api/comments', (async (req: Request, res: Response) => {
+  try {
+    const postId = (req.query.postId || '').toString();
+    if (!postId) return res.status(400).json({ success: false, error: 'postId required' });
+
+    const { db } = await import('./schema/index.js');
+    const { comments } = await import('./schema/schema.js');
+
+    // Order newest first for now
+    const rows = await db
+      .select()
+      .from(comments)
+      .where(eq(comments.postId, postId as any))
+      .orderBy(desc(comments.createdAt));
+
+    return res.json({ success: true, comments: rows });
+  } catch (e: any) {
+    log('error', 'Failed to load comments', e);
+    return res.status(500).json({ success: false, error: 'Failed to load comments' });
+  }
+}) as any);
+
+// Create a comment
+app.post('/api/comments', (async (req: Request, res: Response) => {
+  try {
+    const { postId, authorId, content, parentId } = req.body || {};
+    if (!postId || !authorId || !content) {
+      return res.status(400).json({ success: false, error: 'postId, authorId, and content are required' });
+    }
+
+    const { db } = await import('./schema/index.js');
+    const { comments } = await import('./schema/schema.js');
+
+    const inserted: any = await db.insert(comments).values({
+      postId,
+      authorId,
+      parentId: parentId || null,
+      content,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+
+    const newComment: any = Array.isArray(inserted) ? inserted[0] : (inserted && inserted.rows ? inserted.rows[0] : null);
+    return res.json({ success: true, comment: newComment });
+  } catch (e: any) {
+    log('error', 'Failed to create comment', e);
+    return res.status(500).json({ success: false, error: 'Failed to create comment' });
+  }
+}) as any);
 
 // Notifications: simple local stub for development/testing
 app.get('/api/notification', async (req: Request, res: Response) => {

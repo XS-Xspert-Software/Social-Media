@@ -51,7 +51,7 @@
 </template>
 <script setup>
 import { ref, onMounted } from 'vue';
-const defaultAvatar = 'https://latestnewsandaffairs.site/public/pfp.jpg';
+const defaultAvatar = 'https://endless.sbs/public/pfp.jpg';
 const stats = ref([
   { label: 'Posts', value: 0 },
   { label: 'Followers', value: 0 },
@@ -64,16 +64,19 @@ function follow(u){/* placeholder follow action */}
 onMounted(async ()=>{
   // Fetch random shorts (videos)
   try {
-    const shortsRes = await fetch('/api/shorts');
+    // Use videos API base; in dev you can set VITE_VIDEOS_API or rely on hardcoded URL
+    const videosApi = import.meta?.env?.DEV ? 'https://chyna.vercel.app/api' : 'https://chyna.vercel.app/api';
+    const shortsRes = await fetch(`${videosApi}/shorts`);
     const shortsData = await shortsRes.json();
     if (shortsData.success && Array.isArray(shortsData.shorts)) {
       // Shuffle and take 3
       shorts.value = shortsData.shorts.sort(() => Math.random() - 0.5).slice(0, 3);
     }
   } catch {}
-  // Fetch random posts of the day
+  // Fetch random posts of the day (reverted to old API)
   try {
-    const postsRes = await fetch('/api/posts');
+    const postsApi = import.meta?.env?.DEV ? '/oldapi/api/posts' : 'https://sports321.vercel.app/api/posts';
+    const postsRes = await fetch(postsApi);
     const postsData = await postsRes.json();
     if (Array.isArray(postsData.posts)) {
       // Shuffle and take 3

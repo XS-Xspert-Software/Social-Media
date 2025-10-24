@@ -122,7 +122,7 @@
     :src="userProfile.profilePic"
     alt="Profile"
     class="profile-pic-icon"
-    @error="event => event.target.src = 'https://latestnewsandaffairs.site/download.jpeg'"
+  @error="event => event.target.src = 'https://endless.sbs/download.jpeg'"
   />
 </template>
 
@@ -262,7 +262,7 @@ export default {
 
     loginHref() {
       // Centralize login target so we can change it easily in one place
-      return 'https://latestnewsandaffairs.site/public/signup';
+  return 'https://endless.sbs/public/signup';
     },
   },
 
@@ -436,7 +436,7 @@ export default {
       }
       this.showProfileMenu = false;
   const next = encodeURIComponent(this.$route.fullPath || '/');
-  window.location.href = `https://latestnewsandaffairs.site/public/signup?next=${next}`;
+  window.location.href = `https://endless.sbs/public/signup?next=${next}`;
     },
 
     updateUserProfile() {

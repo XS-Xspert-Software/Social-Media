@@ -162,6 +162,40 @@
                 ↓
               </button>
             </div>
+
+            <!-- Comments Drawer -->
+            <div v-if="showComments" class="comments-drawer" @click.stop>
+              <div class="comments-header">
+                <div class="title">Comments</div>
+                <button class="close-comments" @click="closeComments">✕</button>
+              </div>
+              <div class="comments-body" ref="commentsBody">
+                <div v-if="commentsLoading" class="comments-loading">Loading…</div>
+                <div v-else>
+                  <div v-if="comments.length === 0" class="comments-empty">Be the first to comment.</div>
+                  <div v-for="c in comments" :key="c.id" class="comment-item">
+                    <div class="avatar tiny">{{ (c.authorId || 'U')[0].toUpperCase() }}</div>
+                    <div class="comment-content">
+                      <div class="meta">
+                        <span class="user">@{{ c.authorId?.slice(0,6) || 'user' }}</span>
+                        <span class="dot">•</span>
+                        <span class="time">{{ formatDate(c.createdAt) }}</span>
+                      </div>
+                      <div class="text">{{ c.content }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="comments-input">
+                <input
+                  v-model="newComment"
+                  type="text"
+                  placeholder="Write a comment…"
+                  @keyup.enter="submitComment"
+                />
+                <button class="send-btn glass-btn" :disabled="!newComment.trim()" @click="submitComment">Send</button>
+              </div>
+            </div>
           </div>
           <div class="video-flex-side">
             <div class="video-actions">
@@ -207,6 +241,10 @@ export default {
       loading: false,
       currentIndex: 0,
       fullscreenIndex: null,
+  showComments: false,
+  comments: [],
+  commentsLoading: false,
+  newComment: '',
       uploadForm: {
         title: '',
         description: '',
@@ -547,9 +585,71 @@ export default {
       }
     },
 
-    openComments(id) {
-      // TODO: Open a modal or drawer for comments
-      alert('Comments feature coming soon!');
+    async openComments(postId) {
+      this.showComments = true;
+      this.commentsLoading = true;
+      this.comments = [];
+      try {
+        const res = await fetch(`${this.API_URL}/comments?postId=${encodeURIComponent(postId)}`);
+        const data = await res.json();
+        if (data.success) {
+          this.comments = Array.isArray(data.comments) ? data.comments : [];
+        }
+      } catch (e) {
+        console.error('Failed to load comments', e);
+      } finally {
+        this.commentsLoading = false;
+        this.$nextTick(() => {
+          const el = this.$refs.commentsBody;
+          if (el && typeof el.scrollHeight === 'number') {
+            el.scrollTop = el.scrollHeight;
+          }
+        });
+      }
+    },
+
+    closeComments() {
+      this.showComments = false;
+      this.newComment = '';
+    },
+
+    async submitComment() {
+      if (!this.newComment.trim()) return;
+      const post = this.shorts[this.fullscreenIndex];
+      if (!post) return;
+      const optimistic = {
+        id: 'tmp-' + Date.now(),
+        postId: post.id,
+        authorId: this.userId,
+        content: this.newComment.trim(),
+        createdAt: new Date().toISOString(),
+      };
+      // Optimistic UI
+      this.comments.push(optimistic);
+      post.comments = (post.comments || 0) + 1;
+      const toSend = this.newComment.trim();
+      this.newComment = '';
+      try {
+        const res = await fetch(`${this.API_URL}/comments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ postId: post.id, authorId: this.userId, content: toSend })
+        });
+        const data = await res.json();
+        if (data.success && data.comment) {
+          // replace optimistic with actual
+          const idx = this.comments.findIndex(c => c.id === optimistic.id);
+          if (idx !== -1) this.comments.splice(idx, 1, data.comment);
+        }
+      } catch (e) {
+        console.error('Failed to comment', e);
+      }
+      this.$nextTick(() => {
+        const el = this.$refs.commentsBody;
+        if (el && typeof el.scrollHeight === 'number') {
+          el.scrollTop = el.scrollHeight;
+        }
+      });
     },
 
     async shareShort(id) {

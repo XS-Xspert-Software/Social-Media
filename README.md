@@ -102,7 +102,7 @@ curl http://localhost:3000/federation/discover
 ### 8. Try the Main Sync Instance
 
 See a live example at:  
-[https://latestnewsandaffairs.site/public/i](https://latestnewsandaffairs.site/public/i)
+[https://endless.sbs/public/i](https://endless.sbs/public/i)
 
 ---
 
