@@ -174,6 +174,36 @@
   padding:0;
 }
 
+/* Post Actions Container - Fix alignment */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.actions > div[style*="display: flex"] {
+  display: flex !important;
+  align-items: center !important;
+  gap: 18px !important;
+  flex-wrap: wrap;
+}
+
+/* Individual action items - ensure proper alignment */
+.actions > div > div,
+.actions > div > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.actions > div > div:hover {
+  transform: scale(1.05);
+  color: #667eea;
+}
+
 .delete-comment-btn{
   color:#1da1f2;
   font-size:14px;
