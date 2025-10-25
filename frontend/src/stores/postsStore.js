@@ -41,8 +41,13 @@ export const usePostsStore = defineStore('posts', {
   try {
     // In dev, route legacy API calls through Vite proxy to avoid CORS
     if (import.meta && import.meta.env && import.meta.env.DEV && typeof endpoint === 'string') {
-      if (endpoint.startsWith('https://sports321.vercel.app')) {
-        endpoint = endpoint.replace('https://sports321.vercel.app', '/oldapi');
+      try {
+        const urlObj = new URL(endpoint);
+        if (urlObj.hostname === 'sports321.vercel.app') {
+          endpoint = endpoint.replace('https://sports321.vercel.app', '/oldapi');
+        }
+      } catch (e) {
+        // If endpoint is not a valid URL, do nothing or optionally handle error
       }
     }
     const config = {
