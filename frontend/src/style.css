@@ -860,6 +860,7 @@ button {
   .main-content {
     margin: 0 !important;
     width: 100% !important;
+    padding-bottom: calc(56px + env(safe-area-inset-bottom)); /* room for bottom nav */
   }
 }
 

@@ -106,7 +106,7 @@
     />
 
    <!-- Mobile nav -->
-<nav v-if="!isChatboxRoute && !isGroupChatboxRoute">
+<nav v-if="!isChatboxRoute && !isGroupChatboxRoute" class="mobile-bottom-nav" aria-label="Primary">
   <ul>
     <li
       v-for="tab in tabs"
@@ -612,6 +612,63 @@ export default {
   align-items: center;
 }
 
+</style>
+
+<style scoped>
+/* Mobile bottom navigation (only visible on small screens) */
+@media (max-width: 767px) {
+  .mobile-bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    background: rgba(15, 15, 20, 0.7);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border-top: 1px solid rgba(255,255,255,0.15);
+    padding: max(6px, env(safe-area-inset-bottom));
+  }
+
+  .mobile-bottom-nav ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    margin: 0;
+    padding: 6px 10px;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .bottom-nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 6px;
+    min-height: 44px; /* iOS recommended touch target */
+    gap: 4px;
+    border-radius: 14px;
+    font-size: 11px;
+  }
+
+  .bottom-nav-btn i {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .bottom-nav-btn.active {
+    background: rgba(255,255,255,0.08);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+
+  .profile-pic-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+}
 </style>
 
 
