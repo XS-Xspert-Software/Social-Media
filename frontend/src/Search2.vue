@@ -167,7 +167,7 @@
       <!-- Profile Picture -->
       <div class="profile-picture-wrapper">
         <img 
-          :src="userProfile.profilePicture || 'pfp2.jpg'" 
+          :src="userProfile.profilePicture || '/favicon.png'" 
           :alt="`${userProfile.username}'s profile picture`"
           class="profile-picture"
           style=" width: 120px;height: 120px;border-radius: 50%;border: 4px solid #1a1a1a;object-fit: cover;box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), 0 0 0 3px rgba(255, 255, 255, 0.2);"
@@ -314,7 +314,7 @@
                 <!-- Reply Preview -->
                    <div v-if="post.replyTo" class="reply-preview" style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a); border-left: 2px solid #00b4d8; padding: 10px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 0 6px rgba(0, 180, 216, 0.3);">
                   <div class="reply-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-                    <img :src="post.replyTo.profilePicture || 'https://endless.sbs/public/pfp.jpg'" alt="User Profile Picture" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #444;" />
+                    <img :src="post.replyTo.profilePicture || '/favicon.png'" alt="User Profile Picture" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #444;" @error="e=>e.target.src='/favicon.png'" />
                     <div style="display: flex; flex-direction: column;">
                       <strong style="color: #00b4d8;">{{ post.replyTo.username }}</strong>
                       <small style="color: #999;">{{ postsStore.formatTimestamp(post.replyTo.timestamp) }}</small>
@@ -329,7 +329,7 @@
                 <!-- Quote Preview -->
                 <div v-if="post.quoteTo" class="preview-card quote-preview">
                   <div class="preview-header">
-                    <img :src="post.quoteTo.profilePicture || 'https://endless.sbs/public/pfp.jpg'" alt="User Profile Picture" class="preview-avatar" />
+                    <img :src="post.quoteTo.profilePicture || '/favicon.png'" alt="User Profile Picture" class="preview-avatar" @error="e=>e.target.src='/favicon.png'" />
                     <div class="preview-user-info">
                       <strong class="preview-username">{{ post.quoteTo.username }}</strong>
                       <small class="preview-timestamp">{{ postsStore.formatTimestamp(post.quoteTo.timestamp) }}</small>
@@ -342,7 +342,7 @@
                 <!-- Post Header -->
                 <div class="post-header">
                   <div class="profile-picture clickable" @click="redirectToUserProfile(post.username)">
-                    <img :src="post.profilePicture || 'pfp2.jpg'" :alt="`${post.username}'s profile picture`" />
+                    <img :src="post.profilePicture || '/favicon.png'" :alt="`${post.username}'s profile picture`" @error="e=>e.target.src='/favicon.png'" />
                   </div>
                   <div class="username clickable" @click="postsStore.redirectToUserProfile(post.username)">
                     <strong>{{ post.username }}</strong>
@@ -498,7 +498,7 @@
                 <!-- Short content similar to posts but for shorts -->
                 <div class="post-header">
                   <div class="profile-picture clickable" @click="redirectToUserProfile(short.username)">
-                    <img :src="short.profilePicture || 'pfp2.jpg'" :alt="`${short.username}'s profile picture`" />
+                    <img :src="short.profilePicture || '/favicon.png'" :alt="`${short.username}'s profile picture`" @error="e=>e.target.src='/favicon.png'" />
                   </div>
                   <div class="username clickable" @click="postsStore.redirectToUserProfile(short.username)">
                     <strong>{{ short.username }}</strong>

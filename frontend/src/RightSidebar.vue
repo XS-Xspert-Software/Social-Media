@@ -51,7 +51,8 @@
 </template>
 <script setup>
 import { ref, onMounted } from 'vue';
-const defaultAvatar = 'https://endless.sbs/public/pfp.jpg';
+// Use a local fallback avatar to avoid external SSL issues
+const defaultAvatar = '/favicon.png';
 const stats = ref([
   { label: 'Posts', value: 0 },
   { label: 'Followers', value: 0 },

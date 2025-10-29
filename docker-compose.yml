@@ -37,6 +37,8 @@ services:
     working_dir: /app
     volumes:
       - ./frontend:/app
+      # Preserve node_modules installed in the container so deps aren't masked by bind mount
+      - frontend_node_modules:/app/node_modules
 
   vidbackend:
     build: ./vidbackend
@@ -69,3 +71,4 @@ services:
 volumes:
   postgres_data:
   websocket_node_modules:
+  frontend_node_modules:

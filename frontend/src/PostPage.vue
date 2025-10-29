@@ -61,7 +61,7 @@
       <!-- Reply Preview -->
       <div v-if="postsStore.selectedPost.replyTo" class="reply-preview" style="border-left: 3px solid #00b4d8; padding: 10px; margin-bottom: 15px; background: #2a2a2a; border-radius: 8px;">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <img :src="postsStore.selectedPost.replyTo.profilePicture || 'https://endless.sbs/public/pfp.jpg'" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" />
+          <img :src="postsStore.selectedPost.replyTo.profilePicture || '/favicon.png'" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" @error="e=>e.target.src='/favicon.png'" />
           <div>
             <strong style="color: #00b4d8;">{{ postsStore.selectedPost.replyTo.username }}</strong>
             <small style="color: #999; display: block;">{{ postsStore.formatTimestamp(postsStore.selectedPost.replyTo.timestamp) }}</small>
@@ -73,7 +73,7 @@
       
       <!-- Post Header -->
       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-        <img :src="postsStore.selectedPost.profilePicture || 'pfp2.jpg'" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer;" @click="$router.push(`/profile/${postsStore.selectedPost.username}`)" />
+  <img :src="postsStore.selectedPost.profilePicture || '/favicon.png'" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer;" @click="$router.push(`/profile/${postsStore.selectedPost.username}`)" @error="e=>e.target.src='/favicon.png'" />
         <strong style="color: #fff; font-size: 16px;">{{ postsStore.selectedPost.username }}</strong>
       </div>
       

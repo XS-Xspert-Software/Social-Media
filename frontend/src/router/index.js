@@ -12,6 +12,7 @@ const GroupChatbox = () => import('../GroupChatbox.vue')
 const Float = () => import('../Float.vue')
 const Admin = () => import('../Admin.vue')
 const Notification = () => import('../Notification.vue')
+const Callback = () => import('../Callback.vue')
 
 const routes = [
   { path: '/', name: 'Posts', component: Posts },
@@ -24,6 +25,7 @@ const routes = [
   { path: '/group-chat/:groupId/:groupName', name: 'GroupChatbox', component: GroupChatbox },
   { path: '/post/:id', name: 'PostPage', component: PostPage },
   { path: '/notification', name: 'Notification', component: Notification },
+  { path: '/callback', name: 'AuthCallback', component: Callback },
   { path: '/chat', name: 'Chat', component: Chat, children:[
       {
         path: '',

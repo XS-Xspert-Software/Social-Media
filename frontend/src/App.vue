@@ -422,21 +422,49 @@ export default {
       }
     },
 
-    authAction() {
-  this.prepareLoginRedirect();
-      if (this.isSignedIn) {
-        ['username', 'userId', 'profilePic', 'authToken'].forEach((key) => {
-          setLocalStorage(key, '');
-        });
-        Object.assign(this.userProfile, {
-          username: 'Guest',
-          userId: null,
-          profilePic: 'default-pic.png',
-        });
+    async authAction() {
+      // Use the Auth0 plugin via Options API global property
+      const auth0 = this.$auth0;
+      this.prepareLoginRedirect();
+      const next = this.$route.fullPath || '/';
+
+      // Fallback: if plugin isn't available, do nothing gracefully
+      if (!auth0) {
+        console.warn('Auth0 plugin not available');
+        return;
       }
-      this.showProfileMenu = false;
-  const next = encodeURIComponent(this.$route.fullPath || '/');
-  window.location.href = `https://endless.sbs/public/signup?next=${next}`;
+
+      const isAuthed = auth0.isAuthenticated?.value;
+
+      if (isAuthed) {
+        // Logout
+        try {
+          await auth0.logout?.({ logoutParams: { returnTo: window.location.origin } });
+        } finally {
+          ['username', 'userId', 'profilePic', 'authToken'].forEach((key) => setLocalStorage(key, ''));
+          Object.assign(this.userProfile, { username: 'Guest', userId: null, profilePic: 'default-pic.png' });
+          this.showProfileMenu = false;
+        }
+      } else {
+        // Login; carry appState target instead of using query
+        await auth0.loginWithRedirect?.({
+          authorizationParams: { redirect_uri: window.location.origin + '/callback' },
+          appState: { target: next }
+        });
+        // After redirect, Callback.vue will route back; also sync profile locally when available
+        try {
+          const token = await auth0.getAccessTokenSilently?.();
+          if (token) setLocalStorage('authToken', token);
+        } catch {}
+        const u = auth0.user?.value;
+        if (u) {
+          setLocalStorage('username', u.nickname || u.name || 'User');
+          setLocalStorage('userId', u.sub || '');
+          setLocalStorage('profilePic', u.picture || 'default-pic.png');
+          this.updateUserProfile();
+        }
+        this.showProfileMenu = false;
+      }
     },
 
     updateUserProfile() {

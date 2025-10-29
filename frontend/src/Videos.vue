@@ -118,7 +118,7 @@
     <div v-if="fullscreenIndex !== null" class="fullscreen-view">
       <div class="fullscreen-container">
         <div class="video-flex-row">
-          <div class="video-flex-main">
+          <div class="video-flex-main" ref="container">
             <video
               ref="video"
               :src="shorts[fullscreenIndex].videoUrl"
@@ -257,7 +257,12 @@ export default {
       uploadMessage: '',
       uploadError: false,
       wheelTimeout: null, // Moved from methods to data
-      lastWheelTime: 0    // Moved from methods to data
+      lastWheelTime: 0,   // Moved from methods to data
+      // Touch swipe state and handlers for mobile navigation
+      _touchStartY: 0,
+      _touchStartX: 0,
+      _touching: false,
+      _touchHandlers: null,
     };
   },
 
@@ -274,9 +279,14 @@ export default {
       if (val !== null && val !== undefined) {
         window.addEventListener('keydown', this.handleKeydown);
         window.addEventListener('wheel', this.handleWheel, { passive: false });
+        // Attach swipe listeners after DOM updates so ref exists
+        this.$nextTick(() => {
+          this.setupSwipeGestures();
+        });
       } else {
         window.removeEventListener('keydown', this.handleKeydown);
         window.removeEventListener('wheel', this.handleWheel);
+        this.teardownSwipeGestures();
       }
     }
   },
@@ -425,23 +435,65 @@ export default {
     },
 
     setupSwipeGestures() {
-      let startY = 0;
       const container = this.$refs.container;
       if (!container) return;
+      // Avoid double-binding
+      if (this._touchHandlers) return;
 
-      container.addEventListener('touchstart', (e) => {
-        startY = e.touches[0].clientY;
-      });
+      // Ensure vertical pan works smoothly and doesn't trigger browser back/forward gestures
+      try { container.style.touchAction = 'pan-y'; } catch {}
 
-      container.addEventListener('touchend', (e) => {
-        const endY = e.changedTouches[0].clientY;
-        const diff = startY - endY;
+      const onStart = (e) => {
+        if (this.fullscreenIndex === null || this.fullscreenIndex === undefined) return;
+        const t = e.touches && e.touches[0];
+        if (!t) return;
+        this._touchStartY = t.clientY;
+        this._touchStartX = t.clientX;
+        this._touching = true;
+      };
 
-        if (Math.abs(diff) > 50) {
-          if (diff > 0) this.nextShort();
-          else this.prevShort();
+      const onMove = (e) => {
+        // Optional: could add feedback; prevent accidental horizontal page scroll if mostly vertical
+        if (!this._touching) return;
+        const t = e.touches && e.touches[0];
+        if (!t) return;
+        const dy = Math.abs(t.clientY - this._touchStartY);
+        const dx = Math.abs(t.clientX - this._touchStartX);
+        if (dy > dx) {
+          // Primarily vertical gesture; prevent scroll bounce
+          e.preventDefault();
         }
-      });
+      };
+
+      const onEnd = (e) => {
+        if (!this._touching) return;
+        this._touching = false;
+        const t = e.changedTouches && e.changedTouches[0];
+        if (!t) return;
+        const diffY = this._touchStartY - t.clientY;
+        const diffX = this._touchStartX - t.clientX;
+        // Require vertical dominance and threshold
+        if (Math.abs(diffY) > 50 && Math.abs(diffY) > Math.abs(diffX) * 1.2) {
+          if (diffY > 0) this.nextVideo();
+          else this.prevVideo();
+        }
+      };
+
+      container.addEventListener('touchstart', onStart, { passive: true });
+      container.addEventListener('touchmove', onMove, { passive: false });
+      container.addEventListener('touchend', onEnd, { passive: true });
+
+      this._touchHandlers = { onStart, onMove, onEnd };
+    },
+
+    teardownSwipeGestures() {
+      const container = this.$refs.container;
+      if (!container || !this._touchHandlers) return;
+      const { onStart, onMove, onEnd } = this._touchHandlers;
+      container.removeEventListener('touchstart', onStart);
+      container.removeEventListener('touchmove', onMove);
+      container.removeEventListener('touchend', onEnd);
+      this._touchHandlers = null;
     },
 
     handleFileSelect(event) {

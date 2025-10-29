@@ -374,7 +374,7 @@ export const usePostsStore = defineStore('posts', {
         username: this.loggedInUsername,
         commentText: text,
         createdAt: new Date().toISOString(),
-        profilePicture: getLocalStorage('profilePic') || 'pfp2.jpg',
+  profilePicture: getLocalStorage('profilePic') || '/favicon.png',
         hearts: 0,
         likedBy: [],
         replies: [],
@@ -437,7 +437,7 @@ export const usePostsStore = defineStore('posts', {
         username: this.loggedInUsername,
         commentText: text,
         createdAt: new Date().toISOString(),
-        profilePicture: getLocalStorage('profilePic') || 'pfp2.jpg',
+  profilePicture: getLocalStorage('profilePic') || '/favicon.png',
         hearts: 0,
         likedBy: [],
       };

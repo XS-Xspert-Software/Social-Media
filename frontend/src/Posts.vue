@@ -45,7 +45,7 @@
     <!-- Reply Preview -->
     <div v-if="post.replyTo" class="reply-preview" style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a); border-left: 2px solid #00b4d8; padding: 10px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 0 6px rgba(0, 180, 216, 0.3);">
         <div class="reply-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-          <img :src="post.replyTo.profilePicture || 'https://endless.sbs/public/pfp.jpg'" alt="User Profile Picture" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #444;" />
+          <img :src="post.replyTo.profilePicture || '/favicon.png'" alt="User Profile Picture" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #444;" @error="e=>e.target.src='/favicon.png'" />
           <div style="display: flex; flex-direction: column;">
             <strong style="color: #00b4d8;">{{ post.replyTo.username }}</strong>
             <small style="color: #999;">{{ postsStore.formatTimestamp(post.replyTo.timestamp) }}</small>
@@ -60,7 +60,7 @@
     <!-- Quote Preview -->
     <div v-if="post.quoteTo" class="preview-card quote-preview">
       <div class="preview-header">
-  <img :src="post.quoteTo.profilePicture || 'https://endless.sbs/public/pfp.jpg'" alt="User Profile Picture" class="preview-avatar" />
+  <img :src="post.quoteTo.profilePicture || '/favicon.png'" alt="User Profile Picture" class="preview-avatar" @error="e=>e.target.src='/favicon.png'" />
         <div class="preview-user-info">
           <strong class="preview-username">{{ post.quoteTo.username }}</strong>
           <small class="preview-timestamp">{{ postsStore.formatTimestamp(post.quoteTo.timestamp) }}</small>
@@ -73,7 +73,7 @@
     <!-- Post Header -->
     <div class="post-header">
       <div class="profile-picture clickable" @click="redirectToUserProfile(post.username)">
-        <img :src="post.profilePicture ? post.profilePicture : 'pfp2.jpg'" :alt="`${post.username}'s profile picture`" loading="lazy" />
+  <img :src="post.profilePicture ? post.profilePicture : '/favicon.png'" :alt="`${post.username}'s profile picture`" loading="lazy" @error="e=>e.target.src='/favicon.png'" />
       </div>
       <div class="username clickable" @click="postsStore.redirectToUserProfile(post.username)">
         <strong>{{ post.username }}</strong>
@@ -293,7 +293,20 @@ function toggleMenu(id, e){
   openMenuFor.value = id;
 }
 function handleGlobalClick(e){
-  if(!e.target.closest('.more-actions')) openMenuFor.value = null;
+  // Close menu for non-click events (scroll/resize) or when clicking outside
+  if (!(e && e.type === 'click')) {
+    openMenuFor.value = null;
+    return;
+  }
+  const t = e.target;
+  // If target is not an Element (e.g., Text node), treat as outside
+  if (!(t instanceof Element)) {
+    openMenuFor.value = null;
+    return;
+  }
+  if (!t.closest?.('.more-actions')) {
+    openMenuFor.value = null;
+  }
 }
 function handleEdit(post){
   openMenuFor.value = null;
