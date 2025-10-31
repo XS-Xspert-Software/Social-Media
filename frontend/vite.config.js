@@ -22,9 +22,7 @@ export default defineConfig({
         target: process.env.VITE_API_BASE || 'http://backend:3000',
         changeOrigin: true,
         secure: false,
-      }
-      ,
-      // Proxy to legacy posts API to avoid CORS in dev
+      }, // Proxy to legacy posts API to avoid CORS in dev
       '/oldapi': {
         target: 'https://sports321.vercel.app',
         changeOrigin: true,

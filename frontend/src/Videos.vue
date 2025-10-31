@@ -116,7 +116,7 @@
 
     <!-- Fullscreen View -->
     <div v-if="fullscreenIndex !== null" class="fullscreen-view">
-      <div class="fullscreen-container">
+      <div class="fullscreen-container" ref="container">
         <div class="video-flex-row">
           <div class="video-flex-main">
             <video
@@ -125,6 +125,7 @@
               class="fullscreen-video"
               loop
               autoplay
+              muted
               playsinline
               @click="togglePlay"
             />
@@ -263,20 +264,45 @@ export default {
 
   mounted() {
     this.loadShorts();
-    this.setupSwipeGestures();
     // Keyboard/mouse navigation for shorts
     window.addEventListener('keydown', this.handleKeydown);
     window.addEventListener('wheel', this.handleWheel, { passive: false });
   },
   watch: {
-    fullscreenIndex(val) {
+    fullscreenIndex(val, oldVal) {
       // Only enable navigation when in fullscreen
       if (val !== null && val !== undefined) {
         window.addEventListener('keydown', this.handleKeydown);
         window.addEventListener('wheel', this.handleWheel, { passive: false });
+        this.$nextTick(() => {
+          // Attach touch handlers for mobile swipe when entering fullscreen
+          this.attachTouchHandlers();
+          // Ensure the current video starts playing (muted for mobile autoplay)
+          const v = this.$refs.video;
+          if (v && typeof v.play === 'function') {
+            try { v.muted = true; v.play(); } catch (e) { /* ignore */ }
+          }
+        });
+        // If navigating between shorts within fullscreen, reset and play new video
+        if (oldVal !== null && oldVal !== undefined && val !== oldVal) {
+          this.$nextTick(() => {
+            const v = this.$refs.video;
+            if (v) {
+              try { v.pause(); } catch {}
+              try { v.currentTime = 0; v.load && v.load(); } catch {}
+              try { v.muted = true; v.play(); } catch {}
+            }
+          });
+        }
       } else {
         window.removeEventListener('keydown', this.handleKeydown);
         window.removeEventListener('wheel', this.handleWheel);
+        this.detachTouchHandlers();
+        // Pause when exiting fullscreen
+        const v = this.$refs.video;
+        if (v && typeof v.pause === 'function') {
+          try { v.pause(); } catch {}
+        }
       }
     }
   },
@@ -424,24 +450,53 @@ export default {
       }
     },
 
-    setupSwipeGestures() {
-      let startY = 0;
-      const container = this.$refs.container;
-      if (!container) return;
+    attachTouchHandlers() {
+      // Set up vertical swipe to navigate shorts on mobile
+      const el = this.$refs.container;
+      if (!el) return;
 
-      container.addEventListener('touchstart', (e) => {
-        startY = e.touches[0].clientY;
-      });
+      // If already attached, skip
+      if (this._touchHandlers && this._touchHandlers.el === el) return;
 
-      container.addEventListener('touchend', (e) => {
-        const endY = e.changedTouches[0].clientY;
-        const diff = startY - endY;
-
-        if (Math.abs(diff) > 50) {
-          if (diff > 0) this.nextShort();
-          else this.prevShort();
+      const state = { startY: 0, startX: 0 };
+      const onStart = (e) => {
+        if (!e.touches || e.touches.length === 0) return;
+        state.startY = e.touches[0].clientY;
+        state.startX = e.touches[0].clientX;
+      };
+      const onMove = (e) => {
+        if (!e.touches || e.touches.length === 0) return;
+        const dy = e.touches[0].clientY - state.startY;
+        const dx = e.touches[0].clientX - state.startX;
+        // If vertical scroll dominates, prevent default to avoid rubber-band scroll
+        if (Math.abs(dy) > Math.abs(dx)) {
+          e.preventDefault();
         }
-      });
+      };
+      const onEnd = (e) => {
+        if (!e.changedTouches || e.changedTouches.length === 0) return;
+        const dy = e.changedTouches[0].clientY - state.startY;
+        const threshold = 50; // px
+        if (Math.abs(dy) > threshold) {
+          if (dy < 0) this.nextVideo();
+          else this.prevVideo();
+        }
+      };
+
+      el.addEventListener('touchstart', onStart, { passive: true });
+      el.addEventListener('touchmove', onMove, { passive: false });
+      el.addEventListener('touchend', onEnd, { passive: false });
+      this._touchHandlers = { el, onStart, onMove, onEnd };
+    },
+
+    detachTouchHandlers() {
+      const h = this._touchHandlers;
+      if (h && h.el) {
+        h.el.removeEventListener('touchstart', h.onStart);
+        h.el.removeEventListener('touchmove', h.onMove);
+        h.el.removeEventListener('touchend', h.onEnd);
+      }
+      this._touchHandlers = null;
     },
 
     handleFileSelect(event) {
