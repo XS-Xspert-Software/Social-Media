@@ -120,7 +120,7 @@
               class="fullscreen-video"
               loop
               autoplay
-              muted
+              :muted="false"
               playsinline
               @click="togglePlay"
             />
@@ -158,6 +158,7 @@
                 ↓
               </button>
             </div>
+
 
             <!-- Comments Drawer -->
             <div v-if="showComments" class="comments-drawer" @click.stop>
@@ -272,10 +273,10 @@ export default {
         this.$nextTick(() => {
           // Attach touch handlers for mobile swipe when entering fullscreen
           this.attachTouchHandlers();
-          // Ensure the current video starts playing (muted for mobile autoplay)
+          // Ensure the current video starts playing with sound
           const v = this.$refs.video;
           if (v && typeof v.play === 'function') {
-            try { v.muted = true; v.play(); } catch (e) { /* ignore */ }
+            this.playWithPolicy(v);
           }
         });
         // If navigating between shorts within fullscreen, reset and play new video
@@ -285,7 +286,7 @@ export default {
             if (v) {
               try { v.pause(); } catch {}
               try { v.currentTime = 0; v.load && v.load(); } catch {}
-              try { v.muted = true; v.play(); } catch {}
+              this.playWithPolicy(v);
             }
           });
         }
@@ -307,6 +308,15 @@ export default {
       if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
       if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
       return num;
+    },
+
+    playWithPolicy(videoEl) {
+      // Always try to play with sound; if autoplay is blocked, playback will start on first user gesture.
+      try {
+        videoEl.muted = false;
+        const p = videoEl.play?.();
+        if (p && typeof p.then === 'function') { p.catch(() => {}); }
+      } catch {}
     },
 
     openFullscreen(index) {
@@ -355,6 +365,8 @@ export default {
       }
     },
 
+    // No mute toggle – shorts should always play with sound as requested
+
     async likeShort() {
       const short = this.shorts[this.fullscreenIndex];
       if (!short) return;
@@ -378,68 +390,56 @@ export default {
     },
 
     nextVideo() {
+      if (this.fullscreenIndex === null || this.fullscreenIndex === undefined) return;
       if (this.fullscreenIndex < this.shorts.length - 1) {
-        this.fullscreenIndex++;
+        this.fullscreenIndex += 1;
+        this.$nextTick(() => {
+          const v = this.$refs.video;
+          if (v) this.playWithPolicy(v);
+        });
       }
     },
 
     prevVideo() {
+      if (this.fullscreenIndex === null || this.fullscreenIndex === undefined) return;
       if (this.fullscreenIndex > 0) {
-        this.fullscreenIndex--;
+        this.fullscreenIndex -= 1;
+        this.$nextTick(() => {
+          const v = this.$refs.video;
+          if (v) this.playWithPolicy(v);
+        });
       }
     },
 
     async loadShorts() {
       this.loading = true;
-      this.currentView = 'feed';
-      this.currentIndex = 0;
-      
       try {
-  const response = await fetch(`${this.API_URL}/shorts`);
+        const response = await fetch(`${this.API_URL}/shorts?userId=${this.userId}`);
         const data = await response.json();
-        
-        if (data.success) {
+        if (data.success && Array.isArray(data.shorts)) {
           this.shorts = data.shorts;
+        } else {
+          this.shorts = [];
         }
       } catch (error) {
         console.error('Error loading shorts:', error);
+        this.shorts = [];
       } finally {
         this.loading = false;
       }
     },
 
     async loadMyShorts() {
+      // Simple filter by current userId – if backend supports a dedicated endpoint, swap to it
       this.loading = true;
-      // If user is guest (id 20), show random posts from all users
-      if (this.userId === '20') {
-        this.currentView = 'feed';
-        this.currentIndex = 0;
-        try {
-          const response = await fetch(`${this.API_URL}/shorts`);
-          const data = await response.json();
-          if (data.success) {
-            // Shuffle posts for randomness
-            this.shorts = data.shorts.sort(() => Math.random() - 0.5);
-          }
-        } catch (error) {
-          console.error('Error loading shorts:', error);
-        } finally {
-          this.loading = false;
-        }
-        return;
-      }
-      this.currentView = 'profile';
-      this.currentIndex = 0;
-      
       try {
-        const response = await fetch(`${this.API_URL}/shorts?userId=${this.userId}`);
+        const response = await fetch(`${this.API_URL}/shorts?userId=${this.userId}&owner=${this.userId}`);
         const data = await response.json();
-        
-        if (data.success) {
-          this.shorts = data.shorts;
+        if (data.success && Array.isArray(data.shorts)) {
+          this.shorts = data.shorts.filter(s => s.userId === this.userId);
         }
-      } catch (error) {
-        console.error('Error loading shorts:', error);
+      } catch (e) {
+        console.error('Error loading my feed:', e);
       } finally {
         this.loading = false;
       }
@@ -1282,6 +1282,39 @@ export default {
   opacity: 0.3;
   cursor: not-allowed;
   transform: scale(1);
+}
+
+.mute-toggle {
+  background: linear-gradient(135deg, rgba(34,40,60,0.45) 0%, rgba(80,120,255,0.18) 100%);
+  border: 2px solid rgba(255,255,255,0.25);
+  color: #fff;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  backdrop-filter: blur(20px) saturate(170%);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.2);
+  transition: all 0.3s cubic-bezier(.16,1,.3,1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+ .mute-toggle:hover { transform: scale(1.05); }
+
+.unmute-hint {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  border: 1px solid rgba(255,255,255,0.25);
+  backdrop-filter: blur(8px);
 }
 
 @media (min-width: 768px) {
