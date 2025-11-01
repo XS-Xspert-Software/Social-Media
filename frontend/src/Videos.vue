@@ -1,17 +1,9 @@
 <template>
   <div class="shorts-feed">
-    <!-- Upload Button -->
-    <div v-if="!fullscreenIndex && fullscreenIndex !== 0" class="upload-fab" @click="currentView = 'upload'">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <line x1="12" y1="5" x2="12" y2="19"/>
-        <line x1="5" y1="12" x2="19" y2="12"/>
-      </svg>
-    </div>
-
-    <!-- Upload View -->
-    <div v-if="currentView === 'upload'" class="upload-view">
+    <!-- Inline Upload Section -->
+    <div v-if="currentView === 'upload'" class="inline-upload">
       <div class="upload-header">
-        <button @click="currentView = 'feed'" class="back-btn">←</button>
+        <button @click="currentView = 'feed'" class="back-btn" aria-label="Back to feed">←</button>
         <h1>Create Short</h1>
       </div>
 
@@ -97,7 +89,10 @@
 
     <!-- Grid View -->
     <div v-if="!fullscreenIndex && fullscreenIndex !== 0 && currentView === 'feed'" class="grid-view">
-      <button class="profile-feed-btn" @click="loadMyShorts">My Feed</button>
+      <div class="grid-toolbar">
+        <button class="profile-feed-btn" @click="loadMyShorts">My Feed</button>
+        <button class="upload-trigger-btn" @click="currentView = 'upload'">Upload Short</button>
+      </div>
       <div 
         v-for="(short, index) in shorts" 
         :key="short.id"
@@ -856,43 +851,7 @@ export default {
 }
 
 /* Upload FAB */
-.upload-fab {
-  position: fixed;
-  bottom: 80px;
-  right: 20px;
-  width: 51px;
-  height: 51px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.5);
-  z-index: 100;
-  transition: all 0.3s cubic-bezier(.16,1,.3,1);
-  animation: gentle-bounce 2s ease-in-out infinite;
-}
-
-.upload-fab:hover {
-  transform: scale(1.15) rotate(90deg);
-  box-shadow: 0 6px 30px rgba(102, 126, 234, 0.7);
-  animation: none;
-}
-
-@keyframes gentle-bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-/* Upload View */
-.upload-view {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  z-index: 999;
-  overflow-y: auto;
-}
+.inline-upload { margin: 12px; }
 
 .upload-header {
   display: flex;
@@ -922,9 +881,9 @@ export default {
 }
 
 .upload-content {
-  padding: 20px;
-  max-width: 600px;
-  margin: 0 auto;
+  padding: 16px;
+  max-width: 800px;
+  margin: 0 auto 8px;
 }
 
 .file-upload-area {
@@ -1082,6 +1041,24 @@ export default {
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   padding: 8px;
+}
+
+.grid-toolbar {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 4px 0 8px;
+}
+
+.upload-trigger-btn, .profile-feed-btn {
+  background: rgba(24, 32, 54, 0.55);
+  border: 1.5px solid rgba(255,255,255,0.18);
+  color: #e8eefc;
+  padding: 8px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 .grid-item {
