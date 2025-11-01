@@ -8,7 +8,6 @@ const Settings = () => import('../Settings.vue')
 const Search2 = () => import('../Search2.vue')
 const Chatbox = () => import('../Chatbox.vue')
 const PostPage = () => import('../PostPage.vue')
-const GroupChatbox = () => import('../GroupChatbox.vue')
 const Float = () => import('../Float.vue')
 const Admin = () => import('../Admin.vue')
 const Notification = () => import('../Notification.vue')
@@ -21,7 +20,6 @@ const routes = [
   { path: '/settings', name: 'Settings', component: Settings },
   { path: '/search', name: 'Search', component: Search2 },
   { path: '/chatbox', name: 'Chatbox', component: Chatbox },
-  { path: '/group-chat/:groupId/:groupName', name: 'GroupChatbox', component: GroupChatbox },
   { path: '/post/:id', name: 'PostPage', component: PostPage },
   { path: '/notification', name: 'Notification', component: Notification },
   { path: '/chat', name: 'Chat', component: Chat, children:[
@@ -32,7 +30,7 @@ const routes = [
       },
       { path: 'live', name: 'LiveChat', meta: { section: 'Live' } },
       { path: 'world', name: 'WorldChat', meta: { section: 'WorldChat' } },
-      { path: 'groups', name: 'GroupChat', meta: { section: 'GroupChat' } }
+  // Group chat routes removed for a simpler chat experience
     ]
   },
   { path: '/admin', name: 'Admin', component: Admin },

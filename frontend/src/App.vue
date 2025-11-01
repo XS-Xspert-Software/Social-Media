@@ -1,7 +1,7 @@
 <template>
-  <div :class="['app-wrapper', { 'Chatbox-fullscreen': isChatboxRoute, 'no-header-padding': postsStore.selectedPost, 'GroupChatbox-fullscreen': isGroupChatboxRoute}]">
+  <div :class="['app-wrapper', { 'Chatbox-fullscreen': isChatboxRoute, 'no-header-padding': postsStore.selectedPost }]">
   <!-- Header -->
-  <header v-if="!isChatboxRoute && !isGroupChatboxRoute && !postsStore.selectedPost">
+  <header v-if="!isChatboxRoute && !postsStore.selectedPost">
        <h1 style="font-size: 23px; margin-left: 3%; display: flex; align-items: center; gap: 8px;">
         <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" style="width:24px; height:24px;">
           <path d="M32 2 L38 26 L62 32 L38 38 L32 62 L26 38 L2 32 L26 26 Z"/>
@@ -106,7 +106,7 @@
     />
 
    <!-- Mobile nav -->
-<nav v-if="!isChatboxRoute && !isGroupChatboxRoute" class="mobile-bottom-nav" aria-label="Primary">
+<nav v-if="!isChatboxRoute" class="mobile-bottom-nav" aria-label="Primary">
   <ul>
     <li
       v-for="tab in tabs"
@@ -250,10 +250,6 @@ export default {
 
     isChatboxRoute() {
       return this.$route.name === 'Chatbox';
-    },
-
-    isGroupChatboxRoute() {
-      return this.$route.name === 'GroupChatbox';
     },
 
     notificationActive() {
@@ -472,7 +468,7 @@ export default {
       const name = (to.name || '').toString();
       const lower = name.toLowerCase();
       // Normalize chat child routes to 'chat'
-      const chatNames = ['chat', 'chathome', 'livechat', 'worldchat', 'groupchat'];
+  const chatNames = ['chat', 'chathome', 'livechat', 'worldchat'];
       if (chatNames.includes(lower)) {
         this.currentTab = 'chat';
         return;

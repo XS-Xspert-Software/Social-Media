@@ -82,38 +82,7 @@
 
               <div class="divider"></div>
 
-              <!-- Create Group Section -->
-              <div class="create-group-section">
-                <h3>Create Group</h3>
-                <div class="group-form">
-                  <div class="group-image-section">
-                    <label for="group-image-input" class="group-image-upload">
-                      <i class="fas fa-camera"></i>
-                      <span>Add Image</span>
-                    </label>
-                    <input type="file" id="group-image-input" accept="image/*" @change="handleGroupImageUpload" ref="groupImageInput" hidden />
-                    <img v-if="groupImagePreview" :src="groupImagePreview" class="group-image-preview" alt="Group Image Preview" />
-                  </div>
-                  
-                  <input 
-                    v-model="newGroupName" 
-                    placeholder="Enter group name..." 
-                    id="group-name-input"
-                    class="content-editable"
-                  />
-                  
-                  <div class="group-actions">
-                    <button @click="createGroup" :disabled="!newGroupName" class="create-btn">
-                      <i class="fas fa-plus"></i>
-                      Create
-                    </button>
-                    <button @click="resetGroupForm" class="cancel-btn">
-                      <i class="fas fa-times"></i>
-                      Clear
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <!-- Group creation removed for simpler, leaner chat experience -->
             </div>
           </div>
         </div>
@@ -135,10 +104,7 @@ const uploadedImage = ref(null)
 const fileInput = ref(null)
 const contentEditable = ref(null)
 const lastSentPostId = ref(null)
-const newGroupName = ref('')
-const groupImageData = ref(null)
-const groupImagePreview = ref(null)
-const groupImageInput = ref(null)
+// Group creation removed
 
 const currentTrigger = ref(null)
 const currentWord = ref('')
@@ -355,22 +321,7 @@ async function handleImageUpload(event) {
 }
 
 // Upload group image
-async function handleGroupImageUpload(event) {
-  const file = event.target.files[0]
-  if (!file) return
-
-  const reader = new FileReader()
-  reader.onloadend = async () => {
-    try {
-      const resizedBlob = await resizeImageToMaxSize(reader.result, 100)
-      groupImageData.value = await blobToBase64(resizedBlob)
-      groupImagePreview.value = reader.result
-    } catch {
-      showAlert('Error processing group image.', true)
-    }
-  }
-  reader.readAsDataURL(file)
-}
+// handleGroupImageUpload removed
 
 // Resize image
 function resizeImageToMaxSize(imageSrc, maxSizeKB = 65) {
@@ -493,41 +444,7 @@ async function postOpinion() {
   }
 }
 
-// Create group
-async function createGroup() {
-  refreshAuthRefs()
-  if (!isAuthenticated.value) {
-    showAlert('Please log in to create a group', true)
-    window.location.href = loginHref
-    return
-  }
-  try {
-    const response = await fetch('https://yupitis.vercel.app/api/groups', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        'x-user-id': loggedInUserId.value,
-      },
-      credentials: 'include',
-      body: JSON.stringify({
-        name: newGroupName.value.trim(),
-        creator: loggedInUsername.value,
-        image: groupImageData.value,
-      }),
-    })
-
-    if (!response.ok) throw new Error('Group creation failed')
-
-    showAlert('Group created!', false)
-    newGroupName.value = ''
-    groupImageData.value = null
-    groupImagePreview.value = null
-    if (groupImageInput.value) groupImageInput.value.value = ''
-  } catch {
-    showAlert('Error creating group.', true)
-  }
-}
+// createGroup removed
 
 // Reset form
 function resetForm() {
