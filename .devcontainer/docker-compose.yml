@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye
+    volumes:
+      - ..:/workspace:cached
+    command: sleep infinity
+    network_mode: service:db
+    environment:
+      - NODE_ENV=development
+
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: social_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: sync
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ../backend
+    environment:
+      - DATABASE_URL=postgresql://postgres:sync@db:5432/social_db
+      - B2_KEY_ID=${B2_KEY_ID}
+      - B2_APP_KEY=${B2_APP_KEY}
+      - B2_BUCKET_ID=${B2_BUCKET_ID}
+    network_mode: service:db
+    working_dir: /app
+    volumes:
+      - ../backend:/app
+    command: sh -c "npm install && npm start"
+
+  frontend:
+    build: ../frontend
+    environment:
+      - VITE_API_BASE=http://localhost:3000
+    network_mode: service:db
+    working_dir: /app
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+
+  vidbackend:
+    build: ../vidbackend
+    network_mode: service:db
+    working_dir: /app
+    volumes:
+      - ../vidbackend:/app
+
+  websocket:
+    build: ../socketio
+    environment:
+      - PGUSER=postgres
+      - PGPASSWORD=sync
+      - PGHOST=localhost
+      - PGDATABASE=social_db
+      - PGPORT=5432
+    network_mode: service:db
+    working_dir: /app
+    volumes:
+      - ../socketio:/app
+      - websocket_node_modules:/app/node_modules
+
+volumes:
+  postgres_data:
+  websocket_node_modules:

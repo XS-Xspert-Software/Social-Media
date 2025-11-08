@@ -6,6 +6,21 @@ For something more decentralized, see [RSSX](https://github.com/thegoodduck/rssx
 
 ---
 
+## 🎨 UI Development with GitHub Codespaces
+
+**New!** Develop and iterate on the UI in a fully-configured cloud environment:
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/XS-Xspert-Software/Social-Media)
+
+- ✨ **Instant Setup** - Pre-configured development environment
+- 🔥 **Hot Reload** - See UI changes instantly as you code
+- 🚀 **Full Stack** - All services running (database, backend, frontend)
+- 💻 **Virtual Machine** - Develop from anywhere, on any device
+
+📖 **[Read the Codespaces UI Development Guide →](CODESPACES.md)**
+
+---
+
 ## 🚀 How to Host Your Own Halo Server
 
 Anyone can run their own Halo server and join the decentralized Sync network!  

@@ -15,6 +15,19 @@ export default defineConfig({
     },
   },
   server: {
+    host: '0.0.0.0', // Listen on all interfaces for Codespaces/VM access
+    port: 5173,
+    strictPort: true,
+    // Enhanced HMR configuration for virtual machines and Codespaces
+    hmr: {
+      clientPort: 5173, // Use same port for HMR in virtual environments
+      host: 'localhost', // Will be overridden by Codespaces forwarding
+    },
+    // Optimize watch for better performance in virtual machines
+    watch: {
+      usePolling: process.env.VITE_USE_POLLING === 'true', // Enable if needed
+      interval: 100, // Poll interval in ms
+    },
     proxy: {
       '/api/video': {
         // Use container hostname when running via Docker; allow override with VITE_API_BASE
