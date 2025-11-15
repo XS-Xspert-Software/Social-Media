@@ -59,17 +59,12 @@
         </div>
       </div>
     </div>
-    <!-- Clear guest banner for Settings -->
+    <!-- Clear guest banner for Settings: single, reusable prompt -->
     <LoginPrompt
       v-if="isGuest"
       message="Login to edit your profile and access settings."
-      :href="loginHref"
+      @login="goLogin"
     />
-      <LoginPrompt
-        v-if="isGuest"
-        message="Login to edit your profile and access settings."
-        @login="goLogin"
-      />
 
     <!-- Profile Content -->
     <main class="main-content">
