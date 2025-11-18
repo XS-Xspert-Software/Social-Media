@@ -44,36 +44,17 @@ export const users = pgTable('users', {
     statusIdx: index('user_status_idx').on(table.status),
     lastActiveIdx: index('user_last_active_idx').on(table.lastActive),
 }));
-export const posts = pgTable('posts', {
-    id: uuid('id').defaultRandom().primaryKey(),
-    authorId: uuid('author_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
-    content: text('content'),
-    type: postTypeEnum('type').default('text').notNull(),
-    media: jsonb('media'),
-    privacy: privacyEnum('privacy').default('public').notNull(),
-    location: varchar('location', { length: 100 }),
-    taggedUsers: jsonb('tagged_users'),
-    hashtags: jsonb('hashtags'),
-    linkPreview: jsonb('link_preview'),
-    pollData: jsonb('poll_data'),
-    likesCount: integer('likes_count').default(0).notNull(),
-    commentsCount: integer('comments_count').default(0).notNull(),
-    sharesCount: integer('shares_count').default(0).notNull(),
-    viewsCount: integer('views_count').default(0).notNull(),
-    isEdited: boolean('is_edited').default(false).notNull(),
-    editedAt: timestamp('edited_at'),
-    scheduledFor: timestamp('scheduled_for'),
-    isDeleted: boolean('is_deleted').default(false).notNull(),
-    deletedAt: timestamp('deleted_at'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
-}, (table) => ({
-    authorIdIdx: index('post_author_id_idx').on(table.authorId),
-    typeIdx: index('post_type_idx').on(table.type),
-    privacyIdx: index('post_privacy_idx').on(table.privacy),
-    createdAtIdx: index('post_created_at_idx').on(table.createdAt),
-    scheduledForIdx: index('post_scheduled_for_idx').on(table.scheduledFor),
-}));
+export const posts = pgTable("posts", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    content: text("content").notNull(),
+    imageUrl: varchar("image_url", { length: 255 }),
+    videoUrl: varchar("video_url", { length: 255 }),
+    title: varchar("title", { length: 255 }),
+    description: text("description"),
+    hashtags: text("hashtags"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 export const comments = pgTable('comments', {
     id: uuid('id').defaultRandom().primaryKey(),
     postId: uuid('post_id').references(() => posts.id, { onDelete: 'cascade' }).notNull(),
@@ -261,7 +242,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 }));
 export const postsRelations = relations(posts, ({ one, many }) => ({
     author: one(users, {
-        fields: [posts.authorId],
+        fields: [posts.userId],
         references: [users.id],
     }),
     comments: many(comments),

@@ -57,7 +57,7 @@ export async function getUserInfo(userId) {
     const { password, ...userInfo } = found[0];
     return userInfo;
 }
-export async function updateUserProfile(userId, updates) {
+export async function updateUserProfile({ userId, updates }) {
     if (!userId || !updates || typeof updates !== 'object') {
         throw new Error('userId and updates required');
     }
@@ -67,14 +67,16 @@ export async function updateUserProfile(userId, updates) {
     ];
     const updateData = {};
     for (const key of allowedFields) {
-        if (key in updates) updateData[key] = updates[key];
+        if (key in updates)
+            updateData[key] = updates[key];
     }
     if (Object.keys(updateData).length === 0) {
         throw new Error('No valid fields to update');
     }
     await db.update(users).set(updateData).where(eq(users.id, userId));
     const found = await db.select().from(users).where(eq(users.id, userId));
-    if (found.length === 0) throw new Error('Utilisateur non trouvé');
+    if (found.length === 0)
+        throw new Error('Utilisateur non trouvé');
     const { password, ...userInfo } = found[0];
     return userInfo;
 }

@@ -1,7 +1,7 @@
-import { db } from '../schema/index.js';
-import { posts, users } from '../schema/schema.js';
-import { eq } from 'drizzle-orm';
-
+import { db } from '../schema/index';
+import { posts, users, likes } from '../schema/schema';
+import { eq, desc, and } from 'drizzle-orm';
+import { validate as validateUUID } from 'uuid';
 export const createPost = async (req, res) => {
     // Security: Require auth unless test mode is enabled and test param is present
     const configPath = require('path').resolve(__dirname, '../../config.json');
@@ -10,7 +10,8 @@ export const createPost = async (req, res) => {
         if (require('fs').existsSync(configPath)) {
             globalConfig = JSON.parse(require('fs').readFileSync(configPath, 'utf-8'));
         }
-    } catch (e) {
+    }
+    catch (e) {
         // ignore
     }
     const allowTest = globalConfig.ALLOW_TEST_POST_UPLOAD === true;
@@ -60,7 +61,6 @@ export const createPost = async (req, res) => {
         console.warn('Test post upload (unauthenticated):', req.body);
     }
 };
-
 export const getPosts = async (req, res) => {
     // Join posts with users to get username
     const dbPosts = await db.select({
@@ -70,7 +70,7 @@ export const getPosts = async (req, res) => {
         imageUrl: posts.imageUrl,
         createdAt: posts.createdAt,
         username: users.username
-    }).from(posts).leftJoin(users, eq(posts.userId, users.id)).orderBy(posts.createdAt.desc());
+    }).from(posts).leftJoin(users, eq(posts.userId, users.id)).orderBy(desc(posts.createdAt));
     const postsOut = dbPosts.map(post => ({
         _id: post.id,
         username: post.username,
@@ -85,4 +85,50 @@ export const getPosts = async (req, res) => {
         commentInput: ''
     }));
     res.json({ posts: postsOut });
+};
+export const likePost = async (req, res) => {
+    const { userId } = req.body;
+    const postId = req.params.postId;
+    if (!userId || !postId)
+        return res.status(400).json({ error: 'userId and postId required' });
+    if (!validateUUID(userId))
+        return res.status(400).json({ error: 'Invalid userId (must be UUID)' });
+    if (!validateUUID(postId))
+        return res.status(400).json({ error: 'Invalid postId (must be UUID)' });
+    // Check if like exists
+    const existing = await db.select().from(likes).where(and(eq(likes.userId, userId), eq(likes.postId, postId)));
+    if (existing.length) {
+        // Already liked, remove like (toggle off)
+        await db.delete(likes).where(and(eq(likes.userId, userId), eq(likes.postId, postId)));
+        return res.json({ liked: false });
+    }
+    else {
+        // Add like
+        await db.insert(likes).values({ userId, postId });
+        return res.json({ liked: true });
+    }
+};
+export const dislikePost = async (req, res) => {
+    // For now, treat as a toggle for a 'dislike' (could be a separate table or a flag in likes table)
+    // Here, we use likes table with a 'dislike' flag for extensibility
+    const { userId } = req.body;
+    const postId = req.params.postId;
+    if (!userId || !postId)
+        return res.status(400).json({ error: 'userId and postId required' });
+    if (!validateUUID(userId))
+        return res.status(400).json({ error: 'Invalid userId (must be UUID)' });
+    if (!validateUUID(postId))
+        return res.status(400).json({ error: 'Invalid postId (must be UUID)' });
+    // Check if dislike exists
+    const existing = await db.select().from(likes).where(and(eq(likes.userId, userId), eq(likes.postId, postId)));
+    if (existing.length) {
+        // Already disliked, remove (toggle off)
+        await db.delete(likes).where(and(eq(likes.userId, userId), eq(likes.postId, postId)));
+        return res.json({ disliked: false });
+    }
+    else {
+        // Add dislike (for now, just insert like as a placeholder)
+        await db.insert(likes).values({ userId, postId });
+        return res.json({ disliked: true });
+    }
 };

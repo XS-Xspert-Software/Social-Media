@@ -1,31 +1,53 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import fetch from 'node-fetch';
-import { registerUser, loginUser, getUserInfo, updateUserProfile } from './controller/user.js';
+import multer from 'multer';
+import { registerUser, loginUser, getUserInfo } from './controller/user.js';
 import rateLimit from 'express-rate-limit';
-import { createPost, getPosts } from './controller/post.js';
+import { createPost, getPosts, likePost, dislikePost } from './controller/post.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 dotenv.config();
+import { uploadVideoToB2 } from './b2.service.js';
+// ESM-compatible __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const PORT = process.env.PORT || 3000;
 const app = express();
-app.use(cors({ origin: "*" }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Listen on all network interfaces for Vite/Node dev
-app.set('host', '0.0.0.0');
-
-function log(level, ...args) {
-  const ts = new Date().toISOString();
-  if (level === 'error') {
-    console.error(`[${ts}]`, ...args);
-  } else if (level === 'warn') {
-    console.warn(`[${ts}]`, ...args);
-  } else {
-    console.log(`[${ts}]`, ...args);
-  }
+// Load global config.json from project root
+const configPath = path.resolve(__dirname, '../config.json');
+let globalConfig = {};
+try {
+    if (fs.existsSync(configPath)) {
+        globalConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    }
 }
-
+catch (e) {
+    log('error', 'Failed to load config.json:', e);
+}
+// Helper to get trusted servers from config
+const getTrustedServers = () => {
+    return Array.isArray(globalConfig.federationTrustedServers)
+        ? globalConfig.federationTrustedServers
+        : [];
+};
+// Logger function for extensible logging
+function log(level, ...args) {
+    const ts = new Date().toISOString();
+    if (level === 'error') {
+        console.error(`[${ts}]`, ...args);
+    }
+    else if (level === 'warn') {
+        console.warn(`[${ts}]`, ...args);
+    }
+    else {
+        console.log(`[${ts}]`, ...args);
+    }
+}
+app.use(cors({ origin: "*" }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.get('/', (req, res) => {
     res.send('Welcome to the backend server!');
 });
@@ -36,14 +58,14 @@ app.post('/api/register', async (req, res) => {
         res.status(201).json({ user });
     }
     catch (e) {
-        log('error', "Erreur complète registerUser:", e, typeof e, JSON.stringify(e));
+        log('error', "Full error registerUser:", e, typeof e, JSON.stringify(e));
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 const loginRateLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 1 minute
     max: 5, // Limit each IP to 5 login requests per `window` (1 minute)
-    message: { error: "Too many login attempts. Please try again later." },
+    message: { error: "Too many login attempts. Please try again later. Send this to your administrator: {{request.ip}} {{request.body}} {{request.headers}} {{request.method}} ERROR_RATE_LIMIT" },
 });
 app.post('/api/login', loginRateLimiter, async (req, res) => {
     try {
@@ -52,6 +74,7 @@ app.post('/api/login', loginRateLimiter, async (req, res) => {
         res.json({ token, user });
     }
     catch (e) {
+        log('error', e.message);
         res.status(400).json({ error: e.message });
     }
 });
@@ -65,120 +88,257 @@ app.get('/api/user-info', (req, res) => {
             res.json({ user });
         }
         catch (e) {
+            log('error', e.message);
             res.status(400).json({ error: e.message });
         }
     })();
 });
-app.put('/api/user-update', async (req, res) => {
+app.get('/api/posts', getPosts);
+const createPostRateLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 10, // Limit each IP to 10 create post requests per `window` (1 minute)
+    message: { error: "Too many post creation attempts. Please try again later. Send this to your administrator: {{request.ip}} {{request.body}} {{request.headers}} {{request.method}} ERROR_RATE_LIMIT" },
+});
+app.post('/api/posts', createPostRateLimiter, createPost);
+app.post('/api/posts/:postId/like', likePost);
+app.post('/api/posts/:postId/dislike', dislikePost);
+// Proxy video upload to remote service (avoids frontend CORS & dev 404)
+// NOTE: /api/video proxy removed due to TypeScript issues and lack of multipart parser. Keep using front-end Vite proxy.
+// Get user settings/profile by userId or username
+// Video upload endpoint (Backblaze B2)
+const upload = multer({ dest: 'uploads/' }); // Temporary upload folder
+app.post('/api/video/upload', upload.single('video'), async (req, res) => {
+    try {
+        if (!req.file)
+            return res.status(400).json({ error: 'No video file uploaded.' });
+        const fileName = req.file.originalname || req.file.filename;
+        const filePath = req.file.path;
+        const videoInfo = await uploadVideoToB2(filePath, fileName);
+        fs.unlink(filePath, () => { }); // cleanup
+        // Save metadata to posts table
+        const { userId, title, description, hashtags } = req.body;
+        if (!userId)
+            return res.status(400).json({ error: 'userId required' });
+        // Import db and posts schema
+        const { db } = await import('./schema/index.js');
+        const { posts } = await import('./schema/schema.js');
+        const inserted = await db.insert(posts).values({
+            userId,
+            content: description || '',
+            videoUrl: videoInfo.url || videoInfo.downloadUrl || '',
+            title: title || '',
+            description: description || '',
+            hashtags: hashtags || '',
+            createdAt: new Date(),
+        }).returning();
+        const newPost = inserted[0];
+        return res.json({ success: true, video: videoInfo, post: newPost });
+    }
+    catch (err) {
+        log('error', 'Video upload failed', err);
+        return res.status(500).json({ error: err.message || 'Upload failed' });
+    }
+});
+app.get('/api/user/settings', async (req, res) => {
+    try {
+        const { userId, username } = req.query;
+        let user;
+        if (userId) {
+            user = await getUserInfo(userId);
+        }
+        else if (username) {
+            const found = await db.select().from(users).where(eq(users.username, username));
+            if (found.length === 0)
+                return res.status(404).json({ error: 'User not found' });
+            const { password, ...userInfo } = found[0];
+            user = userInfo;
+        }
+        else {
+            return res.status(400).json({ error: 'userId or username required' });
+        }
+        return res.json({ user });
+    }
+    catch (e) {
+        log('error', e.message);
+        return res.status(400).json({ error: e.message });
+    }
+});
+// Update user profile fields (username, description, etc.)
+app.post('/api/user/settings', async (req, res) => {
     try {
         const { userId, updates } = req.body;
-        if (!userId || !updates) return res.status(400).json({ error: 'userId and updates required' });
-        const user = await updateUserProfile(userId, updates);
+        if (!userId || !updates)
+            return res.status(400).json({ error: 'userId and updates required' });
+        const user = await updateUserProfile({ userId, updates });
         res.json({ user });
-    } catch (e) {
+    }
+    catch (e) {
+        log('error', e.message);
         res.status(400).json({ error: e.message });
     }
 });
-app.get('/api/posts', getPosts);
-app.post('/api/posts', createPost);
-
-// Decentralized viewer endpoint: fetches and proxies content from another server
-app.get('/viewer', async (req, res) => {
-    const { url } = req.query;
-    if (!url || typeof url !== 'string') {
-        return res.status(400).json({ error: 'Missing or invalid url parameter' });
-    }
+// Update user preferences (dark mode, notifications, etc.)
+app.post('/api/user/preferences', async (req, res) => {
     try {
-        // Only allow http(s) URLs for security
-        if (!/^https?:\/\//.test(url)) {
-            return res.status(400).json({ error: 'Only http(s) URLs are allowed' });
-        }
-        const fetchRes = await fetch(url, { method: 'GET' });
-        const contentType = fetchRes.headers.get('content-type') || 'application/octet-stream';
-        // Always respond with JSON for errors or unsupported types
-        if (contentType.includes('text/html')) {
-            const html = await fetchRes.text();
-            return res.status(502).json({ error: 'Remote server returned HTML, not API data. Check the URL.', htmlSnippet: html.slice(0, 500) });
-        }
-        if (contentType.includes('application/json')) {
-            const json = await fetchRes.json();
-            return res.json(json);
-        } else if (contentType.includes('text/plain')) {
-            const text = await fetchRes.text();
-            return res.type('text/plain').send(text);
-        } else if (fetchRes.body && (contentType.startsWith('video/') || contentType.startsWith('image/'))) {
-            // For video/image, stream as-is
-            res.set('content-type', contentType);
-            return fetchRes.body.pipe(res);
-        } else {
-            // For all other types, return JSON error, never HTML
-            return res.status(502).json({ error: 'Unsupported content-type from remote server', contentType });
-        }
-    } catch (e) {
-        log('error', 'Error fetching from remote server:', e);
-        res.status(502).json({ error: 'Failed to fetch from remote server' });
+        const { userId, preferences } = req.body;
+        if (!userId || !preferences)
+            return res.status(400).json({ error: 'userId and preferences required' });
+        const user = await updateUserProfile({ userId, updates: { preferences } });
+        res.json({ user });
+    }
+    catch (e) {
+        log('error', e.message);
+        res.status(400).json({ error: e.message });
     }
 });
-
+// Helper to wrap async route handlers for Express/TypeScript
+function wrapAsync(fn) {
+    return function (req, res, next) {
+        Promise.resolve(fn(req, res, next)).catch(next);
+    };
+}
 // --- Decentralized/Federation Endpoints ---
-
+// Use the global fetch API available in Node.js v18+
+// If you need to support older Node.js versions, install 'node-fetch' and import it at the top
+// import fetch from 'node-fetch';
 // Discover remote servers (static for now, could be dynamic in future)
 app.get('/federation/servers', (req, res) => {
     res.json({
         servers: [
-            // Example: { name: 'Pulse Demo', url: 'https://pulse-demo.example.com' }
+        // Example: { name: 'Pulse Demo', url: 'https://pulse-demo.example.com' }
         ]
     });
 });
-
 // Proxy remote posts from another Pulse server
-app.get('/federation/posts', async (req, res) => {
+app.get('/federation/posts', wrapAsync(async (req, res) => {
     const { remote } = req.query;
-    if (!remote) return res.status(400).json({ error: 'Missing remote parameter' });
+    const trustedServers = getTrustedServers();
+    if (!remote || typeof remote !== 'string' || !trustedServers.includes(remote)) {
+        return res.status(400).json({ error: 'Invalid or untrusted remote parameter' });
+    }
     try {
         const fetchRes = await fetch(`${remote}/api/posts`);
-        if (!fetchRes.ok) throw new Error('Remote fetch failed');
+        if (!fetchRes.ok)
+            throw new Error('Remote fetch failed');
         const data = await fetchRes.json();
         res.json(data);
-    } catch (e) {
-        res.status(502).json({ error: 'Failed to fetch remote posts', details: e.message });
     }
-});
-
+    catch (e) {
+        log('error', 'Error fetching from remote server:', e);
+        res.status(502).json({ error: 'Failed to fetch from remote server' });
+    }
+}));
 // Proxy remote user info
-app.get('/federation/user-info', async (req, res) => {
+app.get('/federation/user-info', wrapAsync(async (req, res) => {
     const { remote, userId } = req.query;
-    if (!remote || !userId) return res.status(400).json({ error: 'Missing remote or userId parameter' });
+    const trustedServers = getTrustedServers();
+    if (!remote || !userId || typeof remote !== 'string' || typeof userId !== 'string' || !trustedServers.includes(remote)) {
+        return res.status(400).json({ error: 'Invalid or untrusted remote parameter' });
+    }
     try {
         const fetchRes = await fetch(`${remote}/api/user-info?userId=${encodeURIComponent(userId)}`);
-        if (!fetchRes.ok) throw new Error('Remote fetch failed');
+        if (!fetchRes.ok)
+            throw new Error('Remote fetch failed');
         const data = await fetchRes.json();
         res.json(data);
-    } catch (e) {
-        res.status(502).json({ error: 'Failed to fetch remote user info', details: e.message });
     }
-});
-
+    catch (e) {
+        log('error', 'Error fetching from remote server:', e);
+        res.status(502).json({ error: 'Failed to fetch from remote server' });
+    }
+}));
 // Proxy remote videos
-app.get('/federation/videos', async (req, res) => {
+app.get('/federation/videos', wrapAsync(async (req, res) => {
     const { remote } = req.query;
-    if (!remote) return res.status(400).json({ error: 'Missing remote parameter' });
+    const trustedServers = getTrustedServers();
+    if (!remote || typeof remote !== 'string' || !trustedServers.includes(remote)) {
+        return res.status(400).json({ error: 'Invalid or untrusted remote parameter' });
+    }
     try {
         const fetchRes = await fetch(`${remote}/api/videos`);
-        if (!fetchRes.ok) throw new Error('Remote fetch failed');
+        if (!fetchRes.ok)
+            throw new Error('Remote fetch failed');
         const data = await fetchRes.json();
         res.json(data);
-    } catch (e) {
-        res.status(502).json({ error: 'Failed to fetch remote videos', details: e.message });
     }
+    catch (e) {
+        log('error', 'Error fetching from remote server:', e);
+        res.status(502).json({ error: 'Failed to fetch from remote server' });
+    }
+}));
+// API Discovery endpoint for federation (dynamic, based on current post API source)
+app.get('/federation/discover', (req, res) => {
+    // Try to detect the remote API used for posts (from env or config, fallback to local)
+    // You can set this in an env var like FEDERATION_POSTS_API or similar
+    const postsApi = process.env.FEDERATION_POSTS_API || 'http://localhost:3000/api/posts';
+    const userInfoApi = process.env.FEDERATION_USERINFO_API || 'http://localhost:3000/api/user-info';
+    const videosApi = process.env.FEDERATION_VIDEOS_API || 'http://localhost:3000/api/videos';
+    // Federation endpoints (always local to this instance)
+    const baseUrl = process.env.FEDERATION_BASE_URL || `http://localhost:${PORT}`;
+    res.json({
+        posts: postsApi,
+        userInfo: userInfoApi,
+        videos: videosApi,
+        federationPosts: `${baseUrl}/federation/posts`,
+        federationUserInfo: `${baseUrl}/federation/user-info`,
+        federationVideos: `${baseUrl}/federation/videos`,
+        federationInbox: `${baseUrl}/federation/inbox`,
+        description: 'API discovery for Pulse federation. Endpoints reflect the current remote API configuration.'
+    });
 });
-
 // Accept incoming federation requests (for future: e.g. push posts, follow, etc.)
 app.post('/federation/inbox', (req, res) => {
     log('info', 'Received federation inbox:', req.body);
     res.json({ status: 'ok' });
 });
-
+// Admin verification endpoint
+app.post('/api/admin/verify', (req, res) => {
+    try {
+        const provided = (req.body?.code || '').toString();
+        const expected = (process.env.ADMIN_CODE || 'cat').toString();
+        if (!provided)
+            return res.status(400).json({ error: 'Code required' });
+        if (provided === expected)
+            return res.json({ ok: true });
+        return res.status(401).json({ error: 'Invalid code' });
+    }
+    catch (e) {
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
+// Universal logging middleware: logs every request and response
+app.use((req, res, next) => {
+    // Log incoming request
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+    if (Object.keys(req.query).length) {
+        console.log('Query:', req.query);
+    }
+    if (Object.keys(req.body || {}).length) {
+        console.log('Body:', req.body);
+    }
+    // Monkey-patch res.send to log outgoing response
+    const oldSend = res.send;
+    res.send = function (data) {
+        console.log(`[${new Date().toISOString()}] Response ${res.statusCode} for ${req.method} ${req.originalUrl}`);
+        try {
+            // Try to pretty print JSON
+            const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+            console.log('Response Body:', JSON.stringify(parsed, null, 2));
+        }
+        catch {
+            // Fallback for non-JSON
+            console.log('Response Body:', data);
+        }
+        // @ts-ignore
+        return oldSend.apply(res, arguments);
+    };
+    next();
+});
+// Error logging middleware: logs all errors
+app.use((err, req, res, next) => {
+    console.error(`[${new Date().toISOString()}] ERROR:`, err.stack || err);
+    res.status(500).json({ error: 'Internal server error' });
+});
 export default app;
 app.listen(PORT, () => {
     log('info', `Server is running on port ${PORT}`);
