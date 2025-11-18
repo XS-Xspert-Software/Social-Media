@@ -38,33 +38,33 @@ services:
     volumes:
       - ./frontend:/app
 
-  vidbackend:
-    build: ./vidbackend
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-    working_dir: /app
-    volumes:
-      - ./vidbackend:/app
-
-  websocket:
-    build: ./socketio
-    environment:
-      - PGUSER=postgres
-      - PGPASSWORD=sync
-      - PGHOST=db
-      - PGDATABASE=social_db
-      - PGPORT=5432
-    ports:
-      - "4000:4000"
-    depends_on:
-      - db
-    working_dir: /app
-    volumes:
-      - ./socketio:/app
-      # Preserve node_modules installed during image build so dependencies (e.g. ws) remain available
-      - websocket_node_modules:/app/node_modules
+#  vidbackend:
+#    build: ./vidbackend
+#    ports:
+#      - "8000:8000"
+#    depends_on:
+#      - db
+#    working_dir: /app
+#    volumes:
+#      - ./vidbackend:/app
+#
+#  websocket:
+#    build: ./socketio
+#    environment:
+#      - PGUSER=postgres
+#      - PGPASSWORD=sync
+#      - PGHOST=db
+#      - PGDATABASE=social_db
+#      - PGPORT=5432
+#    ports:
+#      - "4000:4000"
+#    depends_on:
+#      - db
+#    working_dir: /app
+#    volumes:
+#      - ./socketio:/app
+#      # Preserve node_modules installed during image build so dependencies (e.g. ws) remain available
+#      - websocket_node_modules:/app/node_modules
 
 volumes:
   postgres_data:
