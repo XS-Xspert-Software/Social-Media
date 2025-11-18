@@ -10,3 +10,4 @@ backend/*.js
 !backend/test-env.js
 backend/controller/*.js
 backend/schema/*.js
+backend/utils/*.js
