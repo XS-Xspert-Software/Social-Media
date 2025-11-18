@@ -111,7 +111,13 @@ export async function uploadVideoToB2(filePath: string, fileName: string): Promi
     }
     throw e;
   }
-  const fileData = fs.readFileSync(filePath);
+  // Ensure uploaded file is inside upload directory (defense in depth)
+  const UPLOAD_DIR = path.resolve(process.cwd(), 'uploads');
+  const resolvedFilePath = path.resolve(filePath);
+  if (!resolvedFilePath.startsWith(UPLOAD_DIR + path.sep)) {
+    throw new Error('Invalid video path.');
+  }
+  const fileData = fs.readFileSync(resolvedFilePath);
   const detectedMime = mime.lookup(fileName) || 'video/mp4';
   const { data } = await b2.getUploadUrl({ bucketId: B2_BUCKET_ID });
   try {
