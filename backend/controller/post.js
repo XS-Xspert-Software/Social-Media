@@ -2,18 +2,10 @@ import { db } from '../schema/index';
 import { posts, users, likes } from '../schema/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import { validate as validateUUID } from 'uuid';
+import { loadConfig } from '../utils/config.js';
 export const createPost = async (req, res) => {
     // Security: Require auth unless test mode is enabled and test param is present
-    const configPath = require('path').resolve(__dirname, '../../config.json');
-    let globalConfig = {};
-    try {
-        if (require('fs').existsSync(configPath)) {
-            globalConfig = JSON.parse(require('fs').readFileSync(configPath, 'utf-8'));
-        }
-    }
-    catch (e) {
-        // ignore
-    }
+    const globalConfig = loadConfig();
     const allowTest = globalConfig.ALLOW_TEST_POST_UPLOAD === true;
     const isTest = req.body && req.body.test_upload === '1';
     if (!isTest) {
