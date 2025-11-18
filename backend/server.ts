@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import { createPost, getPosts, likePost, dislikePost } from './controller/post.js';
 import fs from 'fs';
 import path from 'path';
+const UPLOADS_DIR = path.resolve('uploads');
 import { fileURLToPath } from 'url';
 import { db } from './schema/index.js';
 import { users } from './schema/schema.js';
@@ -133,7 +134,13 @@ app.post('/api/video/upload', videoUploadRateLimiter, upload.single('video'), wr
   const fileName = req.file.originalname || req.file.filename;
   const filePath = req.file.path;
   const videoInfo = await uploadVideoToB2(filePath, fileName);
-  fs.unlink(filePath, () => {}); // cleanup
+  // Ensure the file to be deleted is really in the expected uploads directory
+  const resolvedFilePath = path.resolve(filePath);
+  if (resolvedFilePath.startsWith(UPLOADS_DIR + path.sep)) {
+    fs.unlink(resolvedFilePath, () => {}); // cleanup
+  } else {
+    // Optional: log a warning, do not attempt to delete
+  }
 
   // Save metadata to posts table
   const { userId, title, description, hashtags } = req.body;
