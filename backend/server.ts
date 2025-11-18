@@ -119,7 +119,13 @@ app.post('/api/posts/:postId/dislike', dislikePost as any);
 // Get user settings/profile by userId or username
 // Video upload endpoint (Backblaze B2)
 const upload = multer({ dest: 'uploads/' }); // Temporary upload folder
-app.post('/api/video/upload', upload.single('video'), wrapAsync(async (req: Request, res: Response) => {
+const videoUploadRateLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 5, // Limit each IP to 5 video uploads per minute
+  message: { error: "Too many video upload attempts. Please try again later." },
+});
+
+app.post('/api/video/upload', videoUploadRateLimiter, upload.single('video'), wrapAsync(async (req: Request, res: Response) => {
   if (!req.file) {
     res.status(400).json({ error: 'No video file uploaded.' });
     return;
