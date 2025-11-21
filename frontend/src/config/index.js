@@ -19,7 +19,8 @@ export {
   API_BASE_URLS, 
   ENDPOINTS, 
   apiRequest, 
-  buildUrl 
+  buildUrl,
+  nodeAPI
 } from './api';
 
 // Re-export default for backward compatibility

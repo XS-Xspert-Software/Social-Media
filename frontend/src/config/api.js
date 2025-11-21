@@ -30,6 +30,9 @@ const API_BASE_URLS = {
   VIDEOS_API: 'https://chyna.vercel.app',              // Videos feed
 };
 
+// Optional local/backend proxy for legacy routes (falls back to Vite proxy)
+const NODE_API_BASE = import.meta?.env?.VITE_NODE_API || '/api';
+
 // ====== ALL API ENDPOINTS ======
 // Organized by feature/service for easy management
 const ENDPOINTS = {
@@ -194,11 +197,26 @@ export function buildUrl(baseUrl, params = {}) {
   return url.toString();
 }
 
+// Lightweight helper for legacy Node endpoints
+const nodeAPI = {
+  baseUrl: NODE_API_BASE,
+  request: async (endpoint = '', options = {}) => {
+    const target = `${NODE_API_BASE}${endpoint}`;
+    try {
+      return await apiRequest(target, options);
+    } catch (error) {
+      // Add helpful context about which endpoint failed
+      throw new Error(`nodeAPI.request failed for endpoint "${endpoint}" (${target}): ${error.message}`);
+    }
+  },
+};
+
 // ====== EXPORTS ======
-export { API_BASE_URLS, ENDPOINTS };
+export { API_BASE_URLS, ENDPOINTS, nodeAPI };
 
 // Default export for backward compatibility
 export default {
   baseUrls: API_BASE_URLS,
   endpoints: ENDPOINTS,
+  nodeAPI,
 };

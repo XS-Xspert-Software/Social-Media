@@ -48,61 +48,16 @@ scrollbar-color: #222 #000;
 
 /* Reusable glass utility - Apple-style fully transparent liquid glass */
 .glass {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.14);
   border-radius: var(--radius-lg);
-  position: relative;
-  overflow: hidden;
 }
 
-/* Modern browsers get enhanced blur */
-@supports (backdrop-filter: blur(10px)) {
-  .glass {
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    background: rgba(255,255,255,0.05);
-  }
-  .glass::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
-    animation: glass-shimmer 3s ease-in-out infinite;
-  }
-  .glass::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 50%);
-    pointer-events: none;
-  }
-}
-
-@keyframes glass-shimmer {
-  0%, 100% { left: -100%; }
-  50% { left: 100%; }
-}
-
-/* Enhanced glass with more depth - Fully transparent */
+/* Keep glass lightweight on low-end devices */
 .glass-enhanced {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 
-    0 8px 32px rgba(31, 38, 135, 0.3),
-    inset 0 1px 0 rgba(255,255,255,0.15),
-    inset 0 -1px 0 rgba(255,255,255,0.05);
-  position: relative;
-}
-
-@supports (backdrop-filter: blur(10px)) {
-  .glass-enhanced {
-    backdrop-filter: blur(40px) saturate(180%);
-    -webkit-backdrop-filter: blur(40px) saturate(180%);
-    background: rgba(255,255,255,0.04);
-  }
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
 }
 
 /* Focus visibility for accessibility */
@@ -123,10 +78,10 @@ scrollbar-color: #222 #000;
   border-radius: var(--radius-pill);
   letter-spacing: .3px;
   transition: var(--transition-base);
-  backdrop-filter: blur(10px);
 }
-.btn:hover { background: linear-gradient(135deg,#ffffff10,#ffffff26); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
-.btn:active { transform: translateY(0) scale(.97); }
+.btn:hover { background: linear-gradient(135deg,#ffffff10,#ffffff26); box-shadow: var(--shadow-sm); }
+/* Use opacity for better performance on low-end devices instead of filter */
+.btn:active { opacity: 0.85; }
 .btn-primary { background: var(--gradient-accent); border: none; }
 .btn-primary:hover { filter: brightness(1.07); }
 .btn-danger { background: linear-gradient(135deg,#ff4d61,#c32038); border: none; }
@@ -178,7 +133,7 @@ body .dark-mode {
 }
 /* Header - Default for small devices */
 header {
-    background: linear-gradient(180deg, rgba(0,0,0,0.98), rgba(0,0,0,0.92));
+  background: linear-gradient(180deg, rgba(0,0,0,0.98), rgba(0,0,0,0.92));
     color: #fff;
     padding: 14px 16px;
     display: flex;
@@ -196,13 +151,7 @@ header {
     border-bottom: 1.5px solid rgba(255,255,255,0.12);
 }
 
-/* Modern browsers get enhanced effects */
-@supports (backdrop-filter: blur(10px)) {
-  header {
-    backdrop-filter: blur(var(--blur-md)) saturate(160%);
-    -webkit-backdrop-filter: blur(var(--blur-md)) saturate(160%);
-  }
-}
+/* Removed expensive blur to lower GPU cost */
 header .user-section .search-dropdown input {
     border-radius: 9px;
 }
@@ -219,13 +168,7 @@ nav {
   border-top: 1.5px solid rgba(255,255,255,0.12);
 }
 
-/* Modern browsers get enhanced effects */
-@supports (backdrop-filter: blur(10px)) {
-  nav {
-    backdrop-filter: blur(var(--blur-md)) saturate(160%);
-    -webkit-backdrop-filter: blur(var(--blur-md)) saturate(160%);
-  }
-}
+/* Blur removed here as well */
 
 nav ul {
   display: flex;
@@ -241,12 +184,10 @@ nav li {
   font-size: 1.2rem;
   color: #f3f4f6;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(.16,1,.3,1);
-  position: relative;
+  transition: color 0.25s ease;
 }
 
 nav li:hover {
-  transform: scale(1.15) translateY(-3px);
   color: #667eea;
 }
 
@@ -256,21 +197,12 @@ nav li.active {
 
 nav li.active::after {
   content: "";
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
+  display: block;
+  margin: 6px auto 0;
   width: 6px;
   height: 6px;
   background: #667eea;
   border-radius: 50%;
-  box-shadow: 0 0 12px rgba(102, 126, 234, 0.9);
-  animation: nav-pulse 2s ease-in-out infinite;
-}
-
-@keyframes nav-pulse {
-  0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
-  50% { opacity: 0.7; transform: translateX(-50%) scale(1.2); }
 }
     /* Large Screens (Sidebar with Text Only) */
     @media (min-width: 768px) {
@@ -299,60 +231,13 @@ nav li.active::after {
     padding: 18px;
     border-radius: 20px;
     margin: 0 0 18px 0;
-    transition: all 0.35s cubic-bezier(.16,1,.3,1);
-    box-shadow: 
-      0 4px 12px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255,255,255,0.12),
-      inset 0 -1px 0 rgba(255,255,255,0.04);
-    position: relative;
-    overflow: hidden;
-}
-
-/* Modern browsers get fully transparent liquid glass */
-@supports (backdrop-filter: blur(10px)) {
-  .post-card, .movie-card {
-    backdrop-filter: blur(40px) saturate(180%);
-    -webkit-backdrop-filter: blur(40px) saturate(180%);
-    background: rgba(255,255,255,0.04);
-  }
-  .post-card::before, .movie-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
-  }
+    transition: border-color 0.25s ease, background 0.25s ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
 }
 
 .post-card:hover, .movie-card:hover {
-    transform: translateY(-5px) scale(1.01);
-    box-shadow: 
-      0 12px 32px rgba(0, 0, 0, 0.4),
-      0 0 0 1px rgba(102, 126, 234, 0.5),
-      inset 0 1px 0 rgba(255,255,255,0.15),
-      inset 0 -1px 0 rgba(255,255,255,0.06);
     border-color: rgba(102, 126, 234, 0.6);
-    background: rgba(255,255,255,0.08);
-}
-
-/* Smooth entrance animation */
-@media (prefers-reduced-motion: no-preference) {
-  .post-card, .movie-card {
-    animation: card-enter 0.5s cubic-bezier(.16,1,.3,1) backwards;
-  }
-}
-
-@keyframes card-enter {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    background: rgba(255,255,255,0.07);
 }
 
 .post-card:not(:last-child),
