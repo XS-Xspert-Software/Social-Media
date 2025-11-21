@@ -1,0 +1,151 @@
+API Configuration Structure
+═══════════════════════════════════════════════════════════════════
+
+📁 /frontend/src/config/
+│
+├── 📄 api.js (MAIN CONFIG FILE - 425 lines)
+│   ├── API_CONFIG Object
+│   │   ├── AUTH_BASE_URL
+│   │   ├── SERVICES {}
+│   │   │   ├── AUTHORIZE
+│   │   │   ├── USER_LIST_CHAT
+│   │   │   ├── FEATURES (Hashtags)
+│   │   │   ├── ALERTS
+│   │   │   ├── FRIENDS
+│   │   │   ├── VIDEOS, SHORTS
+│   │   │   ├── POST_OPINION
+│   │   │   ├── MESSAGES, RECENT
+│   │   │   ├── POSTS, FOLLOW, DELETE_POST, etc.
+│   │   │   ├── PROFILE_UPDATE
+│   │   │   └── GROUPS, GROUP_JOIN, GROUP_MEMBERS, etc.
+│   │   ├── NODE_API_BASE_URL (localhost fallback)
+│   │   └── DJANGO_API_BASE_URL (localhost fallback)
+│   │
+│   ├── apiHelper Object (Main helper)
+│   │   ├── fetch() - Generic fetch wrapper
+│   │   ├── Posts Methods
+│   │   │   ├── createPost()
+│   │   │   ├── getPosts()
+│   │   │   ├── deletePost()
+│   │   │   └── editPost()
+│   │   ├── Hashtag Methods
+│   │   │   ├── saveHashtags()
+│   │   │   ├── getTrendingHashtags()
+│   │   │   └── getHashtagPosts()
+│   │   ├── Social Methods
+│   │   │   ├── toggleFollow()
+│   │   │   ├── searchUsers()
+│   │   │   ├── deleteComment()
+│   │   │   └── getNotifications()
+│   │   ├── Messaging Methods
+│   │   │   ├── getMessages()
+│   │   │   ├── sendMessage()
+│   │   │   └── getRecentChats()
+│   │   ├── Group Methods
+│   │   │   ├── getGroups()
+│   │   │   ├── createGroup()
+│   │   │   ├── deleteGroup()
+│   │   │   ├── joinGroup()
+│   │   │   ├── getGroupMembers()
+│   │   │   ├── getGroupMessages()
+│   │   │   ├── sendGroupMessage()
+│   │   │   └── ... (more group methods)
+│   │   ├── Profile Methods
+│   │   │   └── updateProfile()
+│   │   ├── Video Methods
+│   │   │   ├── getVideos()
+│   │   │   └── getShorts()
+│   │   └── Misc Methods
+│   │       ├── sendAlert()
+│   │       ├── getFriends()
+│   │       ├── getUserListChat()
+│   │       └── authorize()
+│   │
+│   ├── nodeAPI (Legacy - backward compatibility)
+│   └── djangoAPI (Legacy - backward compatibility)
+│
+├── 📘 README.md (8.2KB)
+│   └── Full documentation, usage examples, API reference
+│
+├── �� ENDPOINTS.md (2.2KB)
+│   └── Quick reference list of all URLs
+│
+├── 🔄 MIGRATION.md (7.6KB)
+│   └── Step-by-step migration guide with examples
+│
+├── 📊 SUMMARY.md (5.4KB)
+│   └── Project overview and quick start
+│
+└── 📐 STRUCTURE.txt (This file)
+    └── Visual hierarchy of the configuration
+
+
+═══════════════════════════════════════════════════════════════════
+USAGE FLOW
+═══════════════════════════════════════════════════════════════════
+
+Component/View
+      │
+      │ import { apiHelper } from '@/config/api.js';
+      │
+      ▼
+  apiHelper.createPost(data)
+      │
+      │ Uses API_CONFIG.SERVICES.POST_OPINION
+      │ Adds headers, credentials, error handling
+      │
+      ▼
+ Fetch to Vercel API
+      │
+      ▼
+  Response / Error
+
+
+═══════════════════════════════════════════════════════════════════
+SERVICES MAPPED TO VERCEL DOMAINS
+═══════════════════════════════════════════════════════════════════
+
+Domain                        | Services
+------------------------------|----------------------------------------
+1999-theta.vercel.app         | AUTHORIZE, USER_LIST_CHAT
+199-ten.vercel.app            | FEATURES (Hashtags)
+2damnit.vercel.app            | ALERTS
+burger-eta-eight.vercel.app   | FRIENDS
+chyna.vercel.app              | VIDEOS, SHORTS
+hamburger-henna.vercel.app    | POST_OPINION
+recent-six.vercel.app         | MESSAGES, RECENT
+sports321.vercel.app          | POSTS, FOLLOW, DELETE_POST, 
+                              | DELETE_COMMENT, EDIT_POST, SEARCH,
+                              | NOTIFICATION
+venus-ecru.vercel.app         | PROFILE_UPDATE
+yupitis.vercel.app            | GROUPS, GROUP_JOIN, GROUP_CANCEL,
+                              | GROUP_MEMBERS, GROUP_MESSAGES
+
+
+═══════════════════════════════════════════════════════════════════
+HOW TO MODIFY ENDPOINTS
+═══════════════════════════════════════════════════════════════════
+
+1. Open: /frontend/src/config/api.js
+2. Find: API_CONFIG.SERVICES
+3. Edit: The URL you want to change
+4. Save: All components automatically use the new URL
+
+
+═══════════════════════════════════════════════════════════════════
+EXAMPLE: Change Posts Endpoint
+═══════════════════════════════════════════════════════════════════
+
+Before:
+  POSTS: 'https://sports321.vercel.app/api/posts'
+
+After:
+  POSTS: 'https://new-domain.vercel.app/api/posts'
+
+Result:
+  ✅ All components using apiHelper.getPosts() now use new URL
+  ✅ No other file changes needed
+  ✅ Consistent across entire application
+
+
+═══════════════════════════════════════════════════════════════════
