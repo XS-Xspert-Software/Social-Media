@@ -1,4 +1,6 @@
 name: Build Vue Frontend (prod)
+permissions:
+  contents: read
 
 on:
   push:
