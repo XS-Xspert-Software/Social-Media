@@ -1,0 +1,35 @@
+name: Build Vue Frontend (prod)
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - prod
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./frontend
+
+      - name: Build Vue app
+        run: npm run build
+        working-directory: ./frontend
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: vue-dist
+          path: ./frontend/dist
