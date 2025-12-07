@@ -379,6 +379,9 @@ export const usePostsStore = defineStore('posts', {
       const post = this.findPost(postId);
       if (!post) return;
 
+      // Mark pending early to block rapid double clicks before optimistic update runs
+      this.commentPending[postId] = true;
+
       const commentId = String(Date.now());
       const newComment = {
         commentId,
@@ -400,8 +403,6 @@ export const usePostsStore = defineStore('posts', {
       this.updateSelectedPost(post);
       this.clearCommentInput(postId);
       this.invalidateCommentsCache(postId);
-
-      this.commentPending[postId] = true;
 
       try {
         await this.makeApiCall('https://sports321.vercel.app/api/editPost', 'POST', {
@@ -445,6 +446,9 @@ export const usePostsStore = defineStore('posts', {
       const post = this.findPost(postId);
       const comment = this.findComment(post, commentId);
       if (!post || !comment) return;
+
+      // Mark pending early to block rapid double clicks before optimistic update runs
+      this.replyPending[commentId] = true;
       
       const replyId = String(Date.now());
       const newReply = {
@@ -470,8 +474,6 @@ export const usePostsStore = defineStore('posts', {
       this.updateSelectedPost(post);
       this.clearReplyInput(commentId);
       this.invalidateCommentsCache(postId);
-
-      this.replyPending[commentId] = true;
 
       try {
         await this.makeApiCall('https://sports321.vercel.app/api/editPost', 'POST', {
