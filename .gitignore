@@ -5,3 +5,9 @@ vidbackend/Pulse_Backend_Video/pulse/pulse/__pycache__/settings.cpython-312.pyc
 config.json
 *.json
 .env
+# Exclude compiled JS files from TypeScript source
+backend/*.js
+!backend/test-env.js
+backend/controller/*.js
+backend/schema/*.js
+backend/utils/*.js

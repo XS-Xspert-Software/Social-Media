@@ -7,20 +7,13 @@ import fs from 'fs';
 import path from 'path';
 import mime from 'mime-types';
 import { fileURLToPath } from 'url';
+import { loadConfig } from './utils/config.js';
 
 // Recreate __dirname in ESM context
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const configPath = path.resolve(__dirname, '../config.json');
-let config: any = {};
-try {
-  if (fs.existsSync(configPath)) {
-    config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-  }
-} catch (e) {
-  console.error('Failed to load config.json:', e);
-}
+const config = loadConfig();
 //
 const B2_KEY_ID = (process.env.B2_KEY_ID || config.B2_KEY_ID || '').trim();
 const B2_APP_KEY = (process.env.B2_APP_KEY || config.B2_APP_KEY || '').trim();

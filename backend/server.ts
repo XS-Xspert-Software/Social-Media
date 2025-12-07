@@ -1,16 +1,22 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import multer from 'multer';
-import { registerUser, loginUser, getUserInfo } from './controller/user.js';
+import { registerUser, loginUser, getUserInfo, updateUserProfile } from './controller/user.js';
 import rateLimit from 'express-rate-limit';
 import { createPost, getPosts, likePost, dislikePost } from './controller/post.js';
 import fs from 'fs';
 import path from 'path';
+const UPLOADS_DIR = path.resolve('uploads');
 import { fileURLToPath } from 'url';
+import { db } from './schema/index.js';
+import { users } from './schema/schema.js';
+import { eq } from 'drizzle-orm';
 dotenv.config();
 import { uploadVideoToB2 } from './b2.service.js';
+import { log } from './utils/logger.js';
+import { loadConfig, getTrustedServers } from './utils/config.js';
 
 // ESM-compatible __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -19,39 +25,38 @@ const __dirname = path.dirname(__filename);
 const PORT = process.env.PORT || 3000;
 const app = express();
 
-// Load global config.json from project root
-const configPath = path.resolve(__dirname, '../config.json');
-let globalConfig: any = {};
-try {
-  if (fs.existsSync(configPath)) {
-    globalConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-  }
-} catch (e) {
-  log('error', 'Failed to load config.json:', e);
-}
-
-// Helper to get trusted servers from config
-const getTrustedServers = (): string[] => {
-  return Array.isArray(globalConfig.federationTrustedServers)
-    ? globalConfig.federationTrustedServers
-    : [];
-};
-
-// Logger function for extensible logging
-function log(level: string, ...args: any[]) {
-  const ts = new Date().toISOString();
-  if (level === 'error') {
-    console.error(`[${ts}]`, ...args);
-  } else if (level === 'warn') {
-    console.warn(`[${ts}]`, ...args);
-  } else {
-    console.log(`[${ts}]`, ...args);
-  }
-}
-
 app.use(cors({origin: "*"})); 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Universal logging middleware: logs every request (should be before routes)
+app.use((req: Request, res: Response, next: NextFunction) => {
+  // Log incoming request
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  if (Object.keys(req.query).length) {
+    console.log('Query:', req.query);
+  }
+  if (Object.keys(req.body || {}).length) {
+    console.log('Body:', req.body);
+  }
+
+  // Monkey-patch res.send to log outgoing response
+  const oldSend = res.send;
+  res.send = function (data) {
+    console.log(`[${new Date().toISOString()}] Response ${res.statusCode} for ${req.method} ${req.originalUrl}`);
+    try {
+      // Try to pretty print JSON
+      const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+      console.log('Response Body:', JSON.stringify(parsed, null, 2));
+    } catch {
+      // Fallback for non-JSON
+      console.log('Response Body:', data);
+    }
+    // @ts-ignore
+    return oldSend.apply(res, arguments);
+  };
+  next();
+});
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Welcome to the backend server!');
@@ -115,84 +120,92 @@ app.post('/api/posts/:postId/dislike', dislikePost as any);
 // Get user settings/profile by userId or username
 // Video upload endpoint (Backblaze B2)
 const upload = multer({ dest: 'uploads/' }); // Temporary upload folder
-app.post('/api/video/upload', upload.single('video'), async (req: Request, res: Response) => {
-  try {
-    if (!req.file) return res.status(400).json({ error: 'No video file uploaded.' });
-    const fileName = req.file.originalname || req.file.filename;
-    const filePath = req.file.path;
-    const videoInfo = await uploadVideoToB2(filePath, fileName);
-    fs.unlink(filePath, () => {}); // cleanup
-
-    // Save metadata to posts table
-    const { userId, title, description, hashtags } = req.body;
-    if (!userId) return res.status(400).json({ error: 'userId required' });
-    // Import db and posts schema
-    const { db } = await import('./schema/index.js');
-    const { posts } = await import('./schema/schema.js');
-    const inserted = await db.insert(posts).values({
-      userId,
-      content: description || '',
-      videoUrl: videoInfo.url || videoInfo.downloadUrl || '',
-      title: title || '',
-      description: description || '',
-      hashtags: hashtags || '',
-      createdAt: new Date(),
-    }).returning();
-    const newPost = inserted[0];
-
-    return res.json({ success: true, video: videoInfo, post: newPost });
-  } catch (err: any) {
-    log('error', 'Video upload failed', err);
-    return res.status(500).json({ error: err.message || 'Upload failed' });
-  }
+const videoUploadRateLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 5, // Limit each IP to 5 video uploads per minute
+  message: { error: "Too many video upload attempts. Please try again later." },
 });
 
-app.get('/api/user/settings', async (req: Request, res: Response) => {
-  try {
-    const { userId, username } = req.query;
-    let user;
-    if (userId) {
-      user = await getUserInfo(userId as string);
-    } else if (username) {
-      const found = await db.select().from(users).where(eq(users.username, username as string));
-      if (found.length === 0) return res.status(404).json({ error: 'User not found' });
-      const { password, ...userInfo } = found[0];
-      user = userInfo;
-    } else {
-      return res.status(400).json({ error: 'userId or username required' });
+app.post('/api/video/upload', videoUploadRateLimiter, upload.single('video'), wrapAsync(async (req: Request, res: Response) => {
+  if (!req.file) {
+    res.status(400).json({ error: 'No video file uploaded.' });
+    return;
+  }
+  const fileName = req.file.originalname || req.file.filename;
+  const filePath = req.file.path;
+  const videoInfo = await uploadVideoToB2(filePath, fileName);
+  // Ensure the file to be deleted is really in the expected uploads directory
+  const resolvedFilePath = path.resolve(filePath);
+  if (resolvedFilePath.startsWith(UPLOADS_DIR + path.sep)) {
+    fs.unlink(resolvedFilePath, () => {}); // cleanup
+  } else {
+    // Optional: log a warning, do not attempt to delete
+  }
+
+  // Save metadata to posts table
+  const { userId, title, description, hashtags } = req.body;
+  if (!userId) {
+    res.status(400).json({ error: 'userId required' });
+    return;
+  }
+  // Import db and posts schema
+  const { db } = await import('./schema/index.js');
+  const { posts } = await import('./schema/schema.js');
+  const inserted = await db.insert(posts).values({
+    userId,
+    content: description || '',
+    videoUrl: videoInfo.downloadUrl || '',
+    title: title || '',
+    description: description || '',
+    hashtags: hashtags || '',
+    createdAt: new Date(),
+  }).returning();
+  const newPost = inserted[0];
+
+  res.json({ success: true, video: videoInfo, post: newPost });
+}));
+
+app.get('/api/user/settings', wrapAsync(async (req: Request, res: Response) => {
+  const { userId, username } = req.query;
+  let user;
+  if (userId) {
+    user = await getUserInfo(userId as string);
+  } else if (username) {
+    const found = await db.select().from(users).where(eq(users.username, username as string));
+    if (found.length === 0) {
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
-    return res.json({ user });
-  } catch (e: any) {
-    log('error', e.message);
-    return res.status(400).json({ error: e.message });
+    const { password, ...userInfo } = found[0];
+    user = userInfo;
+  } else {
+    res.status(400).json({ error: 'userId or username required' });
+    return;
   }
-});
+  res.json({ user });
+}));
 
 // Update user profile fields (username, description, etc.)
-app.post('/api/user/settings', async (req: Request, res: Response) => {
-  try {
-    const { userId, updates } = req.body;
-    if (!userId || !updates) return res.status(400).json({ error: 'userId and updates required' });
-    const user = await updateUserProfile({ userId, updates });
-    res.json({ user });
-  } catch (e: any) {
-    log('error', e.message);
-    res.status(400).json({ error: e.message });
+app.post('/api/user/settings', wrapAsync(async (req: Request, res: Response) => {
+  const { userId, updates } = req.body;
+  if (!userId || !updates) {
+    res.status(400).json({ error: 'userId and updates required' });
+    return;
   }
-});
+  const user = await updateUserProfile({ userId, updates });
+  res.json({ user });
+}));
 
 // Update user preferences (dark mode, notifications, etc.)
-app.post('/api/user/preferences', async (req: Request, res: Response) => {
-  try {
-    const { userId, preferences } = req.body;
-    if (!userId || !preferences) return res.status(400).json({ error: 'userId and preferences required' });
-    const user = await updateUserProfile({ userId, updates: { preferences } });
-    res.json({ user });
-  } catch (e: any) {
-    log('error', e.message);
-    res.status(400).json({ error: e.message });
+app.post('/api/user/preferences', wrapAsync(async (req: Request, res: Response) => {
+  const { userId, preferences } = req.body;
+  if (!userId || !preferences) {
+    res.status(400).json({ error: 'userId and preferences required' });
+    return;
   }
-});
+  const user = await updateUserProfile({ userId, updates: { preferences } });
+  res.json({ user });
+}));
 
 // Helper to wrap async route handlers for Express/TypeScript
 function wrapAsync(fn: any) {
@@ -202,9 +215,25 @@ function wrapAsync(fn: any) {
 }
 
 // --- Decentralized/Federation Endpoints ---
-// Use the global fetch API available in Node.js v18+
-// If you need to support older Node.js versions, install 'node-fetch' and import it at the top
-// import fetch from 'node-fetch';
+
+// Helper to validate remote server parameter
+function validateRemoteServer(remote: unknown): remote is string {
+  const trustedServers = getTrustedServers();
+  return typeof remote === 'string' && trustedServers.includes(remote);
+}
+
+// Helper to proxy fetch from remote server
+async function proxyRemoteFetch(url: string, res: Response): Promise<void> {
+  try {
+    const fetchRes = await fetch(url);
+    if (!fetchRes.ok) throw new Error('Remote fetch failed');
+    const data = await fetchRes.json();
+    res.json(data);
+  } catch (e: any) {
+    log('error', 'Error fetching from remote server:', e);
+    res.status(502).json({ error: 'Failed to fetch from remote server' });
+  }
+}
 
 // Discover remote servers (static for now, could be dynamic in future)
 app.get('/federation/servers', (req: Request, res: Response) => {
@@ -218,55 +247,28 @@ app.get('/federation/servers', (req: Request, res: Response) => {
 // Proxy remote posts from another Pulse server
 app.get('/federation/posts', wrapAsync(async (req: Request, res: Response) => {
   const { remote } = req.query;
-  const trustedServers = getTrustedServers();
-  if (!remote || typeof remote !== 'string' || !trustedServers.includes(remote)) {
+  if (!validateRemoteServer(remote)) {
     return res.status(400).json({ error: 'Invalid or untrusted remote parameter' });
   }
-  try {
-    const fetchRes = await fetch(`${remote}/api/posts`);
-    if (!fetchRes.ok) throw new Error('Remote fetch failed');
-    const data = await fetchRes.json();
-    res.json(data);
-  } catch (e: any) {
-    log('error', 'Error fetching from remote server:', e);
-    res.status(502).json({ error: 'Failed to fetch from remote server' });
-  }
+  await proxyRemoteFetch(`${remote}/api/posts`, res);
 }));
 
 // Proxy remote user info
 app.get('/federation/user-info', wrapAsync(async (req: Request, res: Response) => {
   const { remote, userId } = req.query;
-  const trustedServers = getTrustedServers();
-  if (!remote || !userId || typeof remote !== 'string' || typeof userId !== 'string' || !trustedServers.includes(remote)) {
+  if (!validateRemoteServer(remote) || typeof userId !== 'string') {
     return res.status(400).json({ error: 'Invalid or untrusted remote parameter' });
   }
-  try {
-    const fetchRes = await fetch(`${remote}/api/user-info?userId=${encodeURIComponent(userId)}`);
-    if (!fetchRes.ok) throw new Error('Remote fetch failed');
-    const data = await fetchRes.json();
-    res.json(data);
-  } catch (e: any) {
-    log('error', 'Error fetching from remote server:', e);
-    res.status(502).json({ error: 'Failed to fetch from remote server' });
-  }
+  await proxyRemoteFetch(`${remote}/api/user-info?userId=${encodeURIComponent(userId)}`, res);
 }));
 
 // Proxy remote videos
 app.get('/federation/videos', wrapAsync(async (req: Request, res: Response) => {
   const { remote } = req.query;
-  const trustedServers = getTrustedServers();
-  if (!remote || typeof remote !== 'string' || !trustedServers.includes(remote)) {
+  if (!validateRemoteServer(remote)) {
     return res.status(400).json({ error: 'Invalid or untrusted remote parameter' });
   }
-  try {
-    const fetchRes = await fetch(`${remote}/api/videos`);
-    if (!fetchRes.ok) throw new Error('Remote fetch failed');
-    const data = await fetchRes.json();
-    res.json(data);
-  } catch (e: any) {
-    log('error', 'Error fetching from remote server:', e);
-    res.status(502).json({ error: 'Failed to fetch from remote server' });
-  }
+  await proxyRemoteFetch(`${remote}/api/videos`, res);
 }));
 
 // API Discovery endpoint for federation (dynamic, based on current post API source)
@@ -299,52 +301,26 @@ app.post('/federation/inbox', (req: Request, res: Response) => {
 });
 
 // Admin verification endpoint
-app.post('/api/admin/verify', (req: Request, res: Response) => {
-  try {
-    const provided = (req.body?.code || '').toString();
-    const expected = (process.env.ADMIN_CODE || 'cat').toString();
-    if (!provided) return res.status(400).json({ error: 'Code required' });
-    if (provided === expected) return res.json({ ok: true });
-    return res.status(401).json({ error: 'Invalid code' });
-  } catch (e: any) {
-    return res.status(500).json({ error: 'Internal server error' });
+app.post('/api/admin/verify', wrapAsync(async (req: Request, res: Response) => {
+  const provided = (req.body?.code || '').toString();
+  const expected = (process.env.ADMIN_CODE || 'cat').toString();
+  if (!provided) {
+    res.status(400).json({ error: 'Code required' });
+    return;
   }
-});
-
-// Universal logging middleware: logs every request and response
-app.use((req, res, next) => {
-  // Log incoming request
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
-  if (Object.keys(req.query).length) {
-    console.log('Query:', req.query);
+  if (provided === expected) {
+    res.json({ ok: true });
+    return;
   }
-  if (Object.keys(req.body || {}).length) {
-    console.log('Body:', req.body);
-  }
-
-  // Monkey-patch res.send to log outgoing response
-  const oldSend = res.send;
-  res.send = function (data) {
-    console.log(`[${new Date().toISOString()}] Response ${res.statusCode} for ${req.method} ${req.originalUrl}`);
-    try {
-      // Try to pretty print JSON
-      const parsed = typeof data === 'string' ? JSON.parse(data) : data;
-      console.log('Response Body:', JSON.stringify(parsed, null, 2));
-    } catch {
-      // Fallback for non-JSON
-      console.log('Response Body:', data);
-    }
-    // @ts-ignore
-    return oldSend.apply(res, arguments);
-  };
-  next();
-});
+  res.status(401).json({ error: 'Invalid code' });
+}));
 
 // Error logging middleware: logs all errors
-app.use((err, req, res, next) => {
+const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   console.error(`[${new Date().toISOString()}] ERROR:`, err.stack || err);
   res.status(500).json({ error: 'Internal server error' });
-});
+};
+app.use(errorHandler);
 
 export default app;
 
