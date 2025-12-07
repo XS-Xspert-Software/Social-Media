@@ -216,7 +216,7 @@ export { API_BASE_URLS, ENDPOINTS, nodeAPI };
 
 // Default export for backward compatibility
 export default {
-  baseUrls: API_BASE_URLS,
+  baseUrls          : API_BASE_URLS,
   endpoints: ENDPOINTS,
   nodeAPI,
 };
