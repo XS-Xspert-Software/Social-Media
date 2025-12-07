@@ -26,6 +26,8 @@ export const usePostsStore = defineStore('posts', {
     replyInputs: {},
     replyToggles: {},
     detailedCommentsCache: new Map(),
+    commentPending: {},
+    replyPending: {},
   }),
 
   getters: {
@@ -95,6 +97,14 @@ export const usePostsStore = defineStore('posts', {
 },
     setNotify(notifyFunction) {
       this.notify = notifyFunction;
+    },
+
+    isCommentPending(postId) {
+      return !!this.commentPending[postId];
+    },
+
+    isReplyPending(commentId) {
+      return !!this.replyPending[commentId];
     },
 
     generateSessionId() {
@@ -354,6 +364,7 @@ export const usePostsStore = defineStore('posts', {
     },
 
     async addComment(postId, commentText = null) {
+      if (this.isCommentPending(postId)) return;
       if (!this.isAuthenticated) {
         this.notify?.('Please log in to comment', true);
         return;
@@ -390,6 +401,8 @@ export const usePostsStore = defineStore('posts', {
       this.clearCommentInput(postId);
       this.invalidateCommentsCache(postId);
 
+      this.commentPending[postId] = true;
+
       try {
         await this.makeApiCall('https://sports321.vercel.app/api/editPost', 'POST', {
           postId,
@@ -411,10 +424,13 @@ export const usePostsStore = defineStore('posts', {
         post.commentCount = Math.max(0, (post.commentCount || 1) - 1);
         this.updateSelectedPost(post);
         this.notify?.('Error adding comment: ' + error.message, true);
+      } finally {
+        this.commentPending[postId] = false;
       }
     },
 
     async addReply(postId, commentId, replyText = null) {
+      if (this.isReplyPending(commentId)) return;
       if (!this.isAuthenticated) {
         this.notify?.('Please log in to reply', true);
         return;
@@ -455,6 +471,8 @@ export const usePostsStore = defineStore('posts', {
       this.clearReplyInput(commentId);
       this.invalidateCommentsCache(postId);
 
+      this.replyPending[commentId] = true;
+
       try {
         await this.makeApiCall('https://sports321.vercel.app/api/editPost', 'POST', {
           postId,
@@ -492,6 +510,8 @@ export const usePostsStore = defineStore('posts', {
         this.replyToggles[commentId] = originalReplyToggle;
         this.updateSelectedPost(post);
         this.notify?.('Error adding reply: ' + error.message, true);
+      } finally {
+        this.replyPending[commentId] = false;
       }
     },
 

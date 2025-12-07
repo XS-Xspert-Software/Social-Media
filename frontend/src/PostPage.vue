@@ -111,7 +111,7 @@
         <!-- Comment Input -->
         <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
           <input v-model="postsStore.commentInputs[postsStore.selectedPost._id]" type="text" placeholder="Add a comment..." @keyup.enter="postsStore.addComment(postsStore.selectedPost._id)" style="width: 100%; padding: 8px 12px; border-radius: 20px; border: 1px solid #444; background: #000; color: #fff; font-size: 14px; outline: none;" />
-          <button @click="postsStore.addComment(postsStore.selectedPost._id)" :disabled="!postsStore.commentInputs[postsStore.selectedPost._id]?.trim()" style="background: #007bff; color: #fff; padding: 6px 12px; border: none; border-radius: 20px; cursor: pointer; font-size: 14px;" :style="{ opacity: !postsStore.commentInputs[postsStore.selectedPost._id]?.trim() ? 0.5 : 1 }">Post</button>
+          <button @click="postsStore.addComment(postsStore.selectedPost._id)" :disabled="!postsStore.commentInputs[postsStore.selectedPost._id]?.trim() || postsStore.isCommentPending(postsStore.selectedPost._id)" style="background: #007bff; color: #fff; padding: 6px 12px; border: none; border-radius: 20px; cursor: pointer; font-size: 14px;" :style="{ opacity: (!postsStore.commentInputs[postsStore.selectedPost._id]?.trim() || postsStore.isCommentPending(postsStore.selectedPost._id)) ? 0.5 : 1 }">Post</button>
         </div>
         
         <!-- Comments List -->
@@ -150,7 +150,7 @@
                     <!-- Reply Input -->
                     <div style="margin-bottom: 10px; display: flex; gap: 8px;">
                       <input v-model="postsStore.replyInputs[comment.commentId]" type="text" placeholder="Reply to this comment..." @keyup.enter="postsStore.addReply(postsStore.selectedPost._id, comment.commentId)" style="flex: 1; padding: 6px 10px; border-radius: 16px; border: 1px solid #333; background: #000; color: #fff; font-size: 13px;" />
-                      <button @click="postsStore.addReply(postsStore.selectedPost._id, comment.commentId)" :disabled="!postsStore.replyInputs[comment.commentId]?.trim()" style="background: #1da1f2; color: #fff; padding: 5px 12px; border: none; border-radius: 16px; cursor: pointer; font-size: 13px;" :style="{ opacity: !postsStore.replyInputs[comment.commentId]?.trim() ? 0.5 : 1 }">Reply</button>
+                      <button @click="postsStore.addReply(postsStore.selectedPost._id, comment.commentId)" :disabled="!postsStore.replyInputs[comment.commentId]?.trim() || postsStore.isReplyPending(comment.commentId)" style="background: #1da1f2; color: #fff; padding: 5px 12px; border: none; border-radius: 16px; cursor: pointer; font-size: 13px;" :style="{ opacity: (!postsStore.replyInputs[comment.commentId]?.trim() || postsStore.isReplyPending(comment.commentId)) ? 0.5 : 1 }">Reply</button>
                     </div>
                     
                     <!-- Replies List -->
