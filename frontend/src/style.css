@@ -6,11 +6,19 @@ scrollbar-color: #222 #000;
 }
 /* Root design tokens - Apple-style liquid glass */
 :root {
-  --color-bg: #000000;
-  --color-surface: rgba(255,255,255,0.08);
-  --color-surface-alt: rgba(255,255,255,0.12);
-  --color-border: rgba(255,255,255,0.15);
-  --color-border-strong: rgba(255,255,255,0.25);
+  /* Light theme defaults */
+  --color-bg: #f6f7fb;
+  --color-surface: rgba(255,255,255,0.9);
+  --color-surface-alt: rgba(240,242,248,0.92);
+  --color-border: rgba(15,23,42,0.08);
+  --color-border-strong: rgba(15,23,42,0.16);
+  --color-text: #0f172a;
+  --header-bg: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(246,247,251,0.92));
+  --nav-bg: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(240,242,248,0.95));
+  --card-bg: rgba(255,255,255,0.94);
+  --card-border: rgba(15,23,42,0.12);
+  --card-hover: rgba(255,255,255,0.98);
+
   --color-accent: #667eea;
   --color-accent-alt: #f093fb;
   --color-danger: #ff4d61;
@@ -31,6 +39,20 @@ scrollbar-color: #222 #000;
   --blur-sm: 10px;
   --blur-md: 24px;
   --blur-lg: 40px;
+}
+
+:root[data-theme="dark"] {
+  --color-bg: #000000;
+  --color-surface: rgba(255,255,255,0.08);
+  --color-surface-alt: rgba(255,255,255,0.12);
+  --color-border: rgba(255,255,255,0.15);
+  --color-border-strong: rgba(255,255,255,0.25);
+  --color-text: #ffffff;
+  --header-bg: linear-gradient(180deg, rgba(0,0,0,0.98), rgba(0,0,0,0.92));
+  --nav-bg: linear-gradient(180deg, rgba(0,0,0,0.92), rgba(0,0,0,0.98));
+  --card-bg: rgba(255,255,255,0.05);
+  --card-border: rgba(255,255,255,0.18);
+  --card-hover: rgba(255,255,255,0.07);
 }
 
 /* Feature detection for older browsers - fallback without backdrop-filter */
@@ -102,10 +124,12 @@ body {
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    background-color: #000;/* ✅ semi-transparent */
-    color: #ffffff;
+  background-color: var(--color-bg);
+  color: var(--color-text);
     -webkit-overflow-scrolling: touch;
 }
+body.theme-dark { background-color: var(--color-bg); color: #fff; }
+body.theme-light { background-color: var(--color-bg); color: var(--color-text); }
 body .dark-mode {
     background: linear-gradient(to bottom right, #111827, #581c87);
     color: #ffffff;
@@ -133,8 +157,8 @@ body .dark-mode {
 }
 /* Header - Default for small devices */
 header {
-  background: linear-gradient(180deg, rgba(0,0,0,0.98), rgba(0,0,0,0.92));
-    color: #fff;
+  background: var(--header-bg);
+    color: var(--color-text);
     padding: 14px 16px;
     display: flex;
     justify-content: space-between;
@@ -148,7 +172,7 @@ header {
     right: 0;
     z-index: 1000;
     margin-bottom: 30px;
-    border-bottom: 1.5px solid rgba(255,255,255,0.12);
+    border-bottom: 1.5px solid var(--color-border);
 }
 
 /* Removed expensive blur to lower GPU cost */
@@ -160,12 +184,12 @@ nav {
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.92), rgba(0,0,0,0.98));
+  background: var(--nav-bg);
   box-shadow: 
-    0 -4px 20px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255,255,255,0.05);
+    0 -4px 20px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 var(--color-border);
   z-index: 1000;
-  border-top: 1.5px solid rgba(255,255,255,0.12);
+  border-top: 1.5px solid var(--color-border);
 }
 
 /* Blur removed here as well */
@@ -182,7 +206,7 @@ nav li {
   padding: 12px;
   border-radius: 50%;
   font-size: 1.2rem;
-  color: #f3f4f6;
+  color: var(--color-text);
   cursor: pointer;
   transition: color 0.25s ease;
 }
@@ -203,6 +227,176 @@ nav li.active::after {
   height: 6px;
   background: #667eea;
   border-radius: 50%;
+}
+
+.theme-toggle-btn {
+  border: 1px solid var(--color-border);
+  background: linear-gradient(135deg,#ffffff0f,#ffffff26);
+  color: var(--color-text);
+  border-radius: 12px;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+body.theme-dark .theme-toggle-btn {
+  background: linear-gradient(135deg,#ffffff0d,#222234);
+  color: #fff;
+}
+
+.theme-toggle-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-toggle-btn i {
+  font-size: 16px;
+}
+
+/* Light mode overrides for dark inline styles */
+body.theme-light .post-card,
+body.theme-light .movie-card {
+  background: #ffffff !important;
+  border-color: rgba(15,23,42,0.12) !important;
+  color: #0f172a !important;
+}
+
+body.theme-light .app-wrapper,
+body.theme-light .layout-container,
+body.theme-light .main-content,
+body.theme-light .sidebar,
+body.theme-light .right-sidebar,
+body.theme-light .sidebar-tabs li,
+body.theme-light .sidebar-sort,
+body.theme-light .mobile-bottom-nav {
+  background: #f6f7fb !important;
+  color: #0f172a !important;
+}
+
+body.theme-light .right-sidebar .panel-section,
+body.theme-light .right-sidebar .panel-section.soft-bg {
+  background: #ffffff !important;
+  border-color: rgba(15,23,42,0.12) !important;
+}
+
+body.theme-light .right-sidebar .panel-title,
+body.theme-light .right-sidebar .stat-list li,
+body.theme-light .right-sidebar .simple-item,
+body.theme-light .right-sidebar .label,
+body.theme-light .right-sidebar .value,
+body.theme-light .right-sidebar .info strong,
+body.theme-light .right-sidebar .info small,
+body.theme-light .right-sidebar .mini-info strong,
+body.theme-light .right-sidebar .mini-desc,
+body.theme-light .right-sidebar .follow-btn.modern {
+  color: #0f172a !important;
+}
+
+body.theme-light .right-sidebar .stat-list li:hover,
+body.theme-light .right-sidebar .simple-item:hover {
+  background: rgba(0,0,0,0.05) !important;
+}
+
+body.theme-light .right-sidebar .follow-btn.modern {
+  background: linear-gradient(135deg,#4b6cb7,#182848) !important;
+  border: 1px solid rgba(15,23,42,0.15) !important;
+  color: #fff !important;
+}
+
+body.theme-light .right-sidebar .mini-video,
+body.theme-light .right-sidebar .mini-img {
+  background: #e5e7eb !important;
+}
+
+body.theme-light header,
+body.theme-light nav,
+body.theme-light .sidebar-sort .sort-button,
+body.theme-light .sidebar-tab-btn,
+body.theme-light .mobile-bottom-nav li {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: rgba(15,23,42,0.12) !important;
+}
+
+body.theme-light .post-message,
+body.theme-light .post-header .username,
+body.theme-light .post-timestamp,
+body.theme-light .actions,
+body.theme-light .actions div,
+body.theme-light .actions span,
+body.theme-light .actions svg,
+body.theme-light .actions i,
+body.theme-light .reply-preview,
+body.theme-light .quote-preview,
+body.theme-light .preview-message,
+body.theme-light .preview-username,
+body.theme-light .preview-timestamp,
+body.theme-light .preview-image,
+body.theme-light .post-image {
+  color: #0f172a !important;
+  stroke: #0f172a !important;
+}
+
+body.theme-light .reply-preview,
+body.theme-light .quote-preview {
+  background: #f5f7fb !important;
+  border-color: rgba(15,23,42,0.12) !important;
+}
+
+body.theme-light .post-timestamp small,
+body.theme-light small,
+body.theme-light .mobile-bottom-nav,
+body.theme-light .mobile-bottom-nav i,
+body.theme-light .badge,
+body.theme-light .notification-badge {
+  color: #1f2937 !important;
+}
+
+body.theme-light .actions svg path,
+body.theme-light .actions svg circle {
+  stroke: #0f172a !important;
+}
+
+/* Override hardcoded white text/fills when in light mode */
+:root[data-theme="light"] [style*="color: #fff"],
+:root[data-theme="light"] [style*="color:#fff"],
+:root[data-theme="light"] [style*="color: white"],
+:root[data-theme="light"] [style*="color:#ffffff"],
+:root[data-theme="light"] [style*="color: #ffffff"],
+:root[data-theme="light"] [style*="color:#fff;"] {
+  color: #0f172a !important;
+}
+
+:root[data-theme="light"] [style*="stroke: #fff"],
+:root[data-theme="light"] [style*="stroke:#fff"],
+:root[data-theme="light"] [style*="stroke: white"],
+:root[data-theme="light"] [style*="stroke:#ffffff"],
+:root[data-theme="light"] [style*="stroke: #ffffff"] {
+  stroke: #0f172a !important;
+}
+
+:root[data-theme="light"] [style*="fill: #fff"],
+:root[data-theme="light"] [style*="fill:#fff"],
+:root[data-theme="light"] [style*="fill: white"],
+:root[data-theme="light"] [style*="fill:#ffffff"],
+:root[data-theme="light"] [style*="fill: #ffffff"] {
+  fill: #0f172a !important;
+}
+
+/* General icon/text fallback for light mode */
+body.theme-light svg,
+body.theme-light svg path,
+body.theme-light svg circle,
+body.theme-light svg rect,
+body.theme-light button,
+body.theme-light button span,
+body.theme-light button i {
+  color: #0f172a !important;
+  stroke: #0f172a !important;
 }
     /* Large Screens (Sidebar with Text Only) */
     @media (min-width: 768px) {
@@ -225,9 +419,9 @@ nav li.active::after {
 /* Post & Movie Cards - Enhanced with fallbacks */
 .post-card, .movie-card {
     font-size: 13px;
-    background: rgba(255,255,255,0.05);
-    border: 1.5px solid rgba(255,255,255,0.18);
-    color: white;
+  background: var(--card-bg);
+  border: 1.5px solid var(--card-border);
+  color: var(--color-text);
     padding: 18px;
     border-radius: 20px;
     margin: 0 0 18px 0;
@@ -236,8 +430,8 @@ nav li.active::after {
 }
 
 .post-card:hover, .movie-card:hover {
-    border-color: rgba(102, 126, 234, 0.6);
-    background: rgba(255,255,255,0.07);
+  border-color: rgba(102, 126, 234, 0.6);
+  background: var(--card-hover);
 }
 
 .post-card:not(:last-child),
@@ -249,17 +443,20 @@ nav li.active::after {
 .post-card button,
 .movie-card button,
 .actions button {
-    border: none;
-    cursor: pointer;
-    font-size: 7px;
-    min-width: 60px;
-    text-align: center;
-    transition: transform 0.2s ease;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 9px;
+  min-width: 60px;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .post-card button:hover,
 .movie-card button:hover,
 .actions button:hover {
-    transform: scale(1.05);
+  transform: scale(1.05);
+  box-shadow: var(--shadow-sm);
 }
 @media (max-width: 600px) {
     .post-card .actions,
@@ -294,11 +491,36 @@ nav li.active::after {
 .video-modal h2 {
     font-size: 12px;
     margin: 0 0 8px;
+  color: var(--color-text);
 }
 .post-card p,
 .video-card p {
-    color: white;
+  color: var(--color-text);
     margin: 0 0 16px;
+}
+
+.post-message,
+.post-header .username,
+.post-timestamp,
+.actions,
+.sort-button,
+.sidebar-tabs li,
+.sidebar-sort,
+.mobile-bottom-nav,
+.mobile-bottom-nav i,
+.username-display,
+.badge,
+.notification-badge,
+.post-card .actions div,
+.post-card .actions svg,
+.post-card .actions i,
+.post-card .actions span {
+  color: var(--color-text);
+}
+
+.sort-button {
+  background: var(--color-surface) !important;
+  border-color: var(--color-border);
 }
 .dark-mode .post-card p,
 .dark-mode .video-card p {

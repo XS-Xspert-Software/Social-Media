@@ -492,6 +492,14 @@ function resetForm() {
 }
 .floating-circle i { font-size: 1.4rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,.4)); }
 
+@media (max-width: 768px) {
+  .floating-circle {
+    /* Keep the FAB above the mobile dock and safe area */
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    right: 16px;
+  }
+}
+
 @keyframes floatPulse {
   0%,100% { box-shadow: 0 0 0 0 rgba(127,90,240,.55); }
   50% { box-shadow: 0 0 0 14px rgba(127,90,240,0); }

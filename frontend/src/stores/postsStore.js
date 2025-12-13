@@ -28,6 +28,7 @@ export const usePostsStore = defineStore('posts', {
     detailedCommentsCache: new Map(),
     commentPending: {},
     replyPending: {},
+    viewHistory: getLocalStorage('viewHistory') ? JSON.parse(getLocalStorage('viewHistory')) : [],
   }),
 
   getters: {
@@ -129,6 +130,21 @@ export const usePostsStore = defineStore('posts', {
       this.replyInputs[commentId] = '';
     },
 
+    saveViewHistory() {
+      try {
+        setLocalStorage('viewHistory', JSON.stringify(this.viewHistory.slice(-200)));
+      } catch {}
+    },
+
+    recordView(postId) {
+      if (!postId) return;
+      const id = String(postId);
+      if (!this.viewHistory.includes(id)) {
+        this.viewHistory.push(id);
+        this.saveViewHistory();
+      }
+    },
+
     async fetchPosts(page = 1, sort = 'general') {
       this.loading = true;
       try {
@@ -165,6 +181,8 @@ export const usePostsStore = defineStore('posts', {
       const newPosts = await this.fetchPosts(this.currentPage, this.sortOption);
       
       if (newPosts?.posts?.length > 0) {
+        const historySet = new Set(this.viewHistory.map(String));
+        const existingIds = new Set(this.posts.map(p => String(p._id)));
         const formattedPosts = newPosts.posts.map(post => ({
           ...post,
           comments: [],
@@ -173,7 +191,10 @@ export const usePostsStore = defineStore('posts', {
           isBookmarked: false,
         }));
 
-        this.posts.push(...formattedPosts);
+        // Prioritize unviewed posts, then append viewed ones without duplicates
+        const unviewed = formattedPosts.filter(p => !historySet.has(String(p._id)) && !existingIds.has(String(p._id)));
+        const viewed = formattedPosts.filter(p => historySet.has(String(p._id)) && !existingIds.has(String(p._id)));
+        this.posts.push(...unviewed, ...viewed);
         this.currentPage += 1;
         this.hasMorePosts = newPosts.hasMorePosts;
       } else {
@@ -202,10 +223,18 @@ export const usePostsStore = defineStore('posts', {
         isBookmarked: false,
       };
       
-      isNewPost ? this.posts.unshift(formattedPost) : this.posts.push(formattedPost);
+      const id = String(formattedPost._id);
+      const existsAt = this.posts.findIndex(p => String(p._id) === id);
+      if (existsAt >= 0) {
+        this.posts[existsAt] = { ...this.posts[existsAt], ...formattedPost };
+      } else {
+        isNewPost ? this.posts.unshift(formattedPost) : this.posts.push(formattedPost);
+      }
     },
 
     async openFullScreenPost(postId) {
+      // Clear previous selection to avoid stale view
+      this.selectedPost = null;
       try {
         const apiUrl = `https://199-ten.vercel.app/api/UserListChat?id=${postId}`;
         const response = await fetch(apiUrl);
@@ -219,6 +248,7 @@ export const usePostsStore = defineStore('posts', {
               showComments: true,
               comments: data.post.comments || []
             };
+            this.recordView(postId);
             return;
           }
         }
@@ -227,6 +257,7 @@ export const usePostsStore = defineStore('posts', {
         const post = this.posts.find(p => p._id === postId);
         if (post) {
           this.selectedPost = { ...post, showComments: true };
+          this.recordView(postId);
         } else {
           this.selectedPost = null;
         }
@@ -324,6 +355,40 @@ export const usePostsStore = defineStore('posts', {
       }
     },
 
+    applyPostPatch(postId, changes) {
+      // Force reactive updates for feed + full-screen views
+      const matches = (id) => String(id) === String(postId);
+      this.posts = this.posts.map((p) => matches(p._id) ? { ...p, ...changes } : p);
+      if (this.selectedPost && matches(this.selectedPost._id)) {
+        this.selectedPost = { ...this.selectedPost, ...changes };
+      }
+    },
+
+    applyCommentPatch(postId, commentId, changes) {
+      const normalize = (id) => String(id).trim();
+      const matchesPost = (p) => normalize(p._id) === normalize(postId);
+      const matchesComment = (c) => normalize(c.commentId || c.comment_id || c.id) === normalize(commentId);
+
+      const patchComments = (comments = []) => comments.map((c) => {
+        if (matchesComment(c)) {
+          return { ...c, ...changes };
+        }
+        const patchedReplies = Array.isArray(c.replies) ? c.replies : [];
+        return { ...c, replies: patchedReplies };
+      });
+
+      this.posts = this.posts.map((p) => matchesPost(p)
+        ? { ...p, comments: patchComments(p.comments) }
+        : p);
+
+      if (this.selectedPost && matchesPost(this.selectedPost)) {
+        this.selectedPost = {
+          ...this.selectedPost,
+          comments: patchComments(this.selectedPost.comments),
+        };
+      }
+    },
+
     async likePost(postId) {
       if (!this.isAuthenticated) {
         this.notify?.('Please log in to like posts', true);
@@ -337,14 +402,13 @@ export const usePostsStore = defineStore('posts', {
       const isLiked = likedBy.includes(this.loggedInUsername);
       const originalLikes = post.likes;
       const originalLikedBy = [...likedBy];
-      
-      // Optimistic update
-      post.likes = (post.likes || 0) + (isLiked ? -1 : 1);
-      post.likedBy = isLiked 
+      const updatedLikes = (post.likes || 0) + (isLiked ? -1 : 1);
+      const updatedLikedBy = isLiked 
         ? likedBy.filter(user => user !== this.loggedInUsername)
         : [...likedBy, this.loggedInUsername];
-
-      this.updateSelectedPost(post);
+      
+      // Optimistic update with forced reactive patch
+      this.applyPostPatch(postId, { likes: updatedLikes, likedBy: updatedLikedBy });
 
       try {
         await this.makeApiCall('https://sports321.vercel.app/api/editPost', 'POST', {
@@ -356,9 +420,7 @@ export const usePostsStore = defineStore('posts', {
         this.notify?.(`Post ${isLiked ? 'unliked' : 'liked'} successfully!`, false);
       } catch (error) {
         // Revert on error
-        post.likes = originalLikes;
-        post.likedBy = originalLikedBy;
-        this.updateSelectedPost(post);
+        this.applyPostPatch(postId, { likes: originalLikes, likedBy: originalLikedBy });
         this.notify?.('Error liking post: ' + error.message, true);
       }
     },
@@ -543,14 +605,13 @@ export const usePostsStore = defineStore('posts', {
       const isAlreadyLiked = likedBy.includes(this.loggedInUsername);
       const originalHearts = comment.hearts;
       const originalLikedBy = [...likedBy];
-      
-      // Optimistic update
-      comment.hearts = (comment.hearts || 0) + (isAlreadyLiked ? -1 : 1);
-      comment.likedBy = isAlreadyLiked 
+      const updatedHearts = (comment.hearts || 0) + (isAlreadyLiked ? -1 : 1);
+      const updatedLikedBy = isAlreadyLiked 
         ? likedBy.filter(user => user !== this.loggedInUsername)
         : [...likedBy, this.loggedInUsername];
-
-      this.updateSelectedPost(post);
+      
+      // Optimistic update with forced reactive patch
+      this.applyCommentPatch(postId, commentId, { hearts: updatedHearts, likedBy: updatedLikedBy });
 
       try {
         await this.makeApiCall('https://sports321.vercel.app/api/editPost', 'POST', {
@@ -563,9 +624,7 @@ export const usePostsStore = defineStore('posts', {
         this.notify?.(`Comment ${isAlreadyLiked ? 'unliked' : 'liked'} successfully!`, false);
       } catch (error) {
         // Revert on error
-        comment.hearts = originalHearts;
-        comment.likedBy = originalLikedBy;
-        this.updateSelectedPost(post);
+        this.applyCommentPatch(postId, commentId, { hearts: originalHearts, likedBy: originalLikedBy });
         this.notify?.('Error liking comment: ' + error.message, true);
       }
     },
