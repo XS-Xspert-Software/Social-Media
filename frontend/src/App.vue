@@ -14,6 +14,13 @@
       <!-- Profile and Search -->
       <div class="user-section" style="gap: 12px; display: flex; align-items: center;">
          <i class="fas fa-search" @click="navigateToSearch" style="font-size: 24px; cursor: pointer;" aria-label="Open search page"></i>
+        <button
+          class="theme-toggle-btn"
+          :aria-label="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+          @click="toggleTheme"
+        >
+          <i :class="theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon'"></i>
+        </button>
         <div class="relative">
           <span class="username-display" @click.stop="toggleProfileMenu" style="cursor: pointer;">{{ userProfile.username }}</span>
           <Transition name="fade">
@@ -218,6 +225,8 @@ export default {
         { name: 'notification', label: 'Notification', icon: 'fas fa-bolt' },
         { name: 'settings', label: 'Settings', icon: 'fas fa-cog' },
       ],
+
+      theme: localStorage.getItem('sync-theme') || 'light',
     };
   },
 
@@ -262,7 +271,27 @@ export default {
     },
   },
 
+  created() {
+    this.applyTheme(this.theme || 'light');
+  },
+
+  watch: {
+    theme: {
+      immediate: true,
+      handler(val) {
+        this.applyTheme(val);
+      },
+    },
+  },
+
   methods: {
+    applyTheme(val) {
+      const nextTheme = val === 'light' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', nextTheme);
+      document.body.classList.toggle('theme-light', nextTheme === 'light');
+      document.body.classList.toggle('theme-dark', nextTheme === 'dark');
+      localStorage.setItem('sync-theme', nextTheme);
+    },
     prepareLoginRedirect(targetPath) {
       try {
         const next = targetPath || this.$route.fullPath || '/';
@@ -351,6 +380,11 @@ export default {
       } else {
         this.$router.push('/').catch(() => {});
       }
+    },
+
+    toggleTheme() {
+      this.theme = this.theme === 'dark' ? 'light' : 'dark';
+      this.applyTheme(this.theme);
     },
 
     toggleProfileMenu() {

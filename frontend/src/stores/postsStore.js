@@ -28,6 +28,7 @@ export const usePostsStore = defineStore('posts', {
     detailedCommentsCache: new Map(),
     commentPending: {},
     replyPending: {},
+    viewHistory: getLocalStorage('viewHistory') ? JSON.parse(getLocalStorage('viewHistory')) : [],
   }),
 
   getters: {
@@ -129,6 +130,21 @@ export const usePostsStore = defineStore('posts', {
       this.replyInputs[commentId] = '';
     },
 
+    saveViewHistory() {
+      try {
+        setLocalStorage('viewHistory', JSON.stringify(this.viewHistory.slice(-200)));
+      } catch {}
+    },
+
+    recordView(postId) {
+      if (!postId) return;
+      const id = String(postId);
+      if (!this.viewHistory.includes(id)) {
+        this.viewHistory.push(id);
+        this.saveViewHistory();
+      }
+    },
+
     async fetchPosts(page = 1, sort = 'general') {
       this.loading = true;
       try {
@@ -165,6 +181,8 @@ export const usePostsStore = defineStore('posts', {
       const newPosts = await this.fetchPosts(this.currentPage, this.sortOption);
       
       if (newPosts?.posts?.length > 0) {
+        const historySet = new Set(this.viewHistory.map(String));
+        const existingIds = new Set(this.posts.map(p => String(p._id)));
         const formattedPosts = newPosts.posts.map(post => ({
           ...post,
           comments: [],
@@ -173,7 +191,10 @@ export const usePostsStore = defineStore('posts', {
           isBookmarked: false,
         }));
 
-        this.posts.push(...formattedPosts);
+        // Prioritize unviewed posts, then append viewed ones without duplicates
+        const unviewed = formattedPosts.filter(p => !historySet.has(String(p._id)) && !existingIds.has(String(p._id)));
+        const viewed = formattedPosts.filter(p => historySet.has(String(p._id)) && !existingIds.has(String(p._id)));
+        this.posts.push(...unviewed, ...viewed);
         this.currentPage += 1;
         this.hasMorePosts = newPosts.hasMorePosts;
       } else {
@@ -202,10 +223,18 @@ export const usePostsStore = defineStore('posts', {
         isBookmarked: false,
       };
       
-      isNewPost ? this.posts.unshift(formattedPost) : this.posts.push(formattedPost);
+      const id = String(formattedPost._id);
+      const existsAt = this.posts.findIndex(p => String(p._id) === id);
+      if (existsAt >= 0) {
+        this.posts[existsAt] = { ...this.posts[existsAt], ...formattedPost };
+      } else {
+        isNewPost ? this.posts.unshift(formattedPost) : this.posts.push(formattedPost);
+      }
     },
 
     async openFullScreenPost(postId) {
+      // Clear previous selection to avoid stale view
+      this.selectedPost = null;
       try {
         const apiUrl = `https://199-ten.vercel.app/api/UserListChat?id=${postId}`;
         const response = await fetch(apiUrl);
@@ -219,6 +248,7 @@ export const usePostsStore = defineStore('posts', {
               showComments: true,
               comments: data.post.comments || []
             };
+            this.recordView(postId);
             return;
           }
         }
@@ -227,6 +257,7 @@ export const usePostsStore = defineStore('posts', {
         const post = this.posts.find(p => p._id === postId);
         if (post) {
           this.selectedPost = { ...post, showComments: true };
+          this.recordView(postId);
         } else {
           this.selectedPost = null;
         }

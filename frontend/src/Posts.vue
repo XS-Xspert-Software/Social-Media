@@ -293,7 +293,10 @@ function toggleMenu(id, e){
   openMenuFor.value = id;
 }
 function handleGlobalClick(e){
-  if(!e.target.closest('.more-actions')) openMenuFor.value = null;
+  const target = e?.target;
+  const supportsClosest = typeof target?.closest === 'function';
+  const insideMenu = supportsClosest ? target.closest('.more-actions') : false;
+  if (!insideMenu) openMenuFor.value = null;
 }
 function handleEdit(post){
   openMenuFor.value = null;
