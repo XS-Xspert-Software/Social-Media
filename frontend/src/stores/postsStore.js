@@ -324,6 +324,15 @@ export const usePostsStore = defineStore('posts', {
       }
     },
 
+    applyPostPatch(postId, changes) {
+      // Force reactive updates for feed + full-screen views
+      const matches = (id) => String(id) === String(postId);
+      this.posts = this.posts.map((p) => matches(p._id) ? { ...p, ...changes } : p);
+      if (this.selectedPost && matches(this.selectedPost._id)) {
+        this.selectedPost = { ...this.selectedPost, ...changes };
+      }
+    },
+
     async likePost(postId) {
       if (!this.isAuthenticated) {
         this.notify?.('Please log in to like posts', true);
@@ -337,14 +346,13 @@ export const usePostsStore = defineStore('posts', {
       const isLiked = likedBy.includes(this.loggedInUsername);
       const originalLikes = post.likes;
       const originalLikedBy = [...likedBy];
-      
-      // Optimistic update
-      post.likes = (post.likes || 0) + (isLiked ? -1 : 1);
-      post.likedBy = isLiked 
+      const updatedLikes = (post.likes || 0) + (isLiked ? -1 : 1);
+      const updatedLikedBy = isLiked 
         ? likedBy.filter(user => user !== this.loggedInUsername)
         : [...likedBy, this.loggedInUsername];
-
-      this.updateSelectedPost(post);
+      
+      // Optimistic update with forced reactive patch
+      this.applyPostPatch(postId, { likes: updatedLikes, likedBy: updatedLikedBy });
 
       try {
         await this.makeApiCall('https://sports321.vercel.app/api/editPost', 'POST', {
@@ -356,9 +364,7 @@ export const usePostsStore = defineStore('posts', {
         this.notify?.(`Post ${isLiked ? 'unliked' : 'liked'} successfully!`, false);
       } catch (error) {
         // Revert on error
-        post.likes = originalLikes;
-        post.likedBy = originalLikedBy;
-        this.updateSelectedPost(post);
+        this.applyPostPatch(postId, { likes: originalLikes, likedBy: originalLikedBy });
         this.notify?.('Error liking post: ' + error.message, true);
       }
     },
