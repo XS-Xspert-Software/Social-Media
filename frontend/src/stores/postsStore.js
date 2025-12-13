@@ -333,6 +333,31 @@ export const usePostsStore = defineStore('posts', {
       }
     },
 
+    applyCommentPatch(postId, commentId, changes) {
+      const normalize = (id) => String(id).trim();
+      const matchesPost = (p) => normalize(p._id) === normalize(postId);
+      const matchesComment = (c) => normalize(c.commentId || c.comment_id || c.id) === normalize(commentId);
+
+      const patchComments = (comments = []) => comments.map((c) => {
+        if (matchesComment(c)) {
+          return { ...c, ...changes };
+        }
+        const patchedReplies = Array.isArray(c.replies) ? c.replies : [];
+        return { ...c, replies: patchedReplies };
+      });
+
+      this.posts = this.posts.map((p) => matchesPost(p)
+        ? { ...p, comments: patchComments(p.comments) }
+        : p);
+
+      if (this.selectedPost && matchesPost(this.selectedPost)) {
+        this.selectedPost = {
+          ...this.selectedPost,
+          comments: patchComments(this.selectedPost.comments),
+        };
+      }
+    },
+
     async likePost(postId) {
       if (!this.isAuthenticated) {
         this.notify?.('Please log in to like posts', true);
@@ -549,14 +574,13 @@ export const usePostsStore = defineStore('posts', {
       const isAlreadyLiked = likedBy.includes(this.loggedInUsername);
       const originalHearts = comment.hearts;
       const originalLikedBy = [...likedBy];
-      
-      // Optimistic update
-      comment.hearts = (comment.hearts || 0) + (isAlreadyLiked ? -1 : 1);
-      comment.likedBy = isAlreadyLiked 
+      const updatedHearts = (comment.hearts || 0) + (isAlreadyLiked ? -1 : 1);
+      const updatedLikedBy = isAlreadyLiked 
         ? likedBy.filter(user => user !== this.loggedInUsername)
         : [...likedBy, this.loggedInUsername];
-
-      this.updateSelectedPost(post);
+      
+      // Optimistic update with forced reactive patch
+      this.applyCommentPatch(postId, commentId, { hearts: updatedHearts, likedBy: updatedLikedBy });
 
       try {
         await this.makeApiCall('https://sports321.vercel.app/api/editPost', 'POST', {
@@ -569,9 +593,7 @@ export const usePostsStore = defineStore('posts', {
         this.notify?.(`Comment ${isAlreadyLiked ? 'unliked' : 'liked'} successfully!`, false);
       } catch (error) {
         // Revert on error
-        comment.hearts = originalHearts;
-        comment.likedBy = originalLikedBy;
-        this.updateSelectedPost(post);
+        this.applyCommentPatch(postId, commentId, { hearts: originalHearts, likedBy: originalLikedBy });
         this.notify?.('Error liking comment: ' + error.message, true);
       }
     },
