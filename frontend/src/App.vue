@@ -32,9 +32,9 @@
       </div>
     </header>
 
-    <!-- Login prompt for guests -->
+    <!-- Login prompt for guests (hide on routes that render their own prompt) -->
     <LoginPrompt
-      v-if="!isSignedIn"
+      v-if="!isSignedIn && !routeHasOwnLoginPrompt"
       :inline="false"
       @login="() => authAction()"
     />
@@ -255,6 +255,13 @@ export default {
   // Treat chat child views as chat route for layout purposes
   const n = this.$route.name;
   return ['Chat', 'ChatHome', 'LiveChat', 'WorldChat', 'GroupChat', 'Chatbox'].includes(n);
+    },
+
+    routeHasOwnLoginPrompt() {
+      const name = this.$route.name;
+      // Routes that already render their own login prompts
+      const ownsPrompt = ['Settings', 'Chat', 'ChatHome', 'LiveChat', 'WorldChat', 'GroupChat', 'Chatbox'];
+      return ownsPrompt.includes(name);
     },
 
     isChatboxRoute() {
