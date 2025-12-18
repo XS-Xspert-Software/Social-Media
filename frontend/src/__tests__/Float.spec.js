@@ -1,6 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import Float from '../Float.vue';
+
+vi.mock('vue-router', () => ({
+  useRoute: () => ({ query: {} }),
+  useRouter: () => ({ push: vi.fn() })
+}));
 
 describe('Float.vue', () => {
   it('redirects guest to login when FAB clicked', async () => {

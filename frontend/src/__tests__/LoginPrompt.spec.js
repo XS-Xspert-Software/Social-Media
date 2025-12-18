@@ -5,7 +5,7 @@ import LoginPrompt from '../LoginPrompt.vue';
 describe('LoginPrompt.vue', () => {
   it('renders default message and button', () => {
     const wrapper = mount(LoginPrompt);
-    expect(wrapper.text()).toContain('You are in guest mode');
+    expect(wrapper.text()).toContain('Log in to chat, post, and get notifications.');
     expect(wrapper.find('button').exists()).toBe(true);
     expect(wrapper.find('button').text()).toBe('Login');
   });

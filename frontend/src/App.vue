@@ -102,8 +102,9 @@
     
 <Float />
 
-  <!-- Always render Notification component but conditionally show it -->
+  <!-- Render Notification globally except when already on notifications route -->
     <Notification
+      v-if="!isNotificationsRoute"
       :logged-in-username="userProfile.username"
       :show-ui="notificationActive"
       @notify="handleNotify"
@@ -159,6 +160,20 @@
 </template>
 
 <script>
+/*
+  App.vue
+  Main application shell for the Pulse frontend.
+
+  Responsibilities:
+  - Layout and global UI (header, sidebar, right sidebar, mobile nav)
+  - Theme application and persistence
+  - User profile synchronization with localStorage
+  - Routing helpers to map tabs to routes
+  - Global notification and alert plumbing
+
+  Note: keep logic here focused on app-level concerns; heavy page logic
+  belongs in the individual route components (Posts, Chat, etc.).
+*/
 import { ref, computed, shallowReactive, defineAsyncComponent } from 'vue';
 import Notification from './Notification.vue';
 import { usePostsStore } from './stores/postsStore';
@@ -260,8 +275,12 @@ export default {
     routeHasOwnLoginPrompt() {
       const name = this.$route.name;
       // Routes that already render their own login prompts
-      const ownsPrompt = ['Settings', 'Chat', 'ChatHome', 'LiveChat', 'WorldChat', 'GroupChat', 'Chatbox'];
+      const ownsPrompt = ['Settings', 'Chat', 'ChatHome', 'LiveChat', 'WorldChat', 'GroupChat', 'Chatbox', 'Notification'];
       return ownsPrompt.includes(name);
+    },
+
+    isNotificationsRoute() {
+      return this.$route.name === 'Notification';
     },
 
     isChatboxRoute() {
@@ -279,6 +298,9 @@ export default {
   },
 
   created() {
+    // Ensure a theme is applied immediately when the app is created.
+    // The theme is persisted in localStorage under 'sync-theme'. If no
+    // value exists, default to 'light'.
     this.applyTheme(this.theme || 'light');
   },
 
@@ -293,6 +315,8 @@ export default {
 
   methods: {
     applyTheme(val) {
+      // Apply a theme value to the document and persist it.
+      // Accepts 'light' or 'dark' (any non-'light' value will use 'dark').
       const nextTheme = val === 'light' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', nextTheme);
       document.body.classList.toggle('theme-light', nextTheme === 'light');
