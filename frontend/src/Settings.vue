@@ -140,11 +140,6 @@
 
       <!-- Content Tabs -->
       <div class="content-tabs">
-                    const goLogin = () => {
-                      try { localStorage.setItem('postLoginRedirect', window.location.pathname + window.location.search); } catch {}
-                      const next = encodeURIComponent(window.location.pathname + window.location.search);
-                      window.location.href = `${loginHref}?next=${next}`;
-                    };
         <button 
           v-for="tab in contentTabs" 
           :key="tab.key"
@@ -352,6 +347,7 @@ export default {
     const loading = ref(false);
     const message = ref('');
     const newProfilePicture = ref(null);
+    const loginHref = 'https://endless.sbs/public/signup';
 
     // User profile data
   const storedUsername = localStorage.getItem('username') || '';
@@ -428,6 +424,17 @@ export default {
         icon: 'fas fa-play-circle'
       }
     ]);
+
+    const goLogin = () => {
+      try {
+        const next = window.location.pathname + window.location.search;
+        localStorage.setItem('postLoginRedirect', next);
+        const encoded = encodeURIComponent(next || '/');
+        window.location.href = `${loginHref}?next=${encoded}`;
+      } catch {
+        window.location.href = loginHref;
+      }
+    };
 
     // Check for saved files to determine blue mark access
     const checkBlueMarkAccess = () => {
@@ -810,7 +817,9 @@ export default {
       viewMyActivity,
       logOut,
   handleClickOutside,
-  isGuest
+  isGuest,
+  goLogin,
+  loginHref
     };
   }
 };
