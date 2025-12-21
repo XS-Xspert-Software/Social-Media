@@ -33,6 +33,10 @@ const routes = [
   // Group chat routes removed for a simpler chat experience
     ]
   },
+  // Direct routes to keep Chat accessible when navigating via tabs/links
+  { path: '/chat/friends', name: 'ChatFriends', component: Chat, meta: { section: 'Friends' } },
+  { path: '/chat/live', name: 'ChatLive', component: Chat, meta: { section: 'Live' } },
+  { path: '/chat/world', name: 'ChatWorld', component: Chat, meta: { section: 'WorldChat' } },
   { path: '/admin', name: 'Admin', component: Admin },
   { path: '/:catchAll(.*)', redirect: '/' },
 ]

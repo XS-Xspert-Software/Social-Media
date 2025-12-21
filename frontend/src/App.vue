@@ -269,13 +269,13 @@ export default {
     isChatRoute() {
   // Treat chat child views as chat route for layout purposes
   const n = this.$route.name;
-  return ['Chat', 'ChatHome', 'LiveChat', 'WorldChat', 'GroupChat', 'Chatbox'].includes(n);
+    return ['Chat', 'ChatHome', 'LiveChat', 'WorldChat', 'GroupChat', 'Chatbox', 'ChatFriends', 'ChatLive', 'ChatWorld'].includes(n);
     },
 
     routeHasOwnLoginPrompt() {
       const name = this.$route.name;
       // Routes that already render their own login prompts
-      const ownsPrompt = ['Settings', 'Chat', 'ChatHome', 'LiveChat', 'WorldChat', 'GroupChat', 'Chatbox', 'Notification'];
+      const ownsPrompt = ['Settings', 'Chat', 'ChatHome', 'LiveChat', 'WorldChat', 'GroupChat', 'Chatbox', 'Notification', 'ChatFriends', 'ChatLive', 'ChatWorld'];
       return ownsPrompt.includes(name);
     },
 
