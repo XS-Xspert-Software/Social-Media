@@ -162,6 +162,8 @@ header {
     padding: 14px 16px;
     display: flex;
     justify-content: space-between;
+    flex-wrap: nowrap; /* keep title and controls on one line */
+    gap: 12px;
     align-items: center;
     box-shadow: 
       0 4px 20px rgba(0, 0, 0, 0.4),
@@ -173,6 +175,16 @@ header {
     z-index: 1000;
     margin-bottom: 30px;
     border-bottom: 1.5px solid var(--color-border);
+}
+
+/* Ensure header controls stay right-aligned and don’t wrap */
+.user-section {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
 /* Removed expensive blur to lower GPU cost */
