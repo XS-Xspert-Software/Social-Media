@@ -228,7 +228,7 @@
 import { usePostsStore } from './stores/postsStore';
 import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router';
 import { inject, watch, ref, onMounted, onBeforeUnmount } from 'vue';
-// ...existing code...
+
 
 const postsStore = usePostsStore();
 const { posts } = postsStore; // ✅ include posts to avoid undefined error
