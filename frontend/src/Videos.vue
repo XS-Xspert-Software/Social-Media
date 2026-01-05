@@ -748,6 +748,7 @@ export default {
 .shorts-feed {
   min-height: 100vh;
   color: #fff;
+  padding-top: 50px; /* Reserve space for LoginPrompt when logged out */
 }
 
 /* Glassmorphic Shorts Action Buttons */
@@ -1041,6 +1042,7 @@ export default {
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
   padding: 8px;
+  padding-top: 80px; /* Account for fixed header height */
 }
 
 .grid-toolbar {
@@ -1049,6 +1051,8 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin: 4px 0 8px;
+  position: relative;
+  z-index: 10;
 }
 
 .upload-trigger-btn, .profile-feed-btn {
