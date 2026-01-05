@@ -1,116 +1,92 @@
-# Social-Media
+# Endless
 
-This is the repo hosting the open-source behind **Sync**, the everything social media.  
-**Note:** This repository may differ from actual Sync code.  
-For something more decentralized, see [RSSX](https://github.com/thegoodduck/rssx) (Maintained by one of the coders behind Halo and Sync).
+![Status](https://img.shields.io/badge/status-experimental-blue)
+![Live Instance](https://img.shields.io/website-up-down-green-red/https/endless.sbs)
+![Stars](https://img.shields.io/github/stars/XS-Xspert-Software/Social-Media?style=flat)
+![Forks](https://img.shields.io/github/forks/XS-Xspert-Software/Social-Media?style=flat)
+![Issues](https://img.shields.io/github/issues/XS-Xspert-Software/Social-Media)
+![Pull Requests](https://img.shields.io/github/issues-pr/XS-Xspert-Software/Social-Media)
+
+Endless is an experimental social media platform focused on simplicity and having the right to start your own social media without knowing how to code.
+
+This repository contains the full source code for Endless.
 
 ---
 
-## 🚀 How to Host Your Own Halo Server
+## Getting Started
 
-Anyone can run their own Halo server and join the decentralized Sync network!  
-Here’s how to get started:
+### Prerequisites
 
----
+- Node.js (LTS recommended)
+- npm
 
-### 1. Clone the Repository
+### Installation
 
 ```bash
-git clone https://github.com/xs-xspert-software/social-media.git
-cd Social-Media
+git clone https://github.com/XS-Xspert-Software/Social-Media/
+cd Social-Media/frontend
+npm install
+npm run build
+npm run preview
+```
+
+The frontend will be available at:
+
+```
+http://localhost:4173
 ```
 
 ---
 
-### 2. Configure Environment Variables
+## Branches
 
-Copy the example environment file and edit it:
+- `main`  
+  Stable branch intended for self-hosted instances.
 
-```bash
-cp backend/.env.example backend/.env
-nano backend/.env
-```
-
-Set your database credentials, JWT secret, and (optionally) federation variables:
-
-- `FEDERATION_POSTS_API` — (optional) Remote API for posts (e.g. your Vercel deployment)
-- `FEDERATION_USERINFO_API` — (optional) Remote API for user info
-- `FEDERATION_VIDEOS_API` — (optional) Remote API for videos
-- `FEDERATION_BASE_URL` — The public URL of your backend (e.g. https://yourdomain.com)
+- `prod`  
+  Production branch used by https://endless.sbs.  
+  Contains modifications specific to the public deployment.
 
 ---
 
-### 3. Run with Docker (Recommended)
+## Public Instance
 
-Halo is designed for easy Docker deployment:
+The main public instance is available at:
 
-```bash
-docker compose up --build
-```
+https://endless.sbs
 
-This will start:
-
-- PostgreSQL database
-- Backend server (Node.js/Express/TypeScript)
-- Frontend (Vue/Vite)
-- Video backend (Django, if configured)
+This instance is experimental and runs on limited resources.
 
 ---
 
-### 4. Access Your Server
+## Contributing
 
-- **Frontend:** [http://localhost:5173](http://localhost:5173)
-- **Backend API:** [http://localhost:3000](http://localhost:3000)
+Contributions are welcome, especially improvements listed in the roadmap below.
 
----
+To contribute:
 
-### 5. Federation & API Discovery
+1. Fork the repository  
+2. Create a feature branch  
+3. Open a pull request  
 
-Your server will automatically expose federation endpoints:
-
-- `/federation/discover` — Shows your API and federation endpoint locations
-- `/federation/posts?remote=<remote_url>` — Proxy posts from a remote Halo server
-- `/federation/user-info?remote=<remote_url>&userId=<id>` — Proxy user info
-- `/federation/videos?remote=<remote_url>` — Proxy videos
-- `/federation/inbox` — Accept federation requests (future: push, follow, etc.)
-
-**Example:**
-
-```bash
-curl http://localhost:3000/federation/discover
-```
+All contributors are credited.
 
 ---
 
-### 6. Production Hosting
+## Roadmap
 
-- Set your environment variables for production (see above).
-- Point your domain to your server and set `FEDERATION_BASE_URL` accordingly.
-- Use HTTPS for federation and user security.
-- You can deploy on any VPS, cloud provider, or even Vercel/Render for the frontend.
-
----
-
-### 7. Join the Federation
-
-- Share your `/federation/discover` endpoint with others.
-- Add other Halo servers to your `/federation/servers` list for discovery.
-- Your users can now interact with remote servers and content!
+- Server-to-server decentralization  
+- Administrative moderation tools  
+- Lighter, mobile-first frontend  
+- Frontend bug fixes and UI polish  
 
 ---
 
-### 8. Configure Your Instance
+## License
 
-Configure your server settings in `config.json` and customize branding as needed for your self-hosted deployment.
-
+GPL 3.0
 ---
 
-### 9. Contribute & Get Help
+## Authors
 
-- Open issues or discussions on GitHub for support.
-- PRs and new federation features are welcome!
-
----
-
-**Halo is the engine. Sync is the platform.**  
-You can run your own, federate, and help build the decentralized social web!
+Created by @thegoodduck and @endless296
