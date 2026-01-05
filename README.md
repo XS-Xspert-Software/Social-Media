@@ -12,6 +12,7 @@ Endless is an experimental social media platform focused on simplicity and havin
 This repository contains the full source code for Endless.
 
 ---
+<img width="1834" height="970" alt="image" src="https://github.com/user-attachments/assets/7cd5884c-03d5-470a-8e4e-03f0b07678fc" />
 
 ## Getting Started
 
