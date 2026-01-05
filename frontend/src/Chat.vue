@@ -146,7 +146,7 @@ export default {
       const next = encodeURIComponent(this.$route.fullPath || '/chat');
       window.location.href = `${this.loginHref()}?next=${next}`;
     },
-  loginHref() { return 'https://endless.sbs/public/signup'; },
+  loginHref() { return '/signup'; },
     getUserId,
     normalizeUser,
     cacheUser,

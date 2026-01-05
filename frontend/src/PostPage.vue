@@ -61,7 +61,7 @@
       <!-- Reply Preview -->
       <div v-if="postsStore.selectedPost.replyTo" class="reply-preview" style="border-left: 3px solid #00b4d8; padding: 10px; margin-bottom: 15px; background: #2a2a2a; border-radius: 8px;">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <img :src="postsStore.selectedPost.replyTo.profilePicture || 'https://endless.sbs/public/pfp.jpg'" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" />
+          <img :src="postsStore.selectedPost.replyTo.profilePicture || '/default-avatar.jpg'" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" />
           <div>
             <strong style="color: #00b4d8;">{{ postsStore.selectedPost.replyTo.username }}</strong>
             <small style="color: #999; display: block;">{{ postsStore.formatTimestamp(postsStore.selectedPost.replyTo.timestamp) }}</small>
@@ -118,7 +118,7 @@
         <div style="max-height: 50vh; overflow-y: auto;">
           <div v-for="comment in (postsStore.selectedPost.comments || [])" :key="comment.commentId" style="background: #000; border-radius: 8px; margin-bottom: 8px; padding: 11px;">
             <div style="display: flex; align-items: flex-start; gap: 10px;">
-              <img :src="comment.profilePicture || 'https://endless.sbs/public/pfp3.jpg'" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" />
+              <img :src="comment.profilePicture || '/default-avatar.jpg'" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" />
               
               <div style="flex: 1;">
                 <!-- Comment Header -->
@@ -157,7 +157,7 @@
                     <div style="margin-left: 20px; margin-top: 10px;">
                       <div v-for="reply in (comment.replies || [])" :key="reply.commentId" style="background: #000; border-radius: 6px; padding: 8px; margin-bottom: 6px; position: relative;">
                         <div style="display: flex; align-items: flex-start; gap: 8px;">
-                          <img :src="reply.profilePicture || 'https://endless.sbs/public/pfp4.jpg'" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" />
+                          <img :src="reply.profilePicture || '/default-avatar.jpg'" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;" />
                           
                           <!-- Content container with right padding for the heart -->
                           <div style="flex: 1; padding-right: 40px;">

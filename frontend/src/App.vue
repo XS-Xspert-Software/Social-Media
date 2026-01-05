@@ -130,7 +130,7 @@
     :src="userProfile.profilePic"
     alt="Profile"
     class="profile-pic-icon"
-  @error="event => event.target.src = 'https://endless.sbs/download.jpeg'"
+  @error="event => event.target.src = '/default-banner.jpg'"
   />
 </template>
 
@@ -293,7 +293,7 @@ export default {
 
     loginHref() {
       // Centralize login target so we can change it easily in one place
-  return 'https://endless.sbs/public/signup';
+  return '/signup';
     },
   },
 
@@ -497,7 +497,7 @@ export default {
       }
       this.showProfileMenu = false;
   const next = encodeURIComponent(this.$route.fullPath || '/');
-  window.location.href = `https://endless.sbs/public/signup?next=${next}`;
+    window.location.href = `/signup?next=${next}`;
     },
 
     updateUserProfile() {

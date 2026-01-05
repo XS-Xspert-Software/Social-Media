@@ -99,10 +99,9 @@ curl http://localhost:3000/federation/discover
 
 ---
 
-### 8. Try the Main Sync Instance
+### 8. Configure Your Instance
 
-See a live example at:  
-[https://endless.sbs/public/i](https://endless.sbs/public/i)
+Configure your server settings in `config.json` and customize branding as needed for your self-hosted deployment.
 
 ---
 

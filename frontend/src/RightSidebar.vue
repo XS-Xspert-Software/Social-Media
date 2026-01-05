@@ -51,7 +51,7 @@
 </template>
 <script setup>
 import { ref, onMounted } from 'vue';
-const defaultAvatar = 'https://endless.sbs/public/pfp.jpg';
+const defaultAvatar = '/default-avatar.jpg';
 const stats = ref([
   { label: 'Posts', value: 0 },
   { label: 'Followers', value: 0 },

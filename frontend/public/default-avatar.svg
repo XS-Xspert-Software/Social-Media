@@ -1,0 +1,8 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <circle cx="100" cy="100" r="100" fill="#1a1a2e"/>
+  
+  <!-- User icon -->
+  <circle cx="100" cy="70" r="35" fill="#444"/>
+  <ellipse cx="100" cy="160" rx="50" ry="45" fill="#444"/>
+</svg>

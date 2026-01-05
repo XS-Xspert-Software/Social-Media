@@ -99,7 +99,7 @@ app.get('/api/user-info', (req, res) => {
     }
   })();
 });
-// We will be called EndlessX
+// Fetch posts endpoint
 app.get('/api/posts', getPosts as any);
 const createPostRateLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
