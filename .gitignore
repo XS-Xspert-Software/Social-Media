@@ -5,3 +5,4 @@ vidbackend/Pulse_Backend_Video/pulse/pulse/__pycache__/settings.cpython-312.pyc
 config.json
 *.json
 .env
+frontend/dist_2026_01_04.zip
