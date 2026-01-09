@@ -32,6 +32,9 @@
       </div>
     </header>
 
+    <!-- New user welcome banner (dismissible) -->
+    <WelcomeBanner v-if="showWelcomeBanner" @dismiss="dismissWelcomeBanner" />
+
     <!-- Login prompt for guests (hide on routes that render their own prompt) -->
     <LoginPrompt
       v-if="!isSignedIn && !routeHasOwnLoginPrompt"
@@ -192,6 +195,7 @@ const PostPage = defineAsyncComponent(() => import('./PostPage.vue'));
 import Chatbox from './Chatbox.vue';
 import Alert from './Alert.vue';
 import LoginPrompt from './LoginPrompt.vue';
+import WelcomeBanner from './WelcomeBanner.vue';
 
 const jwtCache = new Map();
 
@@ -209,6 +213,7 @@ export default {
     Float,
     Alert,
   LoginPrompt,
+    WelcomeBanner,
     PostPage
   },
 
@@ -242,6 +247,7 @@ export default {
       ],
 
       theme: localStorage.getItem('sync-theme') || 'light',
+      showWelcomeBanner: !localStorage.getItem('sync_seen_welcome_v1'),
     };
   },
 
@@ -314,6 +320,14 @@ export default {
   },
 
   methods: {
+    dismissWelcomeBanner() {
+      try {
+        localStorage.setItem('sync_seen_welcome_v1', '1');
+        this.showWelcomeBanner = false;
+      } catch (e) {
+        this.showWelcomeBanner = false;
+      }
+    },
     applyTheme(val) {
       // Apply a theme value to the document and persist it.
       // Accepts 'light' or 'dark' (any non-'light' value will use 'dark').
