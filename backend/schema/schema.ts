@@ -1,4 +1,5 @@
 // @ts-nocheck
+// This file defines the database schema for a social media application using Drizzle ORM with PostgreSQL.
 import { 
   pgTable, 
   serial, 
@@ -16,7 +17,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-
+export const test = '200'
 export const userStatusEnum = pgEnum('user_status', ['active', 'inactive', 'suspended', 'banned']);
 export const privacyEnum = pgEnum('privacy', ['public', 'friends', 'private']);
 export const postTypeEnum = pgEnum('post_type', ['text', 'image', 'video', 'link', 'poll']);
