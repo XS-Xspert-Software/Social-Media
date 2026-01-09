@@ -1,15 +1,14 @@
-# Endless
+# Sync (Self-Hosted)
 
 ![Status](https://img.shields.io/badge/status-experimental-blue)
-![Live Instance](https://img.shields.io/website-up-down-green-red/https/endless.sbs)
 ![Stars](https://img.shields.io/github/stars/XS-Xspert-Software/Social-Media?style=flat)
 ![Forks](https://img.shields.io/github/forks/XS-Xspert-Software/Social-Media?style=flat)
 ![Issues](https://img.shields.io/github/issues/XS-Xspert-Software/Social-Media)
 ![Pull Requests](https://img.shields.io/github/issues-pr/XS-Xspert-Software/Social-Media)
 
-Endless is an experimental social media platform focused on simplicity and having the right to start your own social media without knowing how to code.
+Sync is an experimental, self-hosted social media platform focused on simplicity and the right to start your own network without needing to code.
 
-This repository contains the full source code for Endless.
+This repository contains the full source code for Sync.
 
 ---
 <img width="1834" height="970" alt="image" src="https://github.com/user-attachments/assets/7cd5884c-03d5-470a-8e4e-03f0b07678fc" />
@@ -44,19 +43,11 @@ http://localhost:4173
 - `main`  
   Stable branch intended for self-hosted instances.
 
-- `prod`  
-  Production branch used by https://endless.sbs.  
-  Contains modifications specific to the public deployment.
-
 ---
 
-## Public Instance
+## Run Your Own Instance
 
-The main public instance is available at:
-
-https://endless.sbs
-
-This instance is experimental and runs on limited resources.
+Deploy your own Sync instance using the steps above. Customize branding, domains, and assets to match your environment.
 
 ---
 
@@ -90,4 +81,4 @@ GPL 3.0
 
 ## Authors
 
-Created by @thegoodduck and @endless296
+Created by the Sync team and community contributors
