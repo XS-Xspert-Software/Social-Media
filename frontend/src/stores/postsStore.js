@@ -2,6 +2,25 @@ import { defineStore } from 'pinia';
 import { useRouter } from 'vue-router';
 import { getLocalStorage, setLocalStorage } from '@/utils/localStorage';
 
+const TRUESEAL_PUBLIC_KEY_PEM = import.meta.env.VITE_TRUESEAL_PUBLIC_KEY_PEM || '';
+let cachedTrueSealPubKeyPromise = null;
+const encoder = new TextEncoder();
+
+function pemToArrayBuffer(pem) {
+  const trimmed = pem.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
+  const binary = atob(trimmed);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+
+function base64ToArrayBuffer(b64) {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+
 export const usePostsStore = defineStore('posts', {
   state: () => ({
     posts: [],
@@ -56,9 +75,56 @@ export const usePostsStore = defineStore('posts', {
           signaturePayloadId: envelope.provisionalId || envelope.signaturePayloadId || envelope.payloadId || null,
           signatureTimestamp: envelope.timestamp || envelope.signatureTimestamp || null,
           trueSeal: envelope,
+          signatureValid: null,
         };
       } catch {
         return post;
+      }
+    },
+
+    async importTrueSealPubKey() {
+      if (!TRUESEAL_PUBLIC_KEY_PEM) return null;
+      if (cachedTrueSealPubKeyPromise) return cachedTrueSealPubKeyPromise;
+      cachedTrueSealPubKeyPromise = window.crypto?.subtle?.importKey(
+        'spki',
+        pemToArrayBuffer(TRUESEAL_PUBLIC_KEY_PEM),
+        { name: 'RSA-PSS', hash: 'SHA-256' },
+        false,
+        ['verify']
+      ).catch(() => null);
+      return cachedTrueSealPubKeyPromise;
+    },
+
+    canonicalizeForVerify(post) {
+      const envelope = post.trueSeal || {};
+      const payload = {
+        author: post.username || envelope.author || '',
+        body: post.message || '',
+        id: envelope.provisionalId || envelope.signaturePayloadId || envelope.payloadId || '',
+        instance_id: envelope.instanceId || post.signatureInstanceId || '',
+        parent_id: (post.replyTo && (post.replyTo.postId || post.replyTo._id)) || '',
+        timestamp: envelope.timestamp || '',
+      };
+      const orderedJson = JSON.stringify(payload, Object.keys(payload).sort());
+      return encoder.encode(orderedJson);
+    },
+
+    async verifyTrueSeal(post) {
+      try {
+        if (!post?.trueSeal?.signature) return;
+        const pubKey = await this.importTrueSealPubKey();
+        if (!pubKey) return;
+        const canonical = this.canonicalizeForVerify(post);
+        const signatureBuf = base64ToArrayBuffer(post.trueSeal.signature);
+        const verified = await window.crypto.subtle.verify(
+          { name: 'RSA-PSS', saltLength: 32 },
+          pubKey,
+          signatureBuf,
+          canonical
+        );
+        this.applyPostPatch(post._id, { signatureValid: !!verified });
+      } catch {
+        this.applyPostPatch(post._id, { signatureValid: false });
       }
     },
 
@@ -214,6 +280,8 @@ export const usePostsStore = defineStore('posts', {
           isBookmarked: false,
         }));
 
+        formattedPosts.forEach((p) => this.verifyTrueSeal(p));
+
         // Prioritize unviewed posts, then append viewed ones without duplicates
         const unviewed = formattedPosts.filter(p => !historySet.has(String(p._id)) && !existingIds.has(String(p._id)));
         const viewed = formattedPosts.filter(p => historySet.has(String(p._id)) && !existingIds.has(String(p._id)));
@@ -253,6 +321,8 @@ export const usePostsStore = defineStore('posts', {
       } else {
         isNewPost ? this.posts.unshift(formattedPost) : this.posts.push(formattedPost);
       }
+
+      this.verifyTrueSeal(formattedPost);
     },
 
     async openFullScreenPost(postId) {
@@ -272,6 +342,7 @@ export const usePostsStore = defineStore('posts', {
               showComments: true,
               comments: normalized.comments || []
             };
+            this.verifyTrueSeal(normalized);
             this.recordView(postId);
             return;
           }
