@@ -42,6 +42,8 @@ http://localhost:4173
 
 - `main`  
   Stable branch intended for self-hosted instances.
+- `prod`
+  The main instance code.
 
 ---
 
