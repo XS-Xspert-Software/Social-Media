@@ -26,7 +26,7 @@
 .Sort{display:flex;overflow-x:auto;margin-top:50px;white-space:nowrap;margin-right:20px;padding:10px 16px;gap:14px;-ms-overflow-style:none;scrollbar-width:none}
 
 /* Posts */
-.post-header{display:flex;align-items:center;padding:5px 10px}.post-header .profile-picture img{width:29px;height:29px;border-radius:50%;object-fit:cover}.post-header .username{font-size:14px;margin-left:15px;margin-bottom:5px}.post-message{font-size:14px;margin-top:8px;cursor:pointer}.post-card img{width:100%;max-width:300px;max-height:280px;border-radius:10px;margin-bottom:10px;cursor:pointer}.post-image{width:100%;max-width:300px;max-height:280px;border-radius:10px;margin-bottom:10px;cursor:pointer}
+.post-card{min-height:195px}.post-header{display:flex;align-items:center;padding:5px 10px}.post-header .profile-picture img{width:29px;height:29px;border-radius:50%;object-fit:cover}.post-header .username{font-size:14px;margin-left:15px;margin-bottom:5px}.post-message{font-size:14px;margin-top:8px;cursor:pointer}.post-card img{width:100%;max-width:300px;max-height:280px;border-radius:10px;margin-bottom:10px;cursor:pointer}.post-image{width:100%;max-width:300px;max-height:280px;border-radius:10px;margin-bottom:10px;cursor:pointer}
 
 /* Reply System */
 .reply-layer{transition:all .3s ease;border-left:3px solid #1da1f2;background:#000;box-shadow:0 2px 6px rgba(0,0,0,.3)}.reply{transition:background .2s ease}.reply:hover{background:#3a3a3a}
@@ -36,6 +36,7 @@
 
 /* Preview Cards */
 .preview-card{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);padding:10px;margin-bottom:12px}.preview-header{display:flex;align-items:center;gap:10px;margin-bottom:6px}.preview-avatar{width:28px;height:28px;border:1px solid #444}.preview-user-info{display:flex;flex-direction:column}.preview-username{font-weight:bold}.preview-timestamp{font-size:12px;color:#999}.preview-message{font-size:13px;color:#ccc;margin:4px 0}.preview-image{width:100%;max-width:150px;border-radius:6px;margin-top:6px}.reply-preview{border-left:2px solid #00b4d8;box-shadow:0 0 6px rgba(0,180,216,.3)}.reply-preview .preview-username{color:#00b4d8}.reply-preview .preview-message{cursor:pointer}.quote-preview{border-left:2px solid #ff6b6b;box-shadow:0 0 6px rgba(255,107,107,.3)}.quote-preview .preview-username{color:#ff6b6b}
+.trueseal-missing{margin-left:10px;font-size:12px;color:#ffb347;white-space:nowrap}
 
 /* Animations */
 .slide-down-enter-active,.slide-down-leave-active{transition:all .3s ease}.slide-down-enter-from,.slide-down-leave-to{opacity:0;transform:translateY(-20px)}

@@ -77,9 +77,14 @@
       </div>
       <div class="username clickable" @click="postsStore.redirectToUserProfile(post.username)">
         <strong>{{ post.username }}</strong>
-        <span class="verified-badge" title="Verified">
+        <span
+          v-if="post.signature"
+          class="verified-badge"
+          :title="`TrueSeal · instance: ${post.signatureInstanceId || 'unknown'} · user: ${post.username || 'unknown'}`"
+        >
           <i class="fa-solid fa-circle-check"></i>
         </span>
+        <span v-else class="trueseal-missing">this post does not use TrueSeal</span>
       </div>
     </div>
     
@@ -113,7 +118,7 @@
   </div>
 
   <!-- Views -->
-  <div style="display: flex; align-items: center; gap: 5px;">
+  <div class="views-container" style="display: flex; align-items: center; gap: 5px;">
      <svg
     viewBox="0 0 24 24"
     width="22"

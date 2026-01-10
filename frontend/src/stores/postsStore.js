@@ -40,62 +40,85 @@ export const usePostsStore = defineStore('posts', {
   },
 
   actions: {
-    async makeApiCall(endpoint, method = 'POST', body = null, customHeaders = {}) {
-  try {
-    // In dev, route legacy API calls through Vite proxy to avoid CORS
-    if (import.meta && import.meta.env && import.meta.env.DEV && typeof endpoint === 'string') {
+    extractTrueSeal(post) {
+      if (!post || !post.message) return post;
+      const tagRegex = /\[TRUESEAL\]:([A-Za-z0-9+/=\-]+)\s*$/i;
+      const match = post.message.match(tagRegex);
+      if (!match) return post;
       try {
-        const urlObj = new URL(endpoint);
-        if (urlObj.hostname === 'sports321.vercel.app') {
-          endpoint = endpoint.replace('https://sports321.vercel.app', '/oldapi');
-        }
-      } catch (e) {
-        // If endpoint is not a valid URL, do nothing or optionally handle error
+        const envelope = JSON.parse(atob(match[1]));
+        const cleaned = post.message.replace(tagRegex, '').trim();
+        return {
+          ...post,
+          message: cleaned,
+          signature: envelope.signature || null,
+          signatureInstanceId: envelope.instanceId || envelope.signatureInstanceId || null,
+          signaturePayloadId: envelope.provisionalId || envelope.signaturePayloadId || envelope.payloadId || null,
+          signatureTimestamp: envelope.timestamp || envelope.signatureTimestamp || null,
+          trueSeal: envelope,
+        };
+      } catch {
+        return post;
       }
-    }
-    const config = {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...customHeaders
-      },
-      credentials: 'include',
-      mode: 'cors', // Add this
-    };
+    },
 
-    if (body && method !== 'GET') {
-      config.body = JSON.stringify(body);
-    }
-    
-    // Add debugging
-    console.log('Making request to:', endpoint);
-    console.log('Method:', method);
-    console.log('Body:', body);
-    
-    const response = await fetch(endpoint, config);
-    
-    console.log('Response status:', response.status);
-    console.log('Response ok:', response.ok);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error response:', errorText);
-      throw new Error(`${response.status}: ${errorText || response.statusText}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error(`API call failed - ${method} ${endpoint}:`, error);
-    
-    // Check if it's a CORS issue
-    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-      console.error('This is likely a CORS issue or network connectivity problem');
-      console.error('Check if the API endpoint exists and allows requests from', window.location.origin);
-    }
-    
-    throw error;
-  }
-},
+    async makeApiCall(endpoint, method = 'POST', body = null, customHeaders = {}) {
+      try {
+        // In dev, route legacy API calls through Vite proxy to avoid CORS
+        if (import.meta && import.meta.env && import.meta.env.DEV && typeof endpoint === 'string') {
+          try {
+            const urlObj = new URL(endpoint);
+            if (urlObj.hostname === 'sports321.vercel.app') {
+              endpoint = endpoint.replace('https://sports321.vercel.app', '/oldapi');
+            }
+          } catch (e) {
+            // ignore URL parse errors
+          }
+        }
+
+        const config = {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            ...customHeaders
+          },
+          credentials: 'include',
+          mode: 'cors',
+        };
+
+        if (body && method !== 'GET') {
+          config.body = JSON.stringify(body);
+        }
+        
+        // Debugging
+        console.log('Making request to:', endpoint);
+        console.log('Method:', method);
+        console.log('Body:', body);
+        
+        const response = await fetch(endpoint, config);
+        
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
+          throw new Error(`${response.status}: ${errorText || response.statusText}`);
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error(`API call failed - ${method} ${endpoint}:`, error);
+        
+        // Likely CORS/network
+        if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+          console.error('This is likely a CORS issue or network connectivity problem');
+          console.error('Check if the API endpoint exists and allows requests from', window.location.origin);
+        }
+        
+        throw error;
+      }
+    },
     setNotify(notifyFunction) {
       this.notify = notifyFunction;
     },
@@ -183,7 +206,7 @@ export const usePostsStore = defineStore('posts', {
       if (newPosts?.posts?.length > 0) {
         const historySet = new Set(this.viewHistory.map(String));
         const existingIds = new Set(this.posts.map(p => String(p._id)));
-        const formattedPosts = newPosts.posts.map(post => ({
+        const formattedPosts = newPosts.posts.map(post => this.extractTrueSeal({
           ...post,
           comments: [],
           commentCount: post.commentCount || 0,
@@ -214,14 +237,14 @@ export const usePostsStore = defineStore('posts', {
     addPostToFeed(post, isNewPost = false) {
       if (!post?._id) return;
       
-      const formattedPost = {
+      const formattedPost = this.extractTrueSeal({
         ...post,
         likes: post.likes || 0,
         comments: [],
         commentCount: post.commentCount || 0,
         likedBy: post.likedBy || [],
         isBookmarked: false,
-      };
+      });
       
       const id = String(formattedPost._id);
       const existsAt = this.posts.findIndex(p => String(p._id) === id);
@@ -243,10 +266,11 @@ export const usePostsStore = defineStore('posts', {
           const data = await response.json();
           
           if (data.post) {
+            const normalized = this.extractTrueSeal(data.post);
             this.selectedPost = {
-              ...data.post,
+              ...normalized,
               showComments: true,
-              comments: data.post.comments || []
+              comments: normalized.comments || []
             };
             this.recordView(postId);
             return;

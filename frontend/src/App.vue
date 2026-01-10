@@ -1,5 +1,8 @@
 <template>
   <div :class="['app-wrapper', { 'Chatbox-fullscreen': isChatboxRoute, 'no-header-padding': postsStore.selectedPost }]">
+  <!-- Global Loading Screen -->
+  <LoadingSpinner ref="loadingSpinner" />
+
   <!-- Header -->
   <header v-if="!isChatboxRoute && !postsStore.selectedPost">
        <h1 style="font-size: 23px; margin-left: 3%; display: flex; align-items: center; gap: 8px;">
@@ -196,6 +199,7 @@ import Chatbox from './Chatbox.vue';
 import Alert from './Alert.vue';
 import LoginPrompt from './LoginPrompt.vue';
 import WelcomeBanner from './WelcomeBanner.vue';
+import LoadingSpinner from './LoadingSpinner.vue';
 
 const jwtCache = new Map();
 
@@ -214,6 +218,7 @@ export default {
     Alert,
   LoginPrompt,
     WelcomeBanner,
+    LoadingSpinner,
     PostPage
   },
 

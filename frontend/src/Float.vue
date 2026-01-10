@@ -115,6 +115,11 @@ const router = useRouter()
 const replyToPostId = ref(route.query.replyToPostId || null)
 const replyToUsername = ref(route.query.replyToUsername || null)
 
+// TrueSeal client-side signing (falls back to digest if no key configured)
+const TRUESEAL_INSTANCE_ID = import.meta.env.VITE_TRUESEAL_INSTANCE_ID || 'SYNC_CLIENT_INSTANCE'
+const TRUESEAL_PRIVATE_KEY_PEM = import.meta.env.VITE_TRUESEAL_PRIVATE_KEY_PEM || ''
+let cachedTrueSealKeyPromise = null
+
 // User info (kept in sync on action)
 const loggedInUserId = ref(localStorage.getItem('userId') || '')
 const loggedInUsername = ref(localStorage.getItem('username') || '')
@@ -155,6 +160,95 @@ onUnmounted(() => {
 function handleGlobalKeydown(e){
   if(e.key === 'Escape' && showPanel.value){
     togglePanel()
+  }
+}
+
+function pemToArrayBuffer(pem) {
+  const trimmed = pem.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '')
+  const binary = atob(trimmed)
+  const len = binary.length
+  const bytes = new Uint8Array(len)
+  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i)
+  return bytes.buffer
+}
+
+function bufferToBase64(buffer) {
+  return btoa(String.fromCharCode(...new Uint8Array(buffer)))
+}
+
+async function importTrueSealKey() {
+  if (cachedTrueSealKeyPromise) return cachedTrueSealKeyPromise
+  if (!TRUESEAL_PRIVATE_KEY_PEM || typeof window === 'undefined' || !window.crypto?.subtle) {
+    return null
+  }
+  cachedTrueSealKeyPromise = window.crypto.subtle.importKey(
+    'pkcs8',
+    pemToArrayBuffer(TRUESEAL_PRIVATE_KEY_PEM),
+    { name: 'RSA-PSS', hash: 'SHA-256' },
+    false,
+    ['sign']
+  ).catch(() => null)
+  return cachedTrueSealKeyPromise
+}
+
+function canonicalizeTrueSeal({ id, author, instanceId, timestamp, body, parentId }) {
+  const payload = {
+    author,
+    body,
+    id,
+    instance_id: instanceId,
+    parent_id: parentId || '',
+    timestamp,
+  }
+  const orderedJson = JSON.stringify(payload, Object.keys(payload).sort())
+  return new TextEncoder().encode(orderedJson)
+}
+
+async function signTrueSeal(canonicalBytes) {
+  try {
+    const key = await importTrueSealKey()
+    if (!key) return null
+    const signatureBuffer = await window.crypto.subtle.sign(
+      { name: 'RSA-PSS', saltLength: 32 },
+      key,
+      canonicalBytes
+    )
+    return bufferToBase64(signatureBuffer)
+  } catch {
+    return null
+  }
+}
+
+async function digestFallback(canonicalBytes) {
+  try {
+    const digest = await window.crypto.subtle.digest('SHA-256', canonicalBytes)
+    return bufferToBase64(digest)
+  } catch {
+    return null
+  }
+}
+
+async function buildTrueSealEnvelope({ body, parentId }) {
+  const timestamp = new Date().toISOString()
+  const provisionalId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : `trueseal-${Date.now()}`
+  const canonicalBytes = canonicalizeTrueSeal({
+    id: provisionalId,
+    author: loggedInUsername.value || 'Guest',
+    instanceId: TRUESEAL_INSTANCE_ID,
+    timestamp,
+    body,
+    parentId,
+  })
+
+  const signature = (await signTrueSeal(canonicalBytes)) || (await digestFallback(canonicalBytes))
+
+  return {
+    signature,
+    instanceId: TRUESEAL_INSTANCE_ID,
+    provisionalId,
+    timestamp,
   }
 }
 
@@ -394,8 +488,17 @@ async function postOpinion() {
     return
   }
 
+  const trueSealEnvelope = await buildTrueSealEnvelope({
+    body: postText.value,
+    parentId: replyToPostId.value,
+  })
+
+  const trueSealTag = trueSealEnvelope.signature
+    ? `\n\n[TRUESEAL]:${btoa(JSON.stringify(trueSealEnvelope))}`
+    : ''
+
   const postData = {
-    message: postText.value,
+    message: `${postText.value}${trueSealTag}`,
     username: loggedInUsername.value,
     sessionId: sessionId.value,
     profilePic: profilePic.value,
@@ -403,7 +506,12 @@ async function postOpinion() {
     tags: extractedTags.value,
     replyTo: replyToPostId.value
       ? { postId: replyToPostId.value, username: replyToUsername.value }
-      : null
+      : null,
+    signature: trueSealEnvelope.signature,
+    signatureInstanceId: trueSealEnvelope.instanceId,
+    signaturePayloadId: trueSealEnvelope.provisionalId,
+    signatureTimestamp: trueSealEnvelope.timestamp,
+    trueSeal: trueSealEnvelope,
   }
 
   try {

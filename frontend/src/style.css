@@ -672,6 +672,7 @@ button,
   color: #fff;
   box-shadow: 0 4px 18px -6px rgba(0,0,0,.22), 0 6px 28px -8px rgba(0,0,0,.18);
   padding: 9px 22px;
+  min-height: 44px;
   font-size: 1rem;
   font-weight: 500;
   letter-spacing: .2px;
@@ -680,6 +681,8 @@ button,
   outline: none;
   position: relative;
   overflow: hidden;
+  display: flex;
+  align-items: center;
 }
 button:hover,
 .btn:hover,
