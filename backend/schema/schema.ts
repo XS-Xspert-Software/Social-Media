@@ -27,7 +27,7 @@ export const notificationTypeEnum = pgEnum('notification_type', [
 export const messageTypeEnum = pgEnum('message_type', ['text', 'image', 'video', 'file', 'voice']);
 export const friendshipStatusEnum = pgEnum('friendship_status', ['pending', 'accepted', 'blocked']);
 
-
+// Users table
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
   username: varchar('username', { length: 14 }).notNull().unique(),
