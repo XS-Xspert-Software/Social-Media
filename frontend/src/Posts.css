@@ -22,7 +22,11 @@
 /* Modal Actions */
 .modal-actions { display: flex; flex-wrap: wrap; gap: 10px;z-index: 4; margin-top: 16px; } .modal-actions button { flex: 1; min-width: 120px; padding: 6px 12px; font-size: 13px; font-weight: 600; border: 2px solid transparent; color: inherit; } .modal-cancel { color: #ff4d4f; background: #121212; border-color: #ff4d4f; } .modal-cancel:hover { background: #a00; color: #fff; box-shadow: 0 0 6px rgba(255,77,79,.4); } .modal-confirm { color: #00ffe0; background: #121212; border-color: #00ffe0; } .modal-confirm:hover { background: linear-gradient(135deg, #00ffe0, #00bfff); color: #000; box-shadow: 0 0 6px rgba(0,255,224,.4); }
 
-/* Sorting */
+/* Sorting & Peer Settings */
+.peer-settings-bar{position:sticky;top:0;background:#fff;border-bottom:1px solid #eee;padding:8px 12px;z-index:10}
+.peer-settings-toggle{background:#00b4d8;color:#fff;border:none;padding:6px 12px;border-radius:4px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.peer-settings-toggle:hover{background:#0099b3}
+.peer-settings-panel{background:#fafafa;border:1px solid #ddd;border-radius:4px;margin-top:6px;overflow:hidden}
 .Sort{display:flex;overflow-x:auto;margin-top:50px;white-space:nowrap;margin-right:20px;padding:10px 16px;gap:14px;-ms-overflow-style:none;scrollbar-width:none}
 
 /* Posts */

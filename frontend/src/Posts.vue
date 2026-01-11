@@ -1,6 +1,50 @@
 <template>
   <div>
     <div id="loading" v-show="postsStore.loading" class="loading"><div class="spinner"></div></div>
+    
+    <!-- Peer Servers Settings (Feed Sources) -->
+    <div class="peer-settings-bar">
+      <button class="peer-settings-toggle" @click="showPeerSettings = !showPeerSettings" title="Manage peer servers">
+        <i class="fas fa-network-wired"></i> Feed Sources
+      </button>
+      <Transition name="slide-down">
+        <div v-if="showPeerSettings" class="peer-settings-panel">
+          <div style="padding: 12px; border-bottom: 1px solid #ddd;">
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+              <input
+                v-model="newPeerUrl"
+                type="url"
+                placeholder="https://example.com"
+                style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"
+              />
+              <button
+                @click="addPeerServer"
+                style="padding: 8px 12px; background: #00b4d8; color: white; border-radius: 4px; font-size: 12px; cursor: pointer; border: none;"
+              >
+                Add
+              </button>
+            </div>
+            <div v-if="peerServers.length" style="display: flex; flex-direction: column; gap: 6px;">
+              <div
+                v-for="(peer, idx) in peerServers"
+                :key="idx"
+                style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f5f5f5; border-radius: 4px; font-size: 11px;"
+              >
+                <span style="word-break: break-all; flex: 1;">{{ peer }}</span>
+                <button
+                  @click="removePeerServer(idx)"
+                  style="padding: 4px 8px; background: #ff4458; color: white; border-radius: 4px; cursor: pointer; font-size: 10px; margin-left: 8px; border: none;"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <p v-else style="color: #999; font-size: 11px; margin: 0;">No peer servers added yet.</p>
+          </div>
+        </div>
+      </Transition>
+    </div>
+
     <div class="Sort">
   <button class="sort-button" :class="{ active: postsStore.sortOption === 'general' }" @click="postsStore.sortPosts('general')">General</button>
   <button class="sort-button" :class="{ active: postsStore.sortOption === 'trending' }" @click="postsStore.sortPosts('trending')">Trending</button>
@@ -239,16 +283,39 @@ import { usePostsStore } from './stores/postsStore';
 import { useRouter, useRoute, onBeforeRouteUpdate } from 'vue-router';
 import { inject, watch, ref, onMounted, onBeforeUnmount } from 'vue';
 
-
 const postsStore = usePostsStore();
-const { posts } = postsStore; // ✅ include posts to avoid undefined error
+const { posts } = postsStore;
 
 const router = useRouter();
 const route = useRoute();
 const selectedSort = inject('selectedSort');
-const notify = inject('notify'); // Inject the notify function from App.vue
+const notify = inject('notify');
 
-// Initialize the store with the injected notify function
+// Peer servers state
+const showPeerSettings = ref(false);
+const peerServers = ref(JSON.parse(localStorage.getItem('peerServers') || '[]'));
+const newPeerUrl = ref('');
+
+const addPeerServer = () => {
+  if (!newPeerUrl.value.trim()) return;
+  try {
+    new URL(newPeerUrl.value);
+    if (!peerServers.value.includes(newPeerUrl.value)) {
+      peerServers.value.push(newPeerUrl.value);
+      localStorage.setItem('peerServers', JSON.stringify(peerServers.value));
+    }
+    newPeerUrl.value = '';
+  } catch {
+    alert('Invalid URL');
+  }
+};
+
+const removePeerServer = (idx) => {
+  peerServers.value.splice(idx, 1);
+  localStorage.setItem('peerServers', JSON.stringify(peerServers.value));
+};
+
+// Initialize the store with the notify function
 if (notify) {
   postsStore.initialize(notify);
 }

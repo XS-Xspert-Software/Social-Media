@@ -6,6 +6,24 @@ const TRUESEAL_PUBLIC_KEY_PEM = import.meta.env.VITE_TRUESEAL_PUBLIC_KEY_PEM || 
 let cachedTrueSealPubKeyPromise = null;
 const encoder = new TextEncoder();
 
+const PEER_POSTS_ORIGINS = (import.meta.env.VITE_PEER_POSTS_ORIGINS || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+function getPeerServersFromStorage() {
+  try {
+    const stored = localStorage.getItem('peerServers');
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+function getAllPeerOrigins() {
+  return [...PEER_POSTS_ORIGINS, ...getPeerServersFromStorage()];
+}
+
 function pemToArrayBuffer(pem) {
   const trimmed = pem.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
   const binary = atob(trimmed);
@@ -234,6 +252,27 @@ export const usePostsStore = defineStore('posts', {
       }
     },
 
+    async fetchPeerPosts() {
+      const origins = getAllPeerOrigins();
+      if (!origins.length) return [];
+      const responses = await Promise.allSettled(
+        origins.map(async (origin) => {
+          const url = `${origin.replace(/\/$/, '')}/posts`;
+          const res = await fetch(url, { headers: { Accept: 'application/json' } });
+          if (!res.ok) throw new Error(`peer fetch failed: ${url}`);
+          const data = await res.json();
+          if (Array.isArray(data)) return data;
+          if (Array.isArray(data.posts)) return data.posts;
+          return [];
+        })
+      );
+
+      return responses
+        .filter((r) => r.status === 'fulfilled')
+        .flatMap((r) => r.value)
+        .map((p) => ({ ...p, _id: p._id || p.id }));
+    },
+
     async fetchPosts(page = 1, sort = 'general') {
       this.loading = true;
       try {
@@ -268,8 +307,9 @@ export const usePostsStore = defineStore('posts', {
       if (this.loading || !this.hasMorePosts) return;
       
       const newPosts = await this.fetchPosts(this.currentPage, this.sortOption);
+      const peerPosts = await this.fetchPeerPosts();
       
-      if (newPosts?.posts?.length > 0) {
+      if (newPosts?.posts?.length > 0 || peerPosts.length > 0) {
         const historySet = new Set(this.viewHistory.map(String));
         const existingIds = new Set(this.posts.map(p => String(p._id)));
         const formattedPosts = newPosts.posts.map(post => this.extractTrueSeal({
@@ -280,14 +320,24 @@ export const usePostsStore = defineStore('posts', {
           isBookmarked: false,
         }));
 
+        const formattedPeers = peerPosts.map(post => this.extractTrueSeal({
+          ...post,
+          comments: post.comments || [],
+          commentCount: post.commentCount || 0,
+          likedBy: post.likedBy || [],
+          isBookmarked: false,
+        }));
+
         formattedPosts.forEach((p) => this.verifyTrueSeal(p));
+        formattedPeers.forEach((p) => this.verifyTrueSeal(p));
 
         // Prioritize unviewed posts, then append viewed ones without duplicates
-        const unviewed = formattedPosts.filter(p => !historySet.has(String(p._id)) && !existingIds.has(String(p._id)));
-        const viewed = formattedPosts.filter(p => historySet.has(String(p._id)) && !existingIds.has(String(p._id)));
+        const combined = [...formattedPosts, ...formattedPeers];
+        const unviewed = combined.filter(p => !historySet.has(String(p._id)) && !existingIds.has(String(p._id)));
+        const viewed = combined.filter(p => historySet.has(String(p._id)) && !existingIds.has(String(p._id)));
         this.posts.push(...unviewed, ...viewed);
         this.currentPage += 1;
-        this.hasMorePosts = newPosts.hasMorePosts;
+        this.hasMorePosts = newPosts.hasMorePosts && formattedPeers.length === 0;
       } else {
         this.hasMorePosts = false;
       }
