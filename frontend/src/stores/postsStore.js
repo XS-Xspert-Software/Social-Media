@@ -2,6 +2,25 @@ import { defineStore } from 'pinia';
 import { useRouter } from 'vue-router';
 import { getLocalStorage, setLocalStorage } from '@/utils/localStorage';
 
+const TRUESEAL_PUBLIC_KEY_PEM = import.meta.env.VITE_TRUESEAL_PUBLIC_KEY_PEM || '';
+let cachedTrueSealPubKeyPromise = null;
+const encoder = new TextEncoder();
+
+function pemToArrayBuffer(pem) {
+  const trimmed = pem.replace(/-----[^-]+-----/g, '').replace(/\s+/g, '');
+  const binary = atob(trimmed);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+
+function base64ToArrayBuffer(b64) {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes.buffer;
+}
+
 export const usePostsStore = defineStore('posts', {
   state: () => ({
     posts: [],
@@ -40,62 +59,132 @@ export const usePostsStore = defineStore('posts', {
   },
 
   actions: {
-    async makeApiCall(endpoint, method = 'POST', body = null, customHeaders = {}) {
-  try {
-    // In dev, route legacy API calls through Vite proxy to avoid CORS
-    if (import.meta && import.meta.env && import.meta.env.DEV && typeof endpoint === 'string') {
+    extractTrueSeal(post) {
+      if (!post || !post.message) return post;
+      const tagRegex = /\[TRUESEAL\]:([A-Za-z0-9+/=\-]+)\s*$/i;
+      const match = post.message.match(tagRegex);
+      if (!match) return post;
       try {
-        const urlObj = new URL(endpoint);
-        if (urlObj.hostname === 'sports321.vercel.app') {
-          endpoint = endpoint.replace('https://sports321.vercel.app', '/oldapi');
-        }
-      } catch (e) {
-        // If endpoint is not a valid URL, do nothing or optionally handle error
+        const envelope = JSON.parse(atob(match[1]));
+        const cleaned = post.message.replace(tagRegex, '').trim();
+        return {
+          ...post,
+          message: cleaned,
+          signature: envelope.signature || null,
+          signatureInstanceId: envelope.instanceId || envelope.signatureInstanceId || null,
+          signaturePayloadId: envelope.provisionalId || envelope.signaturePayloadId || envelope.payloadId || null,
+          signatureTimestamp: envelope.timestamp || envelope.signatureTimestamp || null,
+          trueSeal: envelope,
+          signatureValid: null,
+        };
+      } catch {
+        return post;
       }
-    }
-    const config = {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...customHeaders
-      },
-      credentials: 'include',
-      mode: 'cors', // Add this
-    };
+    },
 
-    if (body && method !== 'GET') {
-      config.body = JSON.stringify(body);
-    }
-    
-    // Add debugging
-    console.log('Making request to:', endpoint);
-    console.log('Method:', method);
-    console.log('Body:', body);
-    
-    const response = await fetch(endpoint, config);
-    
-    console.log('Response status:', response.status);
-    console.log('Response ok:', response.ok);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error response:', errorText);
-      throw new Error(`${response.status}: ${errorText || response.statusText}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error(`API call failed - ${method} ${endpoint}:`, error);
-    
-    // Check if it's a CORS issue
-    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-      console.error('This is likely a CORS issue or network connectivity problem');
-      console.error('Check if the API endpoint exists and allows requests from', window.location.origin);
-    }
-    
-    throw error;
-  }
-},
+    async importTrueSealPubKey() {
+      if (!TRUESEAL_PUBLIC_KEY_PEM) return null;
+      if (cachedTrueSealPubKeyPromise) return cachedTrueSealPubKeyPromise;
+      cachedTrueSealPubKeyPromise = window.crypto?.subtle?.importKey(
+        'spki',
+        pemToArrayBuffer(TRUESEAL_PUBLIC_KEY_PEM),
+        { name: 'RSA-PSS', hash: 'SHA-256' },
+        false,
+        ['verify']
+      ).catch(() => null);
+      return cachedTrueSealPubKeyPromise;
+    },
+
+    canonicalizeForVerify(post) {
+      const envelope = post.trueSeal || {};
+      const payload = {
+        author: post.username || envelope.author || '',
+        body: post.message || '',
+        id: envelope.provisionalId || envelope.signaturePayloadId || envelope.payloadId || '',
+        instance_id: envelope.instanceId || post.signatureInstanceId || '',
+        parent_id: (post.replyTo && (post.replyTo.postId || post.replyTo._id)) || '',
+        timestamp: envelope.timestamp || '',
+      };
+      const orderedJson = JSON.stringify(payload, Object.keys(payload).sort());
+      return encoder.encode(orderedJson);
+    },
+
+    async verifyTrueSeal(post) {
+      try {
+        if (!post?.trueSeal?.signature) return;
+        const pubKey = await this.importTrueSealPubKey();
+        if (!pubKey) return;
+        const canonical = this.canonicalizeForVerify(post);
+        const signatureBuf = base64ToArrayBuffer(post.trueSeal.signature);
+        const verified = await window.crypto.subtle.verify(
+          { name: 'RSA-PSS', saltLength: 32 },
+          pubKey,
+          signatureBuf,
+          canonical
+        );
+        this.applyPostPatch(post._id, { signatureValid: !!verified });
+      } catch {
+        this.applyPostPatch(post._id, { signatureValid: false });
+      }
+    },
+
+    async makeApiCall(endpoint, method = 'POST', body = null, customHeaders = {}) {
+      try {
+        // In dev, route legacy API calls through Vite proxy to avoid CORS
+        if (import.meta && import.meta.env && import.meta.env.DEV && typeof endpoint === 'string') {
+          try {
+            const urlObj = new URL(endpoint);
+            if (urlObj.hostname === 'sports321.vercel.app') {
+              endpoint = endpoint.replace('https://sports321.vercel.app', '/oldapi');
+            }
+          } catch (e) {
+            // ignore URL parse errors
+          }
+        }
+
+        const config = {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            ...customHeaders
+          },
+          credentials: 'include',
+          mode: 'cors',
+        };
+
+        if (body && method !== 'GET') {
+          config.body = JSON.stringify(body);
+        }
+        
+        // Debugging
+        console.log('Making request to:', endpoint);
+        console.log('Method:', method);
+        console.log('Body:', body);
+        
+        const response = await fetch(endpoint, config);
+        
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
+          throw new Error(`${response.status}: ${errorText || response.statusText}`);
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error(`API call failed - ${method} ${endpoint}:`, error);
+        
+        // Likely CORS/network
+        if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+          console.error('This is likely a CORS issue or network connectivity problem');
+          console.error('Check if the API endpoint exists and allows requests from', window.location.origin);
+        }
+        
+        throw error;
+      }
+    },
     setNotify(notifyFunction) {
       this.notify = notifyFunction;
     },
@@ -183,13 +272,15 @@ export const usePostsStore = defineStore('posts', {
       if (newPosts?.posts?.length > 0) {
         const historySet = new Set(this.viewHistory.map(String));
         const existingIds = new Set(this.posts.map(p => String(p._id)));
-        const formattedPosts = newPosts.posts.map(post => ({
+        const formattedPosts = newPosts.posts.map(post => this.extractTrueSeal({
           ...post,
           comments: [],
           commentCount: post.commentCount || 0,
           likedBy: post.likedBy || [],
           isBookmarked: false,
         }));
+
+        formattedPosts.forEach((p) => this.verifyTrueSeal(p));
 
         // Prioritize unviewed posts, then append viewed ones without duplicates
         const unviewed = formattedPosts.filter(p => !historySet.has(String(p._id)) && !existingIds.has(String(p._id)));
@@ -214,14 +305,14 @@ export const usePostsStore = defineStore('posts', {
     addPostToFeed(post, isNewPost = false) {
       if (!post?._id) return;
       
-      const formattedPost = {
+      const formattedPost = this.extractTrueSeal({
         ...post,
         likes: post.likes || 0,
         comments: [],
         commentCount: post.commentCount || 0,
         likedBy: post.likedBy || [],
         isBookmarked: false,
-      };
+      });
       
       const id = String(formattedPost._id);
       const existsAt = this.posts.findIndex(p => String(p._id) === id);
@@ -230,6 +321,8 @@ export const usePostsStore = defineStore('posts', {
       } else {
         isNewPost ? this.posts.unshift(formattedPost) : this.posts.push(formattedPost);
       }
+
+      this.verifyTrueSeal(formattedPost);
     },
 
     async openFullScreenPost(postId) {
@@ -243,11 +336,13 @@ export const usePostsStore = defineStore('posts', {
           const data = await response.json();
           
           if (data.post) {
+            const normalized = this.extractTrueSeal(data.post);
             this.selectedPost = {
-              ...data.post,
+              ...normalized,
               showComments: true,
-              comments: data.post.comments || []
+              comments: normalized.comments || []
             };
+            this.verifyTrueSeal(normalized);
             this.recordView(postId);
             return;
           }

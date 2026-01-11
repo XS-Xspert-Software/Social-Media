@@ -194,7 +194,8 @@ onMounted(async ()=>{
   border-radius: 12px;
   padding: 8px;
   border: none;
-  min-height: 38px;
+  min-height: 54px;
+  height: 54px;
   transition: all 0.3s cubic-bezier(.16,1,.3,1);
 }
 

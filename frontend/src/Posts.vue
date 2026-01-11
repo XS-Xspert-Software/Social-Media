@@ -77,14 +77,24 @@
       </div>
       <div class="username clickable" @click="postsStore.redirectToUserProfile(post.username)">
         <strong>{{ post.username }}</strong>
-        <span class="verified-badge" title="Verified">
-          <i class="fa-solid fa-circle-check"></i>
+        <span
+          v-if="post.signature"
+          class="verified-badge"
+          :class="{ 'invalid-badge': post.signatureValid === false }"
+          :title="post.signatureValid === false
+            ? 'TrueSeal signature invalid'
+            : `TrueSeal · instance: ${post.signatureInstanceId || 'unknown'} · user: ${post.username || 'unknown'}`"
+        >
+          <i v-if="post.signatureValid === false" class="fa-solid fa-circle-xmark"></i>
+          <i v-else class="fa-solid fa-circle-check"></i>
         </span>
+        <span v-else class="trueseal-missing">this post does not use TrueSeal</span>
       </div>
     </div>
     
     <!-- Post Message -->
     <p class="post-message" v-html="postsStore.parseMessage(post.message)" @click="$router.push(`/post/${post._id}`)"></p>
+    <div v-if="post.signatureValid === false" class="trueseal-warning">TrueSeal signature invalid — content may be tampered.</div>
     
     <!-- Post Image -->
   <img v-if="post.photo" :src="post.photo" alt="Post Image" class="post-image" @click="$router.push(`/post/${post._id}`)" loading="lazy" />
@@ -113,7 +123,7 @@
   </div>
 
   <!-- Views -->
-  <div style="display: flex; align-items: center; gap: 5px;">
+  <div class="views-container" style="display: flex; align-items: center; gap: 5px;">
      <svg
     viewBox="0 0 24 24"
     width="22"
