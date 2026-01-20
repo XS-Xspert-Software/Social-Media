@@ -261,16 +261,27 @@ export const usePostsStore = defineStore('posts', {
           const res = await fetch(url, { headers: { Accept: 'application/json' } });
           if (!res.ok) throw new Error(`peer fetch failed: ${url}`);
           const data = await res.json();
-          if (Array.isArray(data)) return data;
-          if (Array.isArray(data.posts)) return data.posts;
-          return [];
+          let posts = [];
+          if (Array.isArray(data)) posts = data;
+          else if (Array.isArray(data.posts)) posts = data.posts;
+          
+          // Extract server name from origin URL (e.g., 'example.com' from 'https://example.com')
+          const serverUrl = new URL(origin);
+          const serverName = serverUrl.hostname;
+          
+          // Tag each post with its source server
+          return posts.map(p => ({
+            ...p,
+            _id: p._id || p.id,
+            sourceServer: serverName,
+            isFromRemoteServer: true
+          }));
         })
       );
 
       return responses
         .filter((r) => r.status === 'fulfilled')
-        .flatMap((r) => r.value)
-        .map((p) => ({ ...p, _id: p._id || p.id }));
+        .flatMap((r) => r.value);
     },
 
     async fetchPosts(page = 1, sort = 'general') {

@@ -120,7 +120,7 @@
         <img :src="post.profilePicture ? post.profilePicture : 'pfp2.jpg'" :alt="`${post.username}'s profile picture`" loading="lazy" />
       </div>
       <div class="username clickable" @click="postsStore.redirectToUserProfile(post.username)">
-        <strong>{{ post.username }}</strong>
+        <strong>{{ post.isFromRemoteServer ? `${post.username}@${post.sourceServer}` : post.username }}</strong>
         <span
           v-if="post.signature"
           class="verified-badge"
