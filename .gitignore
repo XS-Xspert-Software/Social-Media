@@ -7,3 +7,6 @@ config.json
 .env
 frontend/.env.local
 frontend/.env.local
+
+# Ignore cloned Vercel backend repos
+vercel_backend/
