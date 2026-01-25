@@ -3,6 +3,9 @@ import { db } from '../schema/index';
 import { posts, users, likes } from '../schema/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import { validate as validateUUID } from 'uuid';
+import { loadOrCreateTrueSealKeys, canonicalize, signTrueSeal, shouldSign } from '../trueSeal';
+
+const trueSealKeys = loadOrCreateTrueSealKeys();
 
 export const createPost = async (req: Request, res: Response) => {
   // Security: Require auth unless test mode is enabled and test param is present
@@ -37,13 +40,24 @@ export const createPost = async (req: Request, res: Response) => {
   }
   const userId = user[0].id;
   // Insert post into DB
+  const createdAt = new Date();
   const inserted = await db.insert(posts).values({
     userId,
     content: message,
     imageUrl: photo || null,
-    createdAt: new Date(),
+    createdAt,
   }).returning();
   const newPost = inserted[0];
+
+  const canon = canonicalize({
+    id: newPost.id,
+    author: username,
+    instanceId: trueSealKeys.instanceId,
+    timestamp: createdAt.toISOString(),
+    body: newPost.content,
+    parentId: '',
+  });
+  const signature = signTrueSeal(canon, trueSealKeys);
   res.status(201).json({
     _id: newPost.id,
     username,
@@ -55,7 +69,10 @@ export const createPost = async (req: Request, res: Response) => {
     views: 0,
     comments: [],
     showComments: false,
-    commentInput: ''
+    commentInput: '',
+    signature,
+    truesealStatus: 'signed',
+    truesealInstance: trueSealKeys.instanceId
   });
   // If test upload, log it
   if (isTest) {
@@ -73,19 +90,34 @@ export const getPosts = async (req: Request, res: Response) => {
     createdAt: posts.createdAt,
     username: users.username
   }).from(posts).leftJoin(users, eq(posts.userId, users.id)).orderBy(desc(posts.createdAt));
-  const postsOut = dbPosts.map(post => ({
-    _id: post.id,
-    username: post.username,
-    message: post.content,
-    photo: post.imageUrl,
-    timestamp: post.createdAt,
-    likes: 0,
-    dislikes: 0,
-    views: 0,
-    comments: [],
-    showComments: false,
-    commentInput: ''
-  }));
+  const postsOut = dbPosts.map(post => {
+    const createdAtDate = post.createdAt ? new Date(post.createdAt) : new Date();
+    const canon = canonicalize({
+      id: post.id,
+      author: post.username,
+      instanceId: trueSealKeys.instanceId,
+      timestamp: createdAtDate.toISOString(),
+      body: post.content,
+      parentId: '',
+    });
+    const signature = signTrueSeal(canon, trueSealKeys);
+    return {
+      _id: post.id,
+      username: post.username,
+      message: post.content,
+      photo: post.imageUrl,
+      timestamp: post.createdAt,
+      likes: 0,
+      dislikes: 0,
+      views: 0,
+      comments: [],
+      showComments: false,
+      commentInput: '',
+      signature,
+      truesealStatus: 'signed',
+      truesealInstance: trueSealKeys.instanceId,
+    };
+  });
   // If no local posts, try a remote fallback to keep the UI populated
   if (!postsOut.length) {
     try {

@@ -1,5 +1,8 @@
 <template>
   <div :class="['app-wrapper', { 'Chatbox-fullscreen': isChatboxRoute, 'no-header-padding': postsStore.selectedPost }]">
+  <!-- Global Loading Screen -->
+  <LoadingSpinner ref="loadingSpinner" />
+
   <!-- Header -->
   <header v-if="!isChatboxRoute && !postsStore.selectedPost">
        <h1 style="font-size: 23px; margin-left: 3%; display: flex; align-items: center; gap: 8px;">
@@ -31,6 +34,9 @@
         </div>
       </div>
     </header>
+
+    <!-- New user welcome banner (dismissible) -->
+    <WelcomeBanner v-if="showWelcomeBanner" @dismiss="dismissWelcomeBanner" />
 
     <!-- Login prompt for guests (hide on routes that render their own prompt) -->
     <LoginPrompt
@@ -192,6 +198,8 @@ const PostPage = defineAsyncComponent(() => import('./PostPage.vue'));
 import Chatbox from './Chatbox.vue';
 import Alert from './Alert.vue';
 import LoginPrompt from './LoginPrompt.vue';
+import WelcomeBanner from './WelcomeBanner.vue';
+import LoadingSpinner from './LoadingSpinner.vue';
 
 const jwtCache = new Map();
 
@@ -209,6 +217,8 @@ export default {
     Float,
     Alert,
   LoginPrompt,
+    WelcomeBanner,
+    LoadingSpinner,
     PostPage
   },
 
@@ -242,6 +252,7 @@ export default {
       ],
 
       theme: localStorage.getItem('sync-theme') || 'light',
+      showWelcomeBanner: !localStorage.getItem('sync_seen_welcome_v1'),
     };
   },
 
@@ -314,6 +325,14 @@ export default {
   },
 
   methods: {
+    dismissWelcomeBanner() {
+      try {
+        localStorage.setItem('sync_seen_welcome_v1', '1');
+        this.showWelcomeBanner = false;
+      } catch (e) {
+        this.showWelcomeBanner = false;
+      }
+    },
     applyTheme(val) {
       // Apply a theme value to the document and persist it.
       // Accepts 'light' or 'dark' (any non-'light' value will use 'dark').

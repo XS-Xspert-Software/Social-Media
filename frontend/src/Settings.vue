@@ -220,6 +220,7 @@
               </div>
             </div>
           </div>
+
           <div class="modal-actions">
             <button class="btn-primary full-width" @click="saveSettings" :disabled="loading">
               <span v-if="loading">

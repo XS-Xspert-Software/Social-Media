@@ -74,7 +74,7 @@
       <!-- Post Header -->
       <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
         <img :src="postsStore.selectedPost.profilePicture || 'pfp2.jpg'" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer;" @click="$router.push(`/profile/${postsStore.selectedPost.username}`)" />
-        <strong style="color: #fff; font-size: 16px;">{{ postsStore.selectedPost.username }}</strong>
+        <strong style="color: #fff; font-size: 16px;">{{ postsStore.selectedPost.isFromRemoteServer ? `${postsStore.selectedPost.username}@${postsStore.selectedPost.sourceServer}` : postsStore.selectedPost.username }}</strong>
       </div>
       
       <!-- Post Content -->

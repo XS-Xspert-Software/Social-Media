@@ -5,3 +5,8 @@ vidbackend/Pulse_Backend_Video/pulse/pulse/__pycache__/settings.cpython-312.pyc
 config.json
 *.json
 .env
+frontend/.env.local
+frontend/.env.local
+
+# Ignore cloned Vercel backend repos
+vercel_backend/
